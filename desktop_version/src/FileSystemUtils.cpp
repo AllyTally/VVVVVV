@@ -102,21 +102,21 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 	else
 	{
 		strcpy(output, PHYSFS_getBaseDir());
-		strcat(output, "data.zip");
+		strcat(output, "data_fucked.zip");
 	}
 	if (!PHYSFS_mount(output, NULL, 1))
 	{
-		puts("Error: data.zip missing!");
-		puts("You do not have data.zip!");
-		puts("Grab it from your purchased copy of the game,");
-		puts("or get it from the free Make and Play Edition.");
+		puts("Error: data_fucked.zip missing!");
+		puts("You do not have data_fucked.zip!");
+		puts("Good luck, I don't think I can");
+		puts("legally distribute this.");
 
 		SDL_ShowSimpleMessageBox(
 			SDL_MESSAGEBOX_ERROR,
-			"data.zip missing!",
-			"You do not have data.zip!"
-			"\n\nGrab it from your purchased copy of the game,"
-			"\nor get it from the free Make and Play Edition.",
+			"data_fucked.zip missing!",
+			"You do not have data_fucked.zip!"
+			"\n\nGood luck, I don't think I can"
+			"\nlegally distribute this.",
 			NULL
 		);
 		return 0;

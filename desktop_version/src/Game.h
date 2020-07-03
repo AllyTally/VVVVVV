@@ -329,6 +329,7 @@ public:
     int activeactivity, act_fade;
 
     bool press_left, press_right, press_action, press_map;
+    int action_type;
 
     //Some stats:
     int totalflips;
@@ -392,6 +393,8 @@ public:
 #endif
 
     int gametimer;
+    
+    int vamount;
 
     bool inline inspecial()
     {

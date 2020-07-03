@@ -1502,6 +1502,7 @@ void gameinput()
         game.press_right = false;
         game.press_action = false;
         game.press_map = false;
+        game.action_type = 0;
 
         if (key.isDown(KEYBOARD_LEFT) || key.isDown(KEYBOARD_a) || key.controllerWantsLeft(false))
         {
@@ -1515,6 +1516,9 @@ void gameinput()
                 || key.isDown(KEYBOARD_UP) || key.isDown(KEYBOARD_DOWN) || key.isDown(KEYBOARD_w) || key.isDown(KEYBOARD_s)|| key.isDown(game.controllerButton_flip))
         {
             game.press_action = true;
+            game.action_type = 0;
+            if (key.isDown(KEYBOARD_UP)) {game.action_type = 1;}
+            if (key.isDown(KEYBOARD_DOWN)) {game.action_type = 2;}
         };
         if (key.isDown(KEYBOARD_ENTER) || key.isDown(SDLK_KP_ENTER) || key.isDown(game.controllerButton_map)  )
         {
@@ -1788,21 +1792,27 @@ void gameinput()
                     game.jumppressed--;
                     if (obj.entities[ie].onground>0 && game.gravitycontrol == 0)
                     {
-                        game.gravitycontrol = 1;
-                        obj.entities[ie].vy = -4;
-                        obj.entities[ie].ay = -3;
-                        music.playef(0);
-                        game.jumppressed = 0;
-                        game.totalflips++;
+                        if (game.action_type != 2) {
+                            game.gravitycontrol = 1;
+                            obj.entities[ie].vy = -4;
+                            obj.entities[ie].ay = -3;
+                            music.playef(1);
+                            game.jumppressed = 0;
+                            game.totalflips++;
+                            game.action_type = 0;
+                        }
                     }
                     if (obj.entities[ie].onroof>0 && game.gravitycontrol == 1)
                     {
-                        game.gravitycontrol = 0;
-                        obj.entities[ie].vy = 4;
-                        obj.entities[ie].ay = 3;
-                        music.playef(1);
-                        game.jumppressed = 0;
-                        game.totalflips++;
+                        if (game.action_type != 1) {
+                            game.gravitycontrol = 0;
+                            obj.entities[ie].vy = 4;
+                            obj.entities[ie].ay = 3;
+                            music.playef(0);
+                            game.jumppressed = 0;
+                            game.totalflips++;
+                            game.action_type = 0;
+                        }
                     }
                 }
             }

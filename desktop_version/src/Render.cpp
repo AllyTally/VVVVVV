@@ -21,19 +21,14 @@ void menurender()
     switch (game.currentmenuname)
     {
     case Menu::mainmenu:
-        graphics.drawsprite((160 - 96) + 0 * 32, temp, 23, tr, tg, tb);
-        graphics.drawsprite((160 - 96) + 1 * 32, temp, 23, tr, tg, tb);
-        graphics.drawsprite((160 - 96) + 2 * 32, temp, 23, tr, tg, tb);
-        graphics.drawsprite((160 - 96) + 3 * 32, temp, 23, tr, tg, tb);
-        graphics.drawsprite((160 - 96) + 4 * 32, temp, 23, tr, tg, tb);
-        graphics.drawsprite((160 - 96) + 5 * 32, temp, 23, tr, tg, tb);
-#if defined(MAKEANDPLAY)
-        graphics.Print(-1,temp+35,"     MAKE AND PLAY EDITION",tr, tg, tb, true);
-#endif
+        for (int i = 0; i < game.vamount; i++) {
+            graphics.drawsprite((160 - 96) + i * 32, temp, 23, tr, tg, tb);
+        }
+        graphics.Print(-1,temp+35,"help",tr, tg, tb, true);
         graphics.Print( 310 - (4*8), 230, "v2.3", tr/2, tg/2, tb/2);
 
         if(music.mmmmmm){
-            graphics.Print( 10, 230, "[MMMMMM Mod Installed]", tr/2, tg/2, tb/2);
+            graphics.Print( 10, 230, "[mmMMmmMmMMMm]", tr/2, tg/2, tb/2);
         }
         break;
 #if !defined(NO_CUSTOM_LEVELS)
@@ -1052,18 +1047,13 @@ void titlerender()
         tb = 164 - (help.glow / 2) - int(fRandom() * 4);
 
         int temp = 50;
-        graphics.drawsprite((160 - 96) + 0 * 32, temp, 23, tr, tg, tb);
-        graphics.drawsprite((160 - 96) + 1 * 32, temp, 23, tr, tg, tb);
-        graphics.drawsprite((160 - 96) + 2 * 32, temp, 23, tr, tg, tb);
-        graphics.drawsprite((160 - 96) + 3 * 32, temp, 23, tr, tg, tb);
-        graphics.drawsprite((160 - 96) + 4 * 32, temp, 23, tr, tg, tb);
-        graphics.drawsprite((160 - 96) + 5 * 32, temp, 23, tr, tg, tb);
-#if defined(MAKEANDPLAY)
-        graphics.Print(-1,temp+35,"     MAKE AND PLAY EDITION",tr, tg, tb, true);
-#endif
-
+        
+        for (int i = 0; i < game.vamount; i++) {
+            graphics.drawsprite((160 - 96) + i * 32, temp, 23, tr, tg, tb);
+        }
+        graphics.Print(-1,temp+35,"help",tr, tg, tb, true);
         graphics.Print(5, 175, "[ Press ACTION to Start ]", tr, tg, tb, true);
-        graphics.Print(5, 195, "ACTION = Space, Z, or V", int(tr*0.5f), int(tg*0.5f), int(tb*0.5f), true);
+        graphics.Print(5, 195, "ACTION = everyone uses Z anyway", int(tr*0.5f), int(tg*0.5f), int(tb*0.5f), true);
     }
     else
     {

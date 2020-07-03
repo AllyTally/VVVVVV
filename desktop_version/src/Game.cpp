@@ -20,6 +20,8 @@
 
 #include "MakeAndPlay.h"
 
+#include <time.h>
+
 // lol, Win32 -flibit
 #ifdef _WIN32
 #define strcasecmp stricmp
@@ -274,6 +276,14 @@ void Game::init(void)
     swnbestrank = 0;
     swnrank = 0;
     swnmessage = 0;
+    
+    srand(time(NULL));
+    
+    vamount = 0;
+    while ((vamount == 6) || (vamount == 0)) {
+        vamount = rand() % 9;
+    }
+    
 
     clearcustomlevelstats();
 
@@ -358,6 +368,7 @@ void Game::init(void)
 
     stat_trinkets = 0;
 
+    state = 1;
     state = 1;
     statedelay = 0;
     //updatestate();
