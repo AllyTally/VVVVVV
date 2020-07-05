@@ -1176,13 +1176,27 @@ void menurender()
     case Menu::downloading:
     {
         int progress = FILESYSTEM_getDownloadProgress();
-        if (progress == 100) {
+        if (progress == 100)
+        {
             game.createmenu(Menu::finisheddownload);
-        } else {
-            std::stringstream text;
-            text << FILESYSTEM_getDownloadProgress();
-            text << "%";
-            graphics.Print((320 - (text.str().length() * 8)) / 2, 240 / 2 - 4, text.str(), tr, tg, tb);
+        }
+        else
+        {
+            int progress_counter = 0;
+            std::stringstream progress_bar;
+            progress_bar << "[";
+            for (; progress_counter < (int)((float)progress / 100 * 20); progress_counter++)
+            {
+                progress_bar << "#";
+            }
+            for (; progress_counter < 20; progress_counter++)
+            {
+                progress_bar << " ";
+            }
+            progress_bar << "] ";
+            if (progress < 10) progress_bar << "0";
+            progress_bar << progress << "%";
+            graphics.Print(-1, 240 / 2 - 4, progress_bar.str(), tr, tg, tb, true);
         }
     }
     default:
