@@ -7105,8 +7105,20 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         {
             option("    " + ed.onlinelevellist[i].title);
         }
-        option("next page");
-        option("previous page");
+        if (ed.current_page == ed.max_pages) {
+            option("first page");
+        }
+        else
+        {
+            option("next page");
+        }
+        if (ed.current_page == 1) {
+            option("last page");
+        }
+        else
+        {
+            option("previous page");
+        }
         option("return to menu");
         menuxoff = 20;
         menuyoff = 70 - (menuoptions.size() * 10);

@@ -231,7 +231,7 @@ bool editorclass::loadOnlineLevels()
 
     std::string temp_string = request_url.str();
 
-    std::cout << "Sending request to" << request_url.str() << std::endl;
+    std::cout << "Sending request to " << request_url.str() << std::endl;
 
     curl_easy_setopt(curl, CURLOPT_URL, temp_string.c_str());
 
@@ -283,7 +283,8 @@ bool editorclass::loadOnlineLevels()
             onlinelevellist.push_back(loaded);
         }
     }
-
+    pElem = hRoot.FirstChildElement("Pages").ToElement();
+    ed.max_pages = pElem->IntAttribute("total");
     return true;
 
 }

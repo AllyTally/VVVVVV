@@ -255,11 +255,17 @@ void menuactionpress()
         else if (game.currentmenuoption == (int)game.menuoptions.size() - 2) {
             //previous page
             music.playef(11);
+            ed.current_page--;
+            if (ed.current_page < 1) ed.current_page = ed.max_pages;
+            ed.loadOnlineLevels();
             map.nexttowercolour();
         }
         else if (game.currentmenuoption == (int)game.menuoptions.size() - 3) {
             //next page
             music.playef(11);
+            ed.current_page++;
+            if (ed.current_page > ed.max_pages) ed.current_page = 1;
+            ed.loadOnlineLevels();
             map.nexttowercolour();
         }
         else {
@@ -334,6 +340,7 @@ void menuactionpress()
         case 1:
             music.playef(11);
             ed.current_page = 1;
+            ed.max_pages = 1;
             if (ed.loadOnlineLevels()) {
                 game.createmenu(Menu::onlinelevellist);
             }
