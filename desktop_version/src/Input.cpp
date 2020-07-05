@@ -258,6 +258,8 @@ void menuactionpress()
             ed.current_page--;
             if (ed.current_page < 1) ed.current_page = ed.max_pages;
             ed.loadOnlineLevels();
+            game.createmenu(Menu::onlinelevellist, true);
+            game.currentmenuoption = game.menuoptions.size() - 2;
             map.nexttowercolour();
         }
         else if (game.currentmenuoption == (int)game.menuoptions.size() - 3) {
@@ -266,6 +268,8 @@ void menuactionpress()
             ed.current_page++;
             if (ed.current_page > ed.max_pages) ed.current_page = 1;
             ed.loadOnlineLevels();
+            game.createmenu(Menu::onlinelevellist, true);
+            game.currentmenuoption = game.menuoptions.size() - 3;
             map.nexttowercolour();
         }
         else {
