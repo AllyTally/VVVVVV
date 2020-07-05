@@ -2408,33 +2408,42 @@ void teleporterinput()
             game.jumpheld = true;
         }
 
-        if (game.press_left)
+        bool any_tele_unlocked = false;
+        if (game.press_left || game.press_right)
         {
-            game.teleport_to_teleporter--;
-            if (game.teleport_to_teleporter < 0) game.teleport_to_teleporter = map.teleporters.size() - 1;
-            tempx = map.teleporters[game.teleport_to_teleporter].x;
-            tempy = map.teleporters[game.teleport_to_teleporter].y;
-            while (map.explored[tempx + (20 * tempy)] == 0)
+            for (size_t i = 0; i < map.teleporters.size(); i++)
+            {
+                point& tele = map.teleporters[i];
+
+                if (map.explored[tele.x + tele.y*20])
+                {
+                    any_tele_unlocked = true;
+                    break;
+                }
+            }
+        }
+
+        if (game.press_left && any_tele_unlocked)
+        {
+            do
             {
                 game.teleport_to_teleporter--;
                 if (game.teleport_to_teleporter < 0) game.teleport_to_teleporter = map.teleporters.size() - 1;
                 tempx = map.teleporters[game.teleport_to_teleporter].x;
                 tempy = map.teleporters[game.teleport_to_teleporter].y;
             }
+            while (map.explored[tempx + (20 * tempy)] == 0);
         }
-        else if (game.press_right)
+        else if (game.press_right && any_tele_unlocked)
         {
-            game.teleport_to_teleporter++;
-            if (game.teleport_to_teleporter >= (int) map.teleporters.size()) game.teleport_to_teleporter = 0;
-            tempx = map.teleporters[game.teleport_to_teleporter].x;
-            tempy = map.teleporters[game.teleport_to_teleporter].y;
-            while (map.explored[tempx + (20 * tempy)] == 0)
+            do
             {
                 game.teleport_to_teleporter++;
                 if (game.teleport_to_teleporter >= (int) map.teleporters.size()) game.teleport_to_teleporter = 0;
                 tempx = map.teleporters[game.teleport_to_teleporter].x;
                 tempy = map.teleporters[game.teleport_to_teleporter].y;
             }
+            while (map.explored[tempx + (20 * tempy)] == 0);
         }
 
         if (game.press_map)
