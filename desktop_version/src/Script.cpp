@@ -11,8 +11,6 @@ scriptclass::scriptclass()
 	//Start SDL
 
 	//Init
-	words.resize(40);
-
 	position = 0;
 	scriptdelay = 0;
 	running = false;
@@ -34,22 +32,26 @@ void scriptclass::clearcustom(){
 	customscripts.clear();
 }
 
-void scriptclass::tokenize( std::string t )
+void scriptclass::tokenize( const std::string& t )
 {
 	j = 0;
-	tempword = "";
+	std::string tempword;
+	char currentletter;
 
 	for (size_t i = 0; i < t.length(); i++)
 	{
-		currentletter = t.substr(i, 1);
-		if (currentletter == "(" || currentletter == ")" || currentletter == ",")
+		currentletter = t[i];
+		if (currentletter == '(' || currentletter == ')' || currentletter == ',')
 		{
 			words[j] = tempword;
-			std::transform(words[j].begin(), words[j].end(), words[j].begin(), ::tolower);
+			for (size_t ii = 0; ii < words[j].length(); ii++)
+			{
+				words[j][ii] = SDL_tolower(words[j][ii]);
+			}
 			j++;
 			tempword = "";
 		}
-		else if (currentletter == " ")
+		else if (currentletter == ' ')
 		{
 			//don't do anything - i.e. strip out spaces.
 		}
@@ -57,9 +59,13 @@ void scriptclass::tokenize( std::string t )
 		{
 			tempword += currentletter;
 		}
+		if (j >= (int) SDL_arraysize(words))
+		{
+			break;
+		}
 	}
 
-	if (tempword != "")
+	if (tempword != "" && j < (int) SDL_arraysize(words))
 	{
 		words[j] = tempword;
 	}
@@ -180,8 +186,8 @@ void scriptclass::run()
 			}
 			else if (words[0] == "customifflag")
 			{
-				int flag = ss_toi(words[1]);
-				if (flag >= 0 && flag < (int) obj.flags.size() && obj.flags[flag])
+				size_t flag = ss_toi(words[1]);
+				if (flag < SDL_arraysize(obj.flags) && obj.flags[flag])
 				{
 					load("custom_"+words[2]);
 					position--;
@@ -1150,15 +1156,6 @@ void scriptclass::run()
 					}
 				}
 			}
-			else if (words[0] == "alarmon")
-			{
-				game.alarmon = true;
-				game.alarmdelay = 0;
-			}
-			else if (words[0] == "alarmoff")
-			{
-				game.alarmon = false;
-			}
 			else if (words[0] == "activateteleporter")
 			{
 				i = obj.getteleporter();
@@ -1330,7 +1327,7 @@ void scriptclass::run()
 			else if (words[0] == "ifexplored")
 			{
 				int room = ss_toi(words[1]) + (20 * ss_toi(words[2]));
-				if (room >= 0 && room < (int) map.explored.size() && map.explored[room] == 1)
+				if (INBOUNDS_ARR(room, map.explored) && map.explored[room] == 1)
 				{
 					load(words[3]);
 					position--;
@@ -1354,8 +1351,8 @@ void scriptclass::run()
 			}
 			else if (words[0] == "ifflag")
 			{
-				int flag = ss_toi(words[1]);
-				if (flag >= 0 && flag < (int) obj.flags.size() && obj.flags[flag])
+				size_t flag = ss_toi(words[1]);
+				if (flag < SDL_arraysize(obj.flags) && obj.flags[flag])
 				{
 					load(words[2]);
 					position--;
@@ -1363,8 +1360,8 @@ void scriptclass::run()
 			}
 			else if (words[0] == "ifcrewlost")
 			{
-				int crewmate = ss_toi(words[1]);
-				if (crewmate >= 0 && crewmate < (int) game.crewstats.size() && game.crewstats[crewmate]==false)
+				size_t crewmate = ss_toi(words[1]);
+				if (crewmate < SDL_arraysize(game.crewstats) && game.crewstats[crewmate]==false)
 				{
 					load(words[2]);
 					position--;
@@ -1389,17 +1386,17 @@ void scriptclass::run()
 			else if (words[0] == "hidecoordinates")
 			{
 				int room = ss_toi(words[1]) + (20 * ss_toi(words[2]));
-				if (room >= 0 && room < (int) map.explored.size())
+				if (INBOUNDS_ARR(room, map.explored))
 				{
-					map.explored[room] = 0;
+					map.explored[room] = false;
 				}
 			}
 			else if (words[0] == "showcoordinates")
 			{
 				int room = ss_toi(words[1]) + (20 * ss_toi(words[2]));
-				if (room >= 0 && room < (int) map.explored.size())
+				if (INBOUNDS_ARR(room, map.explored))
 				{
-					map.explored[room] = 1;
+					map.explored[room] = true;
 				}
 			}
 			else if (words[0] == "hideship")
@@ -1956,8 +1953,8 @@ void scriptclass::run()
 				music.haltdasmusik();
 				music.playef(3);
 
-				int trinket = ss_toi(words[1]);
-				if (trinket >= 0 && trinket < (int) obj.collect.size())
+				size_t trinket = ss_toi(words[1]);
+				if (trinket < SDL_arraysize(obj.collect))
 				{
 					obj.collect[trinket] = true;
 				}
@@ -3567,7 +3564,7 @@ void scriptclass::hardreset()
 	game.nodeathmode = false;
 	game.nocutscenes = false;
 
-	for (i = 0; i < 6; i++)
+	for (i = 0; i < (int) SDL_arraysize(game.crewstats); i++)
 	{
 		game.crewstats[i] = false;
 	}
@@ -3683,12 +3680,9 @@ void scriptclass::hardreset()
 	map.scrolldir = 0;
 	map.customshowmm=true;
 
-	map.roomdeaths.clear();
-	map.roomdeaths.resize(20 * 20);
-	map.roomdeathsfinal.clear();
-	map.roomdeathsfinal.resize(20 * 20);
-	map.explored.clear();
-	map.explored.resize(20 * 20);
+	SDL_memset(map.roomdeaths, 0, sizeof(map.roomdeaths));
+	SDL_memset(map.roomdeathsfinal, 0, sizeof(map.roomdeathsfinal));
+	map.resetmap();
 	//entityclass
 	obj.nearelephant = false;
 	obj.upsetmode = false;
@@ -3698,17 +3692,14 @@ void scriptclass::hardreset()
 	obj.trophytype = 0;
 	obj.altstates = 0;
 
-	obj.flags.clear();
-	obj.flags.resize(100);
+	obj.resetallflags();
 
-	for (i = 0; i < 6; i++){
-		obj.customcrewmoods[i]=1;
+	for (i = 0; i < (int) SDL_arraysize(obj.customcrewmoods); i++){
+		obj.customcrewmoods[i]=true;
 	}
 
-	obj.collect.clear();
-	obj.collect.resize(100);
-	obj.customcollect.clear();
-	obj.customcollect.resize(100);
+	SDL_memset(obj.collect, false, sizeof(obj.collect));
+	SDL_memset(obj.customcollect, false, sizeof(obj.customcollect));
 	i = 100; //previously a for-loop iterating over collect/customcollect set this to 100
 
 	int theplayer = obj.getplayer();
@@ -3734,7 +3725,7 @@ void scriptclass::hardreset()
 	running = false;
 }
 
-void scriptclass::loadcustom(std::string t)
+void scriptclass::loadcustom(const std::string& t)
 {
 	//this magic function breaks down the custom script and turns into real scripting!
 	std::string cscriptname="";
@@ -3782,7 +3773,10 @@ void scriptclass::loadcustom(std::string t)
 		words[0]="nothing"; //Default!
 		words[1]="1"; //Default!
 		tokenize(lines[i]);
-		std::transform(words[0].begin(), words[0].end(), words[0].begin(), ::tolower);
+		for (size_t ii = 0; ii < words[0].length(); ii++)
+		{
+			words[0][ii] = SDL_tolower(words[0][ii]);
+		}
 		if(words[0] == "music"){
 			if(customtextmode==1){ add("endtext"); customtextmode=0;}
 			if(words[1]=="0"){

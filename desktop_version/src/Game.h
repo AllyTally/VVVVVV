@@ -10,7 +10,8 @@
 
 struct MenuOption
 {
-    std::string text;
+    char text[161]; // 40 chars (160 bytes) covers the entire screen, + 1 more for null terminator
+    // WARNING: should match Game::menutextbytes below
     bool active;
 };
 
@@ -200,7 +201,6 @@ public:
     //Menu interaction stuff
     bool mapheld;
     int menupage;
-    //public var crewstats:Array = new Array();
     int lastsaved;
     int deathcounts;
 
@@ -230,12 +230,13 @@ public:
     int current_credits_list_index;
     int menuxoff, menuyoff;
     int menuspacing;
+    static const int menutextbytes = 161; // this is just sizeof(MenuOption::text), but doing that is non-standard
     std::vector<MenuStackFrame> menustack;
 
-    void inline option(std::string text, bool active = true)
+    void inline option(const char* text, bool active = true)
     {
         MenuOption menuoption;
-        menuoption.text = text;
+        SDL_strlcpy(menuoption.text, text, sizeof(menuoption.text));
         menuoption.active = active;
         menuoptions.push_back(menuoption);
     }
@@ -274,37 +275,36 @@ public:
 
     int creditposition;
     int oldcreditposition;
-    int creditmaxposition;
-    std::vector<const char*> superpatrons;
-    std::vector<const char*> patrons;
-    std::vector<const char*> githubfriends;
     bool insecretlab;
 
     bool inintermission;
 
-    std::vector<bool> crewstats;
+    static const int numcrew = 6;
+    bool crewstats[numcrew];
 
     bool alarmon;
     int alarmdelay;
     bool blackout;
 
-    std::vector<bool> tele_crewstats;
+    bool tele_crewstats[numcrew];
 
-    std::vector<bool> quick_crewstats;
+    bool quick_crewstats[numcrew];
 
-    std::vector<int> unlock;
-    std::vector<int> unlocknotify;
+    static const int numunlock = 25;
+    bool unlock[numunlock];
+    bool unlocknotify[numunlock];
     bool anything_unlocked();
     int stat_trinkets;
     bool fullscreen;
     int bestgamedeaths;
 
 
-    std::vector<int>besttimes;
-    int bestframes[6];
-    std::vector<int>besttrinkets;
-    std::vector<int>bestlives;
-    std::vector<int> bestrank;
+    static const int numtrials = 6;
+    int besttimes[numtrials];
+    int bestframes[numtrials];
+    int besttrinkets[numtrials];
+    int bestlives[numtrials];
+    int bestrank[numtrials];
 
     std::string tele_gametime;
     int tele_trinkets;

@@ -54,21 +54,12 @@ edlevelclass::edlevelclass()
 
 editorclass::editorclass()
 {
-    maxwidth=20;
-    maxheight=20;
-
     //We create a blank map
-    for (int j = 0; j < 30 * maxwidth; j++)
-    {
-        for (int i = 0; i < 40 * maxheight; i++)
-        {
-            contents.push_back(0);
-        }
-    }
+    SDL_memset(contents, 0, sizeof(contents));
 
-    for (int i = 0; i < 30 * maxheight; i++)
+    for (size_t i = 0; i < SDL_arraysize(vmult); i++)
     {
-        vmult.push_back(int(i * 40 * maxwidth));
+        vmult[i] = i * 40 * maxwidth;
     }
 
     reset();
@@ -80,9 +71,9 @@ bool compare_nocase (std::string first, std::string second)
     unsigned int i=0;
     while ( (i<first.length()) && (i<second.length()) )
     {
-        if (tolower(first[i])<tolower(second[i]))
+        if (SDL_tolower(first[i])<SDL_tolower(second[i]))
             return true;
-        else if (tolower(first[i])>tolower(second[i]))
+        else if (SDL_tolower(first[i])>SDL_tolower(second[i]))
             return false;
         ++i;
     }
@@ -610,7 +601,7 @@ void editorclass::getlin(const enum textmode mode, const std::string& prompt, st
     ed.oldenttext = key.keybuffer;
 }
 
-std::vector<int> editorclass::loadlevel( int rxi, int ryi )
+const int* editorclass::loadlevel( int rxi, int ryi )
 {
     //Set up our buffer array to be picked up by mapclass
     rxi -= 100;
@@ -620,13 +611,13 @@ std::vector<int> editorclass::loadlevel( int rxi, int ryi )
     if(rxi>=mapwidth)rxi-=mapwidth;
     if(ryi>=mapheight)ryi-=mapheight;
 
-    std::vector<int> result;
+    static int result[1200];
 
     for (int j = 0; j < 30; j++)
     {
         for (int i = 0; i < 40; i++)
         {
-            result.push_back(contents[i+(rxi*40)+vmult[j+(ryi*30)]]);
+            result[i + j*40] = contents[i+(rxi*40)+vmult[j+(ryi*30)]];
         }
     }
 
@@ -1632,57 +1623,6 @@ void editorclass::findstartpoint()
     }
 }
 
-void editorclass::saveconvertor()
-{
-    //In the case of resizing breaking a level, this function can fix it
-    maxwidth=20;
-    maxheight=20;
-    int oldwidth=10, oldheight=10;
-
-    std::vector <int> tempcontents;
-    for (int j = 0; j < 30 * oldwidth; j++)
-    {
-        for (int i = 0; i < 40 * oldheight; i++)
-        {
-            tempcontents.push_back(contents[i+(j*40*oldwidth)]);
-        }
-    }
-
-    contents.clear();
-    for (int j = 0; j < 30 * maxheight; j++)
-    {
-        for (int i = 0; i < 40 * maxwidth; i++)
-        {
-            contents.push_back(0);
-        }
-    }
-
-    for (int j = 0; j < 30 * oldheight; j++)
-    {
-        for (int i = 0; i < 40 * oldwidth; i++)
-        {
-            contents[i+(j*40*oldwidth)]=tempcontents[i+(j*40*oldwidth)];
-        }
-    }
-
-    tempcontents.clear();
-
-    for (int i = 0; i < 30 * maxheight; i++)
-    {
-        vmult.push_back(int(i * 40 * maxwidth));
-    }
-
-    for (int j = 0; j < maxheight; j++)
-    {
-        for (int i = 0; i < maxwidth; i++)
-        {
-            level[i+(j*maxwidth)].tilecol=(i+j)%6;
-        }
-    }
-    contents.clear();
-
-}
-
 int editorclass::findtrinket(int t)
 {
     int ttrinket=0;
@@ -1972,11 +1912,7 @@ bool editorclass::load(std::string& _path)
             if(TextString.length())
             {
                 std::vector<std::string> values = split(TextString,',');
-                //contents.clear();
-                for(size_t i = 0; i < contents.size(); i++)
-                {
-                    contents[i] =0;
-                }
+                SDL_memset(contents, 0, sizeof(contents));
                 int x =0;
                 int y =0;
                 for(size_t i = 0; i < values.size(); i++)
@@ -2797,7 +2733,7 @@ void editorrender()
     //Draw entities
     obj.customplatformtile=game.customcol*12;
 
-    ed.temp=edentat(ed.tilex+ (ed.levx*40),ed.tiley+ (ed.levy*30));
+    int temp2=edentat(ed.tilex+ (ed.levx*40),ed.tiley+ (ed.levy*30));
 
     // Draw entities backward to remain accurate with ingame
     for (int i = edentity.size() - 1; i >= 0; i--)
@@ -2966,7 +2902,7 @@ void editorrender()
             case 13://Warp tokens
                 graphics.drawsprite((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8),18+(ed.entframe%2),196,196,196);
                 fillboxabs((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8),16,16,graphics.getRGB(164,164,255));
-                if(ed.temp==i)
+                if(temp2==i)
                 {
                     graphics.bprint((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8)-8,
                                 "("+help.String(((edentity[i].p1-int(edentity[i].p1%40))/40)+1)+","+help.String(((edentity[i].p2-int(edentity[i].p2%30))/30)+1)+")",210,210,255);
@@ -3014,7 +2950,7 @@ void editorrender()
             case 18: //Terminals
                 graphics.drawsprite((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8)+8,17,96,96,96);
                 fillboxabs((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8),16,24,graphics.getRGB(164,164,164));
-                if(ed.temp==i)
+                if(temp2==i)
                 {
                     graphics.bprint((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8)-8,edentity[i].scriptname,210,210,255);
                 }
@@ -3022,7 +2958,7 @@ void editorrender()
             case 19: //Script Triggers
                 fillboxabs((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8),edentity[i].p1*8,edentity[i].p2*8,graphics.getRGB(255,164,255));
                 fillboxabs((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8),8,8,graphics.getRGB(255,255,255));
-                if(ed.temp==i)
+                if(temp2==i)
                 {
                     graphics.bprint((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8)-8,edentity[i].scriptname,210,210,255);
                 }
@@ -3388,7 +3324,10 @@ void editorrender()
                         if(ed.hookmenupage+i==ed.hookmenu)
                         {
                             std::string tstring="> " + ed.hooklist[(ed.hooklist.size()-1)-(ed.hookmenupage+i)] + " <";
-                            std::transform(tstring.begin(), tstring.end(),tstring.begin(), ::toupper);
+                            for (size_t ii = 0; ii < tstring.length(); ii++)
+                            {
+                                tstring[ii] = SDL_toupper(tstring[ii]);
+                            }
                             graphics.Print(16,68+(i*16),tstring,123, 111, 218, true);
                         }
                         else

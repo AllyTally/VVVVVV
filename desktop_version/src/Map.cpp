@@ -57,25 +57,29 @@ mapclass::mapclass()
 	invincibility = false;
 
 	//We init the lookup table:
-	for (int i = 0; i < 30; i++)
+	for (size_t i = 0; i < SDL_arraysize(vmult); i++)
 	{
-		vmult.push_back(int(i * 40));
+		vmult[i] = i * 40;
 	}
 	//We create a blank map
-	contents.resize(40 * 30);
+	SDL_memset(contents, 0, sizeof(contents));
 
-	roomdeaths.resize(20 * 20);
-	roomdeathsfinal.resize(20 * 20);
-	explored.resize(20 * 20);
+	SDL_memset(roomdeaths, 0, sizeof(roomdeaths));
+	SDL_memset(roomdeathsfinal, 0, sizeof(roomdeathsfinal));
+	resetmap();
 
 	tileset = 0;
 	initmapdata();
 
-	specialnames.resize(8);
 	resetnames();
 
-	//Areamap starts at 100,100 and extends 20x20
-	const int tmap[] = {
+	ypos = 0;
+	oldypos = 0;
+	bypos = 0;
+}
+
+//Areamap starts at 100,100 and extends 20x20
+const int mapclass::areamap[] = {
 	1,2,2,2,2,2,2,2,0,3,0,0,0,4,4,4,4,4,4,4,
 	1,2,2,2,2,2,2,0,0,3,0,0,0,0,4,4,4,4,4,4,
 	0,1,0,0,2,0,0,0,0,3,0,0,0,0,4,4,4,4,4,4,
@@ -96,13 +100,7 @@ mapclass::mapclass()
 	0,2,2,2,2,2,2,2,0,3,0,0,0,0,0,0,0,0,0,0,
 	2,2,2,2,2,0,0,2,0,3,0,0,0,0,0,0,0,0,0,0,
 	2,2,2,2,2,0,0,2,0,3,0,0,0,0,0,0,0,0,0,0,
-	};
-	areamap.insert(areamap.end(), tmap, tmap+400);
-
-	ypos = 0;
-	oldypos = 0;
-	bypos = 0;
-}
+};
 
 int mapclass::RGB(int red,int green,int blue)
 {
@@ -133,8 +131,7 @@ void mapclass::settrinket(int x, int y)
 void mapclass::resetmap()
 {
 	//clear the explored area of the map
-	explored.clear();
-	explored.resize(20 * 20);
+	SDL_memset(explored, 0, sizeof(explored));
 }
 
 void mapclass::resetnames()
@@ -529,7 +526,7 @@ void mapclass::changefinalcol(int t)
 	//change the map to colour t - for the game's final stretch.
 	//First up, the tiles. This is just a setting:
 	final_mapcol = t;
-	temp = 6 - t;
+	int temp = 6 - t;
 	//Next, entities
 	for (size_t i = 0; i < obj.entities.size(); i++)
 	{
@@ -1040,7 +1037,7 @@ void mapclass::gotoroom(int rx, int ry)
 		//Leaving the Ship
 		if (game.roomx == 104 && game.roomy == 112) music.niceplay(4);
 	}
-	temp = rx + (ry * 100);
+	int temp = rx + (ry * 100);
 	loadlevel(game.roomx, game.roomy);
 
 
@@ -1167,7 +1164,7 @@ void mapclass::loadlevel(int rx, int ry)
 	int t;
 	if (!finalmode)
 	{
-		explored[rx - 100 + ((ry - 100) * 20)] = 1;
+		explored[rx - 100 + ((ry - 100) * 20)] = true;
 		if (rx == 109 && !custommode)
 		{
 			exploretower();
@@ -1309,9 +1306,11 @@ void mapclass::loadlevel(int rx, int ry)
 #if !defined(MAKEANDPLAY)
 	case 0:
 	case 1: //World Map
+	{
 		tileset = 1;
 		extrarow = 1;
-		contents = otherlevel.loadlevel(rx, ry);
+		const int* tmap = otherlevel.loadlevel(rx, ry);
+		SDL_memcpy(contents, tmap, sizeof(contents));
 		roomname = otherlevel.roomname;
 		tileset = otherlevel.roomtileset;
 		//do the appear/remove roomname here
@@ -1331,13 +1330,17 @@ void mapclass::loadlevel(int rx, int ry)
 			hiddenname = "Dimension VVVVVV";
 		}
 		break;
+	}
 	case 2: //The Lab
-		contents = lablevel.loadlevel(rx, ry);
+	{
+		const int* tmap = lablevel.loadlevel(rx, ry);
+		SDL_memcpy(contents, tmap, sizeof(contents));
 		roomname = lablevel.roomname;
 		tileset = 1;
 		background = 2;
 		graphics.rcol = lablevel.rcol;
 		break;
+	}
 	case 3: //The Tower
 		tdrawback = true;
 		minitowermode = false;
@@ -1377,7 +1380,9 @@ void mapclass::loadlevel(int rx, int ry)
 		obj.createentity(280, 3216, 9, 8); // (shiny trinket)
 		break;
 	case 4: //The Warpzone
-		contents = warplevel.loadlevel(rx, ry);
+	{
+		const int* tmap = warplevel.loadlevel(rx, ry);
+		SDL_memcpy(contents, tmap, sizeof(contents));
 		roomname = warplevel.roomname;
 		tileset = 1;
 		background = 3;
@@ -1391,13 +1396,19 @@ void mapclass::loadlevel(int rx, int ry)
 		if (warpx) background = 3;
 		if (warpx && warpy) background = 5;
 		break;
+	}
 	case 5: //Space station
-		contents = spacestation2.loadlevel(rx, ry);
+	{
+		const int* tmap = spacestation2.loadlevel(rx, ry);
+		SDL_memcpy(contents, tmap, sizeof(contents));
 		roomname = spacestation2.roomname;
 		tileset = 0;
 		break;
+	}
 	case 6: //final level
-		contents = finallevel.loadlevel(finalx, finaly);
+	{
+		const int* tmap = finallevel.loadlevel(finalx, finaly);
+		SDL_memcpy(contents, tmap, sizeof(contents));
 		roomname = finallevel.roomname;
 		tileset = 1;
 		background = 3;
@@ -1429,6 +1440,7 @@ void mapclass::loadlevel(int rx, int ry)
 			}
 		}
 		break;
+	}
 	case 7: //Final Level, Tower 1
 		tdrawback = true;
 		minitowermode = true;
@@ -1567,7 +1579,8 @@ void mapclass::loadlevel(int rx, int ry)
 		break;
 	case 11: //Tower Hallways //Content is held in final level routine
 	{
-		contents = finallevel.loadlevel(rx, ry);
+		const int* tmap = finallevel.loadlevel(rx, ry);
+		SDL_memcpy(contents, tmap, sizeof(contents));
 		roomname = finallevel.roomname;
 		tileset = 2;
 		if (rx == 108)
@@ -1647,7 +1660,8 @@ void mapclass::loadlevel(int rx, int ry)
 			roomname=ed.level[curlevel].roomname;
 		}
 		extrarow = 1;
-		contents = ed.loadlevel(rx, ry);
+		const int* tmap = ed.loadlevel(rx, ry);
+		SDL_memcpy(contents, tmap, sizeof(contents));
 
 
 		roomtexton = false;
@@ -1865,8 +1879,8 @@ void mapclass::loadlevel(int rx, int ry)
 			if (obj.entities[i].type == 1 && obj.entities[i].behave >= 8 && obj.entities[i].behave < 10)
 			{
 				//put a block underneath
-				temp = obj.entities[i].xp / 8.0f;
-				temp2 = obj.entities[i].yp / 8.0f;
+				int temp = obj.entities[i].xp / 8.0f;
+				int temp2 = obj.entities[i].yp / 8.0f;
 				settile(temp, temp2, 1);
 				settile(temp+1, temp2, 1);
 				settile(temp+2, temp2, 1);

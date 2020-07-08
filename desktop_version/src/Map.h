@@ -79,15 +79,13 @@ public:
     void twoframedelayfix();
 
 
-    std::vector <int> roomdeaths;
-    std::vector <int> roomdeathsfinal;
-    std::vector <int> areamap;
-    std::vector <int> contents;
-    std::vector <int> explored;
-    std::vector <int> vmult;
+    int roomdeaths[20 * 20];
+    int roomdeathsfinal[20 * 20];
+    static const int areamap[20 * 20];
+    int contents[40 * 30];
+    bool explored[20 * 20];
+    int vmult[30];
 
-    int temp;
-    int temp2;
     int background;
     int rcol;
     int tileset;
@@ -134,7 +132,7 @@ public:
     int customzoom;
     bool customshowmm;
 
-    std::vector<std::string> specialnames;
+    std::string specialnames[8];
     int glitchmode;
     int glitchdelay;
     std::string glitchname;

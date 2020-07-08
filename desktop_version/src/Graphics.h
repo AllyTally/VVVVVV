@@ -46,8 +46,7 @@ public:
 
 	void drawcoloredtile(int x, int y, int t, int r, int g, int b);
 
-	void drawmenu(int cr, int cg, int cb);
-	void drawlevelmenu(int cr, int cg, int cb);
+	void drawmenu(int cr, int cg, int cb, bool levelmenu = false);
 
 	void processfade();
 
@@ -215,7 +214,6 @@ public:
 
 	int m;
 
-	std::vector <SDL_Surface*> backgrounds;
 	std::vector <SDL_Surface*> images;
 
 	std::vector <SDL_Surface*> tele;
@@ -226,9 +224,7 @@ public:
 	std::vector <SDL_Surface*> sprites;
 	std::vector <SDL_Surface*> flipsprites;
 	std::vector <SDL_Surface*> bfont;
-	std::vector <SDL_Surface*> bfontmask;
 	std::vector <SDL_Surface*> flipbfont;
-	std::vector <SDL_Surface*> flipbfontmask;
 
 	bool flipmode;
 	bool setflipmode;
@@ -246,7 +242,6 @@ public:
 	SDL_Rect bfont_rect;
 	SDL_Rect tiles_rect;
 	SDL_Rect sprites_rect;
-	SDL_Rect bfontmask_rect;
 	SDL_Rect images_rect;
 	SDL_Rect bg_rect;
 	SDL_Rect line_rect;
@@ -273,7 +268,7 @@ public:
 	int fademode;
 	int fadeamount;
 	int oldfadeamount;
-	std::vector <int> fadebars;
+	int fadebars[15];
 
 	bool trinketcolset;
 	int trinketr, trinketg, trinketb;
@@ -284,14 +279,16 @@ public:
 	int cutscenebarspos;
 	int oldcutscenebarspos;
 
-	std::vector<SDL_Rect> stars;
-	std::vector<int> starsspeed;
+	static const int numstars = 50;
+	SDL_Rect stars[numstars];
+	int starsspeed[numstars];
 
+	static const int numbackboxes = 18;
 	int spcol, spcoldel;
-	std::vector<SDL_Rect> backboxes;
-	std::vector<int> backboxvx;
-	std::vector<int> backboxvy;
-	std::vector<float> backboxint;
+	SDL_Rect backboxes[numbackboxes];
+	int backboxvx[numbackboxes];
+	int backboxvy[numbackboxes];
+	float backboxint[numbackboxes];
 
 	int warpskip, warpfcol, warpbcol;
 
