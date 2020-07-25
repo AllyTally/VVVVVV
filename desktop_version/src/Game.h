@@ -1,12 +1,9 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <vector>
+#include <SDL.h>
 #include <string>
-#include "SDL.h"
-#include "Maths.h"
-#include "UtilityClass.h"
-#include "GraphicsUtil.h"
+#include <vector>
 
 struct MenuOption
 {
@@ -93,7 +90,6 @@ class Game
 {
 public:
     void init(void);
-    ~Game(void);
 
 
     int crewrescued();
@@ -129,7 +125,7 @@ public:
 
     void unlocknum(int t);
 
-    void loadstats();
+    void loadstats(int *width, int *height, bool *vsync);
 
     void  savestats();
 
@@ -355,7 +351,6 @@ public:
     bool savemystats;
 
 
-    bool advanced_mode;
     bool fullScreenEffect_badSignal;
     bool useLinearFilter;
     int stretchMode;
@@ -393,6 +388,7 @@ public:
     int playrx;
     int playry;
     int playgc;
+    int playmusic;
     std::string playassets;
 
     void quittomenu();

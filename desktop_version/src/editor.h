@@ -3,10 +3,9 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
-#include <vector>
+#include <SDL.h>
 #include <string>
-#include "Script.h"
-#include "Graphics.h"
+#include <vector>
 
 // Text entry field type
 enum textmode {
@@ -101,16 +100,6 @@ class EditorData
   std::string creator;
 
   std::string modifier;
-  std::string timeCreated;
-  std::string timeModified;
-
-private:
-
-
-  EditorData()
-  {
-  }
-
 };
 
 struct GhostInfo {
@@ -145,7 +134,7 @@ class editorclass{
 
   void reset();
   void getlin(const enum textmode mode, const std::string& prompt, std::string* ptr);
-  const int* loadlevel(int rxi, int ryi);
+  const short* loadlevel(int rxi, int ryi);
 
   void placetile(int x, int y, int t);
 
@@ -205,7 +194,7 @@ class editorclass{
   std::vector<std::string> getLevelDirFileNames( );
   static const int maxwidth = 20, maxheight = 20; //Special; the physical max the engine allows
   static const int numrooms = maxwidth * maxheight;
-  int contents[40 * 30 * numrooms];
+  short contents[40 * 30 * numrooms];
   int vmult[30 * maxheight];
   int numtrinkets();
   int numcrewmates();
