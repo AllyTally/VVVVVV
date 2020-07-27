@@ -714,13 +714,15 @@ void gameinput()
                         //Quit menu, same conditions as in game menu
 
                         //game.mainmenu = 101;
-                        game.swnmode = false;
-                        graphics.fademode = 2;
-                        music.fadeout();
-                        game.fadetolab = true;
-                        game.fadetolabdelay = 16;
-                        game.state = 80;
-                        break;
+                        if (graphics.fademode == 0) {
+                            game.swnmode = false;
+                            graphics.fademode = 2;
+                            music.fadeout();
+                            game.fadetolab = true;
+                            game.fadetolabdelay = 16;
+                            game.state = 80;
+                            break;
+                        }
         
                         //game.gamestate = MAPMODE;
                         //game.gamesaved = false;
@@ -741,12 +743,14 @@ void gameinput()
                 {
                     game.mapheld = true;
                     //Quit menu, same conditions as in game menu
-                    game.swnmode = false;
-                    graphics.fademode = 2;
-                    music.fadeout();
-                    game.fadetolab = true;
-                    game.fadetolabdelay = 16;
-                    game.state = 80;
+                    if (graphics.fademode == 0) {
+                        game.swnmode = false;
+                        graphics.fademode = 2;
+                        music.fadeout();
+                        game.fadetolab = true;
+                        game.fadetolabdelay = 16;
+                        game.state = 80;
+                    }
                     //game.gamestate = MAPMODE;
                     //game.gamesaved = false;
                     //graphics.resumegamemode = false;
