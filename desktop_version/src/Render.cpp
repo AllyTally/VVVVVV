@@ -34,6 +34,7 @@ void menurender()
     case Menu::mainmenu:
         graphics.setcolreal(graphics.getRGB(tr, tg, tb));
         graphics.drawimagecol(0, -1, 46, tr, tg, tb, true);
+		graphics.Print( 10, 230, "Port by Ally", tr/2, tg/2, tb/2);
         graphics.Print( 310 - (16*8), 230, "1.0 (VVVVVV 2.3)", tr/2, tg/2, tb/2);
         break;
     case Menu::options:
