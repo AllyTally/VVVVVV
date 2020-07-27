@@ -354,6 +354,7 @@ void menuactionpress()
         music.playef(11);
         game.mainmenu = 0;
         graphics.fademode = 2;
+        break;
     }
     /*case Menu::newgamewarning:
         switch (game.currentmenuoption)
