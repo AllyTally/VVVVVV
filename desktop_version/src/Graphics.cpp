@@ -288,13 +288,12 @@ void Graphics::MakeTileArray()
 
 void Graphics::maketelearray()
 {
-    PROCESS_TILESHEET_RENAME(teleporter, tele, 96, )
+    
 }
 
 void Graphics::MakeSpriteArray()
 {
     PROCESS_TILESHEET(sprites, 32, )
-    PROCESS_TILESHEET(flipsprites, 32, )
 }
 
 #undef PROCESS_TILESHEET
@@ -795,22 +794,22 @@ void Graphics::drawgui()
         {
             if (flipmode)
             {
-                drawimage(5, 0, 180, true);
+                //drawimage(5, 0, 180, true);
             }
             else
             {
-                drawimage(0, 0, 12, true);
+                //drawimage(0, 0, 12, true);
             }
         }
         else if ((textbox[i].yp == 12 || textbox[i].yp == 180) && textbox[i].g == 165 && textbox[i].allowspecial)
         {
             if (flipmode)
             {
-                drawimage(6, 0, 180, true);
+                //drawimage(6, 0, 180, true);
             }
             else
             {
-                drawimage(4, 0, 12, true);
+                //drawimage(4, 0, 12, true);
             }
         }
         if (flipmode)
@@ -1817,7 +1816,7 @@ void Graphics::drawentities()
             break;
         case 11:    //The fucking elephant
             setcolreal(obj.entities[i].realcol);
-            drawimagecol(3, xp, yp - yoff);
+            //drawimagecol(3, xp, yp - yoff);
             break;
         case 12:         // Regular sprites that don't wrap
             if (!INBOUNDS(obj.entities[i].drawframe, (*spritesvec)))
@@ -3188,34 +3187,17 @@ void Graphics::reloadresources() {
 	CLEAR_ARRAY(tiles3)
 	CLEAR_ARRAY(entcolours)
 	CLEAR_ARRAY(sprites)
-	CLEAR_ARRAY(flipsprites)
-	CLEAR_ARRAY(tele)
 	CLEAR_ARRAY(bfont)
-	CLEAR_ARRAY(flipbfont)
 
 	#undef CLEAR_ARRAY
 
 	MakeTileArray();
 	MakeSpriteArray();
-	maketelearray();
 	Makebfont();
 
 	images.clear();
 
-	images.push_back(grphx.im_image0);
-	images.push_back(grphx.im_image1);
-	images.push_back(grphx.im_image2);
-	images.push_back(grphx.im_image3);
-	images.push_back(grphx.im_image4);
-	images.push_back(grphx.im_image5);
-	images.push_back(grphx.im_image6);
-
-	images.push_back(grphx.im_image7);
-	images.push_back(grphx.im_image8);
-	images.push_back(grphx.im_image9);
-	images.push_back(grphx.im_image10);
-	images.push_back(grphx.im_image11);
-	images.push_back(grphx.im_image12);
+	images.push_back(grphx.im_gamelogo);
 
 	music.init();
 }

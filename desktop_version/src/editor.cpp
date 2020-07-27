@@ -2260,7 +2260,7 @@ void editorclass::generatecustomminimap()
         map.custommmysize=180-(map.custommmyoff*2);
     }
 
-    FillRect(graphics.images[12], graphics.getRGB(0,0,0));
+    //FillRect(graphics.images[12], graphics.getRGB(0,0,0));
 
     int tm=0;
     int temp=0;
@@ -2284,7 +2284,7 @@ void editorclass::generatecustomminimap()
                         if(temp>=1)
                         {
                             //Fill in this pixel
-                            FillRect(graphics.images[12], (i2*48)+i, (j2*36)+j, 1, 1, graphics.getRGB(tm, tm, tm));
+                            //FillRect(graphics.images[12], (i2*48)+i, (j2*36)+j, 1, 1, graphics.getRGB(tm, tm, tm));
                         }
                     }
                 }
@@ -2310,7 +2310,7 @@ void editorclass::generatecustomminimap()
                         if(temp>=1)
                         {
                             //Fill in this pixel
-                            FillRect(graphics.images[12], (i2*24)+i, (j2*18)+j, 1, 1, graphics.getRGB(tm, tm, tm));
+                            //FillRect(graphics.images[12], (i2*24)+i, (j2*18)+j, 1, 1, graphics.getRGB(tm, tm, tm));
                         }
                     }
                 }
@@ -2335,7 +2335,7 @@ void editorclass::generatecustomminimap()
                         if(temp>=1)
                         {
                             //Fill in this pixel
-                            FillRect(graphics.images[12], (i2*12)+i, (j2*9)+j, 1, 1, graphics.getRGB(tm, tm, tm));
+                            //FillRect(graphics.images[12], (i2*12)+i, (j2*9)+j, 1, 1, graphics.getRGB(tm, tm, tm));
                         }
                     }
                 }

@@ -67,11 +67,11 @@ void titlelogic()
             {
                 music.play(6);
             }
-            else if (game.menudest == Menu::gameover2)
+            //else if (game.menudest == Menu::gameover2)
             {
                 music.playef(11);
             }
-            else if (game.menudest == Menu::timetrialcomplete3)
+            //else if (game.menudest == Menu::timetrialcomplete3)
             {
                 music.playef(3);
             }
@@ -228,7 +228,7 @@ void gamecompletelogic2()
         FILESYSTEM_unmountassets(); // should be before music.playef(18)
         music.playef(18);
         game.returntomenu(Menu::play);
-        game.createmenu(Menu::gamecompletecontinue);
+        //game.createmenu(Menu::gamecompletecontinue);
         map.nexttowercolour();
     }
 }

@@ -2618,7 +2618,7 @@ void scriptclass::resetgametomenu()
 	obj.entities.clear();
 	graphics.fademode = 4;
 	map.tdrawback = true;
-	game.createmenu(Menu::gameover);
+	//game.createmenu(Menu::gameover);
 }
 
 void scriptclass::startgamemode( int t )
@@ -2981,8 +2981,9 @@ void scriptclass::startgamemode( int t )
 		}
 		map.gotoroom(game.saverx, game.savery);
 		map.initmapdata();
-		music.play(11);
 		graphics.fademode = 4;
+		map.warpto(119, 108, obj.getplayer(), 19, 10);
+		game.state = 9;
 		break;
 	case 12:
 		game.gamestate = GAMEMODE;

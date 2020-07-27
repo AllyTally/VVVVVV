@@ -4602,7 +4602,8 @@ void entityclass::customwarplinecheck(int i) {
 
 void entityclass::entitycollisioncheck()
 {
-    std::vector<SDL_Surface*>& spritesvec = graphics.flipmode ? graphics.flipsprites : graphics.sprites;
+    //std::vector<SDL_Surface*>& spritesvec = graphics.flipmode ? graphics.flipsprites : graphics.sprites;
+    std::vector<SDL_Surface*>& spritesvec = graphics.sprites;
 
     for (size_t i = 0; i < entities.size(); i++)
     {

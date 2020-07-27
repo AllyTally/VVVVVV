@@ -1326,7 +1326,6 @@ void mapclass::loadlevel(int rx, int ry)
 
 	switch(t)
 	{
-#if !defined(MAKEANDPLAY)
 	case 0:
 	case 1: //World Map
 	{
@@ -1348,6 +1347,7 @@ void mapclass::loadlevel(int rx, int ry)
 		}
 		break;
 	}
+#if !defined(MAKEANDPLAY)
 	case 2: //The Lab
 	{
 		const short* tmap = lablevel.loadlevel(rx, ry);

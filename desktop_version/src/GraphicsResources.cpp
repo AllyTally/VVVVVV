@@ -89,23 +89,8 @@ void GraphicsResources::init(void)
 	im_tiles3 =		LoadImage("graphics/tiles3.png");
 	im_entcolours =		LoadImage("graphics/entcolours.png");
 	im_sprites =		LoadImage("graphics/sprites.png");
-	im_flipsprites =	LoadImage("graphics/flipsprites.png");
 	im_bfont =		LoadImage("graphics/font.png");
-	im_teleporter =		LoadImage("graphics/teleporter.png");
-
-	im_image0 =		LoadImage("graphics/levelcomplete.png", false);
-	im_image1 =		LoadImage("graphics/minimap.png", true, true);
-	im_image2 =		LoadImage("graphics/covered.png", true, true);
-	im_image3 =		LoadImage("graphics/elephant.png");
-	im_image4 =		LoadImage("graphics/gamecomplete.png", false);
-	im_image5 =		LoadImage("graphics/fliplevelcomplete.png", false);
-	im_image6 =		LoadImage("graphics/flipgamecomplete.png", false);
-	im_image7 =		LoadImage("graphics/site.png", false);
-	im_image8 =		LoadImage("graphics/site2.png");
-	im_image9 =		LoadImage("graphics/site3.png");
-	im_image10 =		LoadImage("graphics/ending.png");
-	im_image11 =		LoadImage("graphics/site4.png");
-	im_image12 =		LoadImage("graphics/minimap.png");
+	im_gamelogo =	LoadImage("graphics/gamelogo.png");
 }
 
 
@@ -120,22 +105,7 @@ void GraphicsResources::destroy(void)
 	CLEAR(im_tiles3);
 	CLEAR(im_entcolours);
 	CLEAR(im_sprites);
-	CLEAR(im_flipsprites);
 	CLEAR(im_bfont);
-	CLEAR(im_teleporter);
-
-	CLEAR(im_image0);
-	CLEAR(im_image1);
-	CLEAR(im_image2);
-	CLEAR(im_image3);
-	CLEAR(im_image4);
-	CLEAR(im_image5);
-	CLEAR(im_image6);
-	CLEAR(im_image7);
-	CLEAR(im_image8);
-	CLEAR(im_image9);
-	CLEAR(im_image10);
-	CLEAR(im_image11);
-	CLEAR(im_image12);
+	CLEAR(im_gamelogo);
 #undef CLEAR
 }

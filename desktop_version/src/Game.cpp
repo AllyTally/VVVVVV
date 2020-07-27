@@ -1364,7 +1364,7 @@ void Game::updatestate()
             graphics.fademode = 4;
             graphics.backgrounddrawn = true;
             map.tdrawback = true;
-            createmenu(Menu::timetrialcomplete);
+            //createmenu(Menu::timetrialcomplete);
             state = 0;
             break;
 
@@ -1886,7 +1886,7 @@ void Game::updatestate()
                 if(!muted && ed.levmusic>0) music.fadeMusicVolumeIn(3000);
             }
             graphics.showcutscenebars = false;
-            returntomenu(Menu::levellist);
+            //returntomenu(Menu::levellist);
             break;
 #endif
         case 1014:
@@ -3245,7 +3245,7 @@ void Game::updatestate()
             graphics.fademode = 4;
             graphics.backgrounddrawn = true;
             map.tdrawback = true;
-            createmenu(Menu::nodeathmodecomplete);
+            //createmenu(Menu::nodeathmodecomplete);
             state = 0;
             break;
 
@@ -6530,135 +6530,17 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
     switch (t)
     {
     case Menu::mainmenu:
-#if !defined(MAKEANDPLAY)
-        option("start game");
-#endif
-#if !defined(NO_CUSTOM_LEVELS)
-        option("player levels");
-#endif
+        option("play game");
+        option("about vvvvvv");
         option("graphic options");
         option("game options");
-#if !defined(MAKEANDPLAY)
-        option("view credits");
-#endif
         option("quit game");
-        menuyoff = -10;
+        menuyoff = 0;
         maxspacing = 15;
-        break;
-#if !defined(NO_CUSTOM_LEVELS)
-    case Menu::playerworlds:
-        option("play a level");
- #if !defined(NO_EDITOR)
-        option("level editor");
- #endif
-        option("open level folder", FILESYSTEM_openDirectoryEnabled());
-        option("back to menu");
-        menuyoff = -40;
-        maxspacing = 15;
-        break;
-    case Menu::levellist:
-        if(ed.ListOfMetaData.size()==0)
-        {
-            option("ok");
-            menuyoff = -20;
-        }
-        else
-        {
-            for(int i=0; i<(int) ed.ListOfMetaData.size(); i++) // FIXME: int/size_t! -flibit
-            {
-                if(i>=levelpage*8 && i< (levelpage*8)+8)
-                {
-                    //This is, er, suboptimal. Whatever, life optimisation and all that
-                    int tvar=-1;
-                    for(size_t j=0; j<customlevelstats.size(); j++)
-                    {
-                        if(ed.ListOfMetaData[i].filename.substr(7) == customlevelstats[j].name)
-                        {
-                            tvar=j;
-                            break;
-                        }
-                    }
-                    const char* prefix;
-                    if(tvar>=0)
-                    {
-                        switch (customlevelstats[tvar].score)
-                        {
-                        case 0:
-                        {
-                            static const char tmp[] = "   ";
-                            prefix = tmp;
-                            break;
-                        }
-                        case 1:
-                        {
-                            static const char tmp[] = " * ";
-                            prefix = tmp;
-                            break;
-                        }
-                        case 3:
-                        {
-                            static const char tmp[] = "** ";
-                            prefix = tmp;
-                            break;
-                        }
-                        default:
-                            SDL_assert(0 && "Unhandled menu text prefix!");
-                            prefix = "";
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        static const char tmp[] = "   ";
-                        prefix = tmp;
-                    }
-                    char text[menutextbytes];
-                    SDL_snprintf(text, sizeof(text), "%s%s", prefix, ed.ListOfMetaData[i].title.c_str());
-                    for (size_t ii = 0; ii < SDL_arraysize(text); ii++)
-                    {
-                        text[ii] = SDL_tolower(text[ii]);
-                    }
-                    option(text);
-                }
-            }
-            if((size_t) ((levelpage*8)+8) <ed.ListOfMetaData.size())
-            {
-                option("next page");
-            }
-            else
-            {
-                option("first page");
-            }
-            if (levelpage == 0)
-            {
-                option("last page");
-            }
-            else
-            {
-                option("previous page");
-            }
-            option("return to menu");
-
-            menuxoff = 20;
-            menuyoff = 70-(menuoptions.size()*10);
-            menuspacing = 5;
-            return; // skip automatic centering, will turn out bad with levels list
-        }
-        break;
-#endif
-    case Menu::quickloadlevel:
-        option("continue from save");
-        option("start from beginning");
-        option("back to levels");
-        menuyoff = -30;
         break;
     case Menu::youwannaquit:
         option("yes, quit");
         option("no, return");
-        menuyoff = -20;
-        break;
-    case Menu::errornostart:
-        option("ok");
         menuyoff = -20;
         break;
     case Menu::graphicoptions:
@@ -6672,78 +6554,23 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("return");
         menuyoff = -10;
         break;
-    case Menu::ed_settings:
-        option("change description");
-        option("edit scripts");
-        option("change music");
-        option("editor ghosts");
-        option("load level");
-        option("save level");
-        option("quit to main menu");
-
-        menuyoff = -20;
-        maxspacing = 15;
-        break;
-    case Menu::ed_desc:
-        option("change name");
-        option("change author");
-        option("change description");
-        option("change website");
-        option("back to settings");
-
-        menuyoff = 6;
-        maxspacing = 15;
-        break;
-    case Menu::ed_music:
-        option("next song");
-        option("back");
-        menuyoff = 16;
-        maxspacing = 15;
-        break;
-    case Menu::ed_quit:
-        option("yes, save and quit");
-        option("no, quit without saving");
-        option("return to editor");
-        menuyoff = 8;
-        maxspacing = 15;
-        break;
     case Menu::options:
         option("accessibility options");
         option("advanced options");
-#if !defined(MAKEANDPLAY)
-        if (ingame_titlemode && unlock[18])
-#endif
-        {
-            option("flip mode");
-        }
-#if !defined(MAKEANDPLAY)
-        option("unlock play modes");
-#endif
         option("game pad options");
         option("clear data");
-        //Add extra menu for mmmmmm mod
-        if(music.mmmmmm){
-            option("soundtrack");
-        }
-
         option("return");
         menuyoff = 0;
         break;
     case Menu::advancedoptions:
         option("toggle mouse");
         option("unfocus pause");
-        option("fake load screen");
-        option("room name background");
-        option("glitchrunner mode");
         option("return");
         menuyoff = 0;
         break;
     case Menu::accessibility:
         option("animated backgrounds");
         option("screen effects");
-        option("text outline");
-        option("invincibility", !ingame_titlemode || (!game.insecretlab && !game.intimetrial && !game.nodeathmode));
-        option("slowdown", !ingame_titlemode || (!game.insecretlab && !game.intimetrial && !game.nodeathmode));
         option("return");
         menuyoff = 0;
         break;
@@ -6760,306 +6587,12 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("yes, delete everything");
         menuyoff = 64;
         break;
-    case Menu::setinvincibility:
-        option("no, return to options");
-        option("yes, enable");
-        menuyoff = 64;
-        break;
-    case Menu::setslowdown:
-        option("normal speed");
-        option("80% speed");
-        option("60% speed");
-        option("40% speed");
-        menuyoff = 16;
-        break;
-    case Menu::unlockmenu:
-        option("unlock time trials");
-        option("unlock intermissions", !unlock[16]);
-        option("unlock no death mode", !unlock[17]);
-        option("unlock flip mode", !unlock[18]);
-        option("unlock ship jukebox", (stat_trinkets<20));
-        option("unlock secret lab", !unlock[8]);
-        option("return");
-        menuyoff = -20;
-        break;
-    case Menu::credits:
-        option("next page");
-        option("last page");
-        option("return");
-        menuyoff = 64;
-        break;
-    case Menu::credits2:
-        option("next page");
-        option("previous page");
-        option("return");
-        menuyoff = 64;
-        break;
-    case Menu::credits25:
-        option("next page");
-        option("previous page");
-        option("return");
-        menuyoff = 64;
-        break;
-    case Menu::credits3:
-        option("next page");
-        option("previous page");
-        option("return");
-        menuyoff = 64;
-        break;
-    case Menu::credits4:
-        option("next page");
-        option("previous page");
-        option("return");
-        menuyoff = 64;
-        break;
-    case Menu::credits5:
-        option("next page");
-        option("previous page");
-        option("return");
-        menuyoff = 64;
-        break;
-    case Menu::credits6:
-        option("first page");
-        option("previous page");
-        option("return");
-        menuyoff = 64;
-        break;
     case Menu::play:
     {
-        //Ok, here's where the unlock stuff comes into it:
-        //First up, time trials:
-        int temp = 0;
-        if (unlock[0] && stat_trinkets >= 3 && !unlocknotify[9]) temp++;
-        if (unlock[1] && stat_trinkets >= 6 && !unlocknotify[10]) temp++;
-        if (unlock[2] && stat_trinkets >= 9 && !unlocknotify[11]) temp++;
-        if (unlock[3] && stat_trinkets >= 12 && !unlocknotify[12]) temp++;
-        if (unlock[4] && stat_trinkets >= 15 && !unlocknotify[13]) temp++;
-        if (unlock[5] && stat_trinkets >= 18 && !unlocknotify[14]) temp++;
-        if (temp > 0)
-        {
-            //you've unlocked a time trial!
-            if (unlock[0] && stat_trinkets >= 3)
-            {
-                unlocknotify[9] = true;
-                unlock[9] = true;
-            }
-            if (unlock[1] && stat_trinkets >= 6)
-            {
-                unlocknotify[10] = true;
-                unlock[10] = true;
-            }
-            if (unlock[2] && stat_trinkets >= 9)
-            {
-                unlocknotify[11] = true;
-                unlock[11] = true;
-            }
-            if (unlock[3] && stat_trinkets >= 12)
-            {
-                unlocknotify[12] = true;
-                unlock[12] = true;
-            }
-            if (unlock[4] && stat_trinkets >= 15)
-            {
-                unlocknotify[13] = true;
-                unlock[13] = true;
-            }
-            if (unlock[5] && stat_trinkets >= 18)
-            {
-                unlocknotify[14] = true;
-                unlock[14] = true;
-            }
-
-            if (temp == 1)
-            {
-                createmenu(Menu::unlocktimetrial);
-                savemystats = true;
-            }
-            else if (temp > 1)
-            {
-                createmenu(Menu::unlocktimetrials);
-                savemystats = true;
-            }
-        }
-        else
-        {
-            //Alright, we haven't unlocked any time trials. How about no death mode?
-            temp = 0;
-            if (bestrank[0] >= 2) temp++;
-            if (bestrank[1] >= 2) temp++;
-            if (bestrank[2] >= 2) temp++;
-            if (bestrank[3] >= 2) temp++;
-            if (bestrank[4] >= 2) temp++;
-            if (bestrank[5] >= 2) temp++;
-            if (temp >= 4 && !unlocknotify[17])
-            {
-                //Unlock No Death Mode
-                unlocknotify[17] = true;
-                unlock[17] = true;
-                createmenu(Menu::unlocknodeathmode);
-                savemystats = true;
-            }
-            //Alright then! Flip mode?
-            else if (unlock[5] && !unlocknotify[18])
-            {
-                unlock[18] = true;
-                unlocknotify[18] = true;
-                createmenu(Menu::unlockflipmode);
-                savemystats = true;
-            }
-            //What about the intermission levels?
-            else if (unlock[7] && !unlocknotify[16])
-            {
-                unlock[16] = true;
-                unlocknotify[16] = true;
-                createmenu(Menu::unlockintermission);
-                savemystats = true;
-            }
-            else
-            {
-                if (save_exists())
-                {
-                    option("continue");
-                }
-                else
-                {
-                    option("new game");
-                }
-                //ok, secret lab! no notification, but test:
-                if (unlock[8])
-                {
-                    option("secret lab", !map.invincibility && slowdown == 30);
-                }
-                option("play modes");
-                if (save_exists())
-                {
-                    option("new game");
-                }
-                option("return");
-                if (unlock[8])
-                {
-                    menuyoff = -30;
-                }
-                else
-                {
-                    menuyoff = -40;
-                }
-            }
-        }
+        option("new game");
+        option("return");
         break;
     }
-    case Menu::unlocktimetrial:
-    case Menu::unlocktimetrials:
-    case Menu::unlocknodeathmode:
-    case Menu::unlockintermission:
-    case Menu::unlockflipmode:
-        option("continue");
-        menuyoff = 70;
-        break;
-    case Menu::newgamewarning:
-        option("start new game");
-        option("return to menu");
-        menuyoff = 64;
-        break;
-    case Menu::playmodes:
-        option("time trials", !map.invincibility && slowdown == 30);
-        option("intermissions", unlock[16]);
-        option("no death mode", unlock[17] && !map.invincibility && slowdown == 30);
-        option("flip mode", unlock[18]);
-        option("return to play menu");
-        menuyoff = 8;
-        maxspacing = 20;
-        break;
-    case Menu::intermissionmenu:
-        option("play intermission 1");
-        option("play intermission 2");
-        option("return to play menu");
-        menuyoff = -35;
-        break;
-    case Menu::playint1:
-        option("Vitellary");
-        option("Vermilion");
-        option("Verdigris");
-        option("Victoria");
-        option("return");
-        menuyoff = 10;
-        break;
-    case Menu::playint2:
-        option("Vitellary");
-        option("Vermilion");
-        option("Verdigris");
-        option("Victoria");
-        option("return");
-        menuyoff = 10;
-        break;
-    case Menu::continuemenu:
-        map.settowercolour(3);
-        option("continue from teleporter");
-        option("continue from quicksave");
-        option("return to play menu");
-        menuyoff = 20;
-        break;
-    case Menu::startnodeathmode:
-        option("disable cutscenes");
-        option("enable cutscenes");
-        option("return to play menu");
-        menuyoff = 40;
-        break;
-    case Menu::gameover:
-        menucountdown = 120;
-        menudest=Menu::gameover2;
-        break;
-    case Menu::gameover2:
-        option("return to play menu");
-        menuyoff = 80;
-        break;
-    case Menu::unlockmenutrials:
-        option("space station 1", !unlock[9]);
-        option("the laboratory", !unlock[10]);
-        option("the tower", !unlock[11]);
-        option("space station 2", !unlock[12]);
-        option("the warp zone", !unlock[13]);
-        option("the final level", !unlock[14]);
-
-        option("return to unlock menu");
-        menuyoff = 0;
-        break;
-    case Menu::timetrials:
-        option(unlock[9] ? "space station 1" : "???", unlock[9]);
-        option(unlock[10] ? "the laboratory" : "???", unlock[10]);
-        option(unlock[11] ? "the tower" : "???", unlock[11]);
-        option(unlock[12] ? "space station 2" : "???", unlock[12]);
-        option(unlock[13] ? "the warp zone" : "???", unlock[13]);
-        option(unlock[14] ? "the final level" : "???", unlock[14]);
-
-        option("return to play menu");
-        menuyoff = 0;
-        maxspacing = 15;
-        break;
-    case Menu::nodeathmodecomplete:
-        menucountdown = 90;
-        menudest = Menu::nodeathmodecomplete2;
-        break;
-    case Menu::nodeathmodecomplete2:
-        option("return to play menu");
-        menuyoff = 70;
-        break;
-    case Menu::timetrialcomplete:
-        menucountdown = 90;
-        menudest=Menu::timetrialcomplete2;
-        break;
-    case Menu::timetrialcomplete2:
-        menucountdown = 60;
-        menudest=Menu::timetrialcomplete3;
-        break;
-    case Menu::timetrialcomplete3:
-        option("return to play menu");
-        option("try again");
-        menuyoff = 70;
-        break;
-    case Menu::gamecompletecontinue:
-        option("return to play menu");
-        menuyoff = 70;
-        break;
     }
 
     // Automatically center the menu. We must check the width of the menu with the initial horizontal spacing.
@@ -7252,40 +6785,7 @@ void Game::quittomenu()
     graphics.backgrounddrawn = false;
     map.tdrawback = true;
     graphics.flipmode = false;
-    //Don't be stuck on the summary screen,
-    //or "who do you want to play the level with?"
-    //or "do you want cutscenes?"
-    //or the confirm-load-quicksave menu
-    if (intimetrial)
-    {
-        returntomenu(Menu::timetrials);
-    }
-    else if (inintermission)
-    {
-        returntomenu(Menu::intermissionmenu);
-    }
-    else if (nodeathmode)
-    {
-        returntomenu(Menu::playmodes);
-    }
-    else if (map.custommode)
-    {
-        returntomenu(Menu::levellist);
-    }
-    else if (save_exists() || anything_unlocked())
-    {
-        returntomenu(Menu::play);
-        if (!insecretlab)
-        {
-            //Select "continue"
-            currentmenuoption = 0;
-        }
-    }
-    else
-    {
         createmenu(Menu::mainmenu);
-    }
-    script.hardreset();
 }
 
 void Game::returntolab()
