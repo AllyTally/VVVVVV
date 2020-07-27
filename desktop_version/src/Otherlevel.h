@@ -6,7 +6,7 @@
 class otherlevelclass
 {
 public:
-    const short* loadlevel(int rx, int ry);
+    const short* loadlevel(int room_id);
 
     std::string roomname;
 

@@ -1331,7 +1331,10 @@ void mapclass::loadlevel(int rx, int ry)
 	{
 		tileset = 1;
 		extrarow = 1;
-		const short* tmap = otherlevel.loadlevel(rx, ry);
+		//const short* tmap = otherlevel.loadlevel(rx, ry);
+
+		const short* tmap = otherlevel.loadlevel(game.swnroommode);
+
 		SDL_memcpy(contents, tmap, sizeof(contents));
 		roomname = otherlevel.roomname;
 		tileset = otherlevel.roomtileset;

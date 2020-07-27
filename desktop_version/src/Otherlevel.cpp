@@ -4,20 +4,17 @@
 #include "Entity.h"
 #include "MakeAndPlay.h"
 
-const short* otherlevelclass::loadlevel(int rx, int ry)
+const short* otherlevelclass::loadlevel(int room_id)
 {
 	int t;
 	roomtileset = 1;
 
-	rx -= 100;
-	ry -= 100;
-	t = rx + (ry * 100);
 	const short* result;
 	roomname = "";
 
-	switch(t)
+	switch(room_id)
 	{
-	case rn(19, 8):
+	case 0:
 	{
 		//The SUPER GRAVITRON
 

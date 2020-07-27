@@ -2951,6 +2951,7 @@ void scriptclass::startgamemode( int t )
 		break;
 	case 11:
 		game.gamestate = GAMEMODE;
+
 		hardreset();
 
 		game.startspecial(0);
@@ -2969,7 +2970,8 @@ void scriptclass::startgamemode( int t )
 		map.showteleporters = true;
 
 		//set flipmode
-		if (graphics.setflipmode) graphics.flipmode = true;
+		//if (graphics.setflipmode) graphics.flipmode = true;
+		graphics.flipmode = false;
 
 		if(obj.entities.empty())
 		{

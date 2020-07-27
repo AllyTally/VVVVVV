@@ -554,11 +554,11 @@ void gamelogic()
                 game.swnstate3 = 0;
                 game.swnstate4 = 0;
                 game.swndelay = 0;
-                if (game.swntimer >= game.swnrecord)
+                if (game.swntimer >= game.swnrecords[game.swnroommode])
                 {
                     if (game.swnmessage == 0) music.playef(25);
                     game.swnmessage = 1;
-                    game.swnrecord = game.swntimer;
+                    game.swnrecords[game.swnroommode] = game.swntimer;
                     game.savestats();
                 }
             }
@@ -673,7 +673,7 @@ void gamelogic()
             else if(game.swngame==1)   //super gravitron game
             {
                 game.swntimer += 1;
-                if (game.swntimer > game.swnrecord) game.swnrecord = game.swntimer;
+                if (game.swntimer > game.swnrecords[game.swnroommode]) game.swnrecords[game.swnroommode] = game.swntimer;
 
                 if (game.swntimer >= 150 && game.swnrank == 0)
                 {

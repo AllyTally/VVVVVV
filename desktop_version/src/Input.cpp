@@ -125,6 +125,7 @@ void menuactionpress()
         case 0:
             //Play
             music.playef(11);
+            game.swnroommode = 0;
             game.mainmenu = 11;
             graphics.fademode = 2;
             break;

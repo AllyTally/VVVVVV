@@ -204,6 +204,9 @@ public:
     bool swnmode;
     int swngame, swnstate, swnstate2, swnstate3, swnstate4, swndelay, swndeaths;
     int swntimer, swncolstate, swncoldelay;
+    int swnroommode;
+    bool swnmodesunlocked[1];
+    bool swnrecords[1];
     int  swnrecord, swnbestrank, swnrank, swnmessage;
 
     //SuperCrewMate Stuff

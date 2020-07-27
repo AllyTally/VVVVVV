@@ -23,6 +23,22 @@
 #define strcasecmp stricmp
 #endif
 
+#define LOAD_ARRAY_RENAME(ARRAY_NAME, DEST) \
+    if (pKey == #ARRAY_NAME) \
+    { \
+        std::string TextString = pText; \
+        if (TextString.length()) \
+        { \
+            std::vector<std::string> values = split(TextString, ','); \
+            for (size_t i = 0; i < SDL_min(SDL_arraysize(DEST), values.size()); i++) \
+            { \
+                DEST[i] = atoi(values[i].c_str()); \
+            } \
+        } \
+    }
+
+#define LOAD_ARRAY(ARRAY_NAME) LOAD_ARRAY_RENAME(ARRAY_NAME, ARRAY_NAME)
+
 //TODO: Non Urgent code cleanup
 const char* BoolToString(bool _b)
 {
@@ -257,6 +273,9 @@ void Game::init(void)
     swnmode = false;
     swntimer = 0;
     swngame = 0;//Not playing sine wave ninja!
+    swnroommode = 0;
+    SDL_memset(swnmodesunlocked, false, sizeof(swnmodesunlocked));
+    SDL_memset(swnrecords, 0, sizeof(swnrecords));
     swnstate = 0;
     swnstate2 = 0;
     swnstate3 = 0;
@@ -278,51 +297,15 @@ void Game::init(void)
 
     saveFilePath = FILESYSTEM_getUserSaveDirectory();
 
-    tinyxml2::XMLDocument doc;
-    if (!FILESYSTEM_loadTiXml2Document("saves/qsave.vvv", doc))
-    {
-        quicksummary = "";
-        printf("Quick Save Not Found\n");
-    }
-    else
-    {
-        tinyxml2::XMLHandle hDoc(&doc);
-        tinyxml2::XMLElement* pElem;
-        tinyxml2::XMLHandle hRoot(NULL);
-
-        pElem=hDoc.FirstChildElement().ToElement();
-        if (!pElem)
-        {
-            printf("Quick Save Appears Corrupted: No XML Root\n");
-        }
-
-        // save this for later
-        hRoot=tinyxml2::XMLHandle(pElem);
-
-        for( pElem = hRoot.FirstChildElement( "Data" ).FirstChild().ToElement(); pElem; pElem=pElem->NextSiblingElement())
-        {
-            std::string pKey(pElem->Value());
-            const char* pText = pElem->GetText() ;
-
-            if (pKey == "summary")
-            {
-                quicksummary = pText;
-            }
-
-
-        }
-    }
-
-
-    tinyxml2::XMLDocument docTele;
-    if (!FILESYSTEM_loadTiXml2Document("saves/tsave.vvv", docTele))
+    tinyxml2::XMLDocument docSuper;
+    if (!FILESYSTEM_loadTiXml2Document("saves/supergravsave.vvv", docSuper))
     {
         telesummary = "";
-        printf("Teleporter Save Not Found\n");
+        printf("Super Gravitron Save Not Found\n");
     }
     else
     {
-        tinyxml2::XMLHandle hDoc(&docTele);
+        tinyxml2::XMLHandle hDoc(&docSuper);
         tinyxml2::XMLElement* pElem;
         tinyxml2::XMLHandle hRoot(NULL);
 
@@ -332,7 +315,7 @@ void Game::init(void)
             // should always have a valid root but handle gracefully if it does
             if (!pElem)
             {
-                printf("Teleporter Save Appears Corrupted: No XML Root\n");
+                printf("Super Gravitron Save Appears Corrupted: No XML Root\n");
             }
 
             // save this for later
@@ -344,11 +327,8 @@ void Game::init(void)
             std::string pKey(pElem->Value());
             const char* pText = pElem->GetText() ;
 
-            if (pKey == "summary")
-            {
-                telesummary = pText;
-            }
-
+            LOAD_ARRAY(swnmodesunlocked)
+            LOAD_ARRAY(swnrecords)
 
         }
     }
@@ -4299,22 +4279,6 @@ void Game::unlocknum( int t )
     unlock[t] = true;
     savestats();
 }
-
-#define LOAD_ARRAY_RENAME(ARRAY_NAME, DEST) \
-    if (pKey == #ARRAY_NAME) \
-    { \
-        std::string TextString = pText; \
-        if (TextString.length()) \
-        { \
-            std::vector<std::string> values = split(TextString, ','); \
-            for (size_t i = 0; i < SDL_min(SDL_arraysize(DEST), values.size()); i++) \
-            { \
-                DEST[i] = atoi(values[i].c_str()); \
-            } \
-        } \
-    }
-
-#define LOAD_ARRAY(ARRAY_NAME) LOAD_ARRAY_RENAME(ARRAY_NAME, ARRAY_NAME)
 
 void Game::loadstats(int *width, int *height, bool *vsync)
 {

@@ -616,7 +616,7 @@ void gamerender()
                 std::string tempstring = help.timestring(game.swntimer);
                 graphics.Print( 10, 10, "Current Time", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), false);
                 graphics.bigprint( 25, 24, tempstring, 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), false, 2);
-                tempstring = help.timestring(game.swnrecord);
+                tempstring = help.timestring(game.swnrecords[game.swnroommode]);
                 graphics.Print( 240, 10, "Best Time", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), false);
                 graphics.bigrprint( 300, 24, tempstring, 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), false, 2);
 
@@ -650,7 +650,7 @@ void gamerender()
                 std::string tempstring = help.timestring(game.swntimer);
                 graphics.Print( 10, 10, "Current Time", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), false);
                 graphics.bigprint( 25, 24, tempstring, 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), false, 2);
-                tempstring = help.timestring(game.swnrecord);
+                tempstring = help.timestring(game.swnrecords[game.swnroommode]);
                 if (int(game.deathseq / 5) % 2 == 1)
                 {
                     graphics.Print( 240, 10, "Best Time", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), false);
@@ -666,7 +666,7 @@ void gamerender()
                 std::string tempstring = help.timestring(game.swntimer);
                 graphics.Print( 10, 10, "Current Time", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), false);
                 graphics.bigprint( 25, 24, tempstring, 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), false, 2);
-                tempstring = help.timestring(game.swnrecord);
+                tempstring = help.timestring(game.swnrecords[game.swnroommode]);
                 graphics.Print( 240, 10, "Best Time", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), false);
                 graphics.bigrprint( 300, 24, tempstring, 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), false, 2);
 
@@ -700,7 +700,7 @@ void gamerender()
             {
                 graphics.bigprint( -1, 20, "SUPER GRAVITRON", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 2);
 
-                std::string tempstring = help.timestring(game.swnrecord);
+                std::string tempstring = help.timestring(game.swnrecords[game.swnroommode]);
                 graphics.Print( 240, 190, "Best Time", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true);
                 graphics.bigrprint( 300, 205, tempstring, 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 2);
             }
@@ -1101,7 +1101,7 @@ void maprender()
             {
                 graphics.Print(0, 174, "SUPER GRAVITRON HIGHSCORE", 196, 196, 255 - help.glow, true);
 
-                std::string tempstring = help.timestring(game.swnrecord);
+                std::string tempstring = help.timestring(game.swnrecords[game.swnroommode]);
                 graphics.Print( 240, 124, "Best Time", 196, 196, 255 - help.glow, true);
                 graphics.bigrprint( 300, 94, tempstring, 196, 196, 255 - help.glow, true, 2);
 
@@ -1134,7 +1134,7 @@ void maprender()
             {
                 graphics.Print(0, 40, "SUPER GRAVITRON HIGHSCORE", 196, 196, 255 - help.glow, true);
 
-                std::string tempstring = help.timestring(game.swnrecord);
+                std::string tempstring = help.timestring(game.swnrecords[game.swnroommode]);
                 graphics.Print( 240, 90, "Best Time", 196, 196, 255 - help.glow, true);
                 graphics.bigrprint( 300, 104, tempstring, 196, 196, 255 - help.glow, true, 2);
 
