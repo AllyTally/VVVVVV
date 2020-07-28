@@ -556,10 +556,13 @@ void gamelogic()
                 game.swndelay = 0;
                 if (game.swntimer >= game.swnrecords[game.swnroommode])
                 {
-                    if (game.swnmessage == 0) music.playef(25);
-                    game.swnmessage = 1;
                     game.swnrecords[game.swnroommode] = game.swntimer;
-                    game.savestats();
+                    if (game.swnmessage == 0)
+                    {
+                        music.playef(25);
+                        game.savestats();
+                    }
+                    game.swnmessage = 1;
                 }
             }
         }
