@@ -16,6 +16,10 @@ public:
     SDL_Surface* im_sprites;
     SDL_Surface* im_bfont;
     SDL_Surface* im_gamelogo;
+    SDL_Surface* im_about1;
+    SDL_Surface* im_about2;
+    SDL_Surface* im_about3;
+    SDL_Surface* im_about4;
 };
 
 #endif /* GRAPHICSRESOURCES_H */

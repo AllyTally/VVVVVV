@@ -91,6 +91,10 @@ void GraphicsResources::init(void)
 	im_sprites =		LoadImage("graphics/sprites.png");
 	im_bfont =		LoadImage("graphics/font.png");
 	im_gamelogo =	LoadImage("graphics/gamelogo.png");
+	im_about1 =	LoadImage("graphics/vvvvvv1.png");
+	im_about2 =	LoadImage("graphics/vvvvvv2.png");
+	im_about3 =	LoadImage("graphics/vvvvvv3.png");
+	im_about4 =	LoadImage("graphics/vvvvvv4.png");
 }
 
 
@@ -107,5 +111,9 @@ void GraphicsResources::destroy(void)
 	CLEAR(im_sprites);
 	CLEAR(im_bfont);
 	CLEAR(im_gamelogo);
+	CLEAR(im_about1);
+	CLEAR(im_about2);
+	CLEAR(im_about3);
+	CLEAR(im_about4);
 #undef CLEAR
 }

@@ -27,6 +27,12 @@ namespace Menu
         controller,
         cleardatamenu,
         play,
+        about1,
+        about2,
+        about3,
+        about4,
+        about5,
+        about6,
     };
 };
 

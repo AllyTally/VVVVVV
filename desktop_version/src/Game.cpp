@@ -6601,6 +6601,19 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("return");
         break;
     }
+    case Menu::about1:
+    case Menu::about2:
+    case Menu::about3:
+    case Menu::about4:
+    case Menu::about5:
+        option("next page");
+        option("return");
+        menuyoff = 64;
+        break;
+    case Menu::about6:
+        option("return");
+        menuyoff = 64;
+        break;
     }
 
     // Automatically center the menu. We must check the width of the menu with the initial horizontal spacing.

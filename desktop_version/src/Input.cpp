@@ -147,8 +147,10 @@ void menuactionpress()
         case 1:
             //About VVVVVV
             music.playef(11);
+            game.createmenu(Menu::about1);
             //game.createmenu(Menu::credits);
-            map.nexttowercolour();
+            map.settowercolour(0);
+            //map.nexttowercolour();
             break;
         case 2:
             //Options
@@ -188,8 +190,71 @@ void menuactionpress()
                 music.playef(2);
             }
         }
-
-
+        break;
+    case Menu::about1:
+        if (game.currentmenuoption == 0) {
+            music.playef(11);
+            game.createmenu(Menu::about2);
+            map.settowercolour(5);
+            //map.nexttowercolour();
+        } else {
+            music.playef(11);
+            game.createmenu(Menu::mainmenu);
+            map.nexttowercolour();
+        }
+        break;
+    case Menu::about2:
+        if (game.currentmenuoption == 0) {
+            music.playef(11);
+            game.createmenu(Menu::about3);
+            map.settowercolour(3);
+            //map.nexttowercolour();
+        } else {
+            music.playef(11);
+            game.createmenu(Menu::mainmenu);
+            map.nexttowercolour();
+        }
+        break;
+    case Menu::about3:
+        if (game.currentmenuoption == 0) {
+            music.playef(11);
+            game.createmenu(Menu::about4);
+            map.settowercolour(1);
+            //map.nexttowercolour();
+        } else {
+            music.playef(11);
+            game.createmenu(Menu::mainmenu);
+            map.nexttowercolour();
+        }
+        break;
+    case Menu::about4:
+        if (game.currentmenuoption == 0) {
+            music.playef(11);
+            game.createmenu(Menu::about5);
+            map.settowercolour(2);
+            //map.nexttowercolour();
+        } else {
+            music.playef(11);
+            game.createmenu(Menu::mainmenu);
+            map.nexttowercolour();
+        }
+        break;
+    case Menu::about5:
+        if (game.currentmenuoption == 0) {
+            music.playef(11);
+            game.createmenu(Menu::about6);
+            map.settowercolour(3);
+            //map.nexttowercolour();
+        } else {
+            music.playef(11);
+            game.createmenu(Menu::mainmenu);
+            map.nexttowercolour();
+        }
+        break;
+    case Menu::about6:
+        music.playef(11);
+        game.createmenu(Menu::mainmenu);
+        map.nexttowercolour();
         break;
     case Menu::graphicoptions:
         switch (game.currentmenuoption)

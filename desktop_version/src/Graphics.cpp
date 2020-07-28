@@ -3214,6 +3214,10 @@ void Graphics::reloadresources() {
 	images.clear();
 
 	images.push_back(grphx.im_gamelogo);
+    images.push_back(grphx.im_about1);
+    images.push_back(grphx.im_about2);
+    images.push_back(grphx.im_about3);
+    images.push_back(grphx.im_about4);
 
 	music.init();
 }
