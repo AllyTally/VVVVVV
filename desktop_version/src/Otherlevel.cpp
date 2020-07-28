@@ -57,6 +57,14 @@ const short* otherlevelclass::loadlevel(int room_id)
 		result = contents;
 		break;
 	}
+	case 1: // Free fall
+	case 2: // Death fall
+	{
+		static const short contents[1200] = {0};
+		//obj.fatal_bottom();
+		result = contents;
+		break;
+	}
 	default:
 	{
 		static const short contents[1200] = {0};

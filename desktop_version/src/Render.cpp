@@ -567,6 +567,19 @@ void gamerender()
         {
             graphics.drawtowerspikes();
         }
+        if (game.swnroommode == 2) {// If deathfall
+            SDL_Rect temprect;
+			temprect.x = 0;
+			temprect.y = 0;
+			temprect.w = 320;
+			temprect.h = 48;
+            FillRect(graphics.backBuffer, temprect, 0);
+			temprect.x = 0;
+			temprect.y = 184;
+			temprect.w = 320;
+			temprect.h = 56;
+            FillRect(graphics.backBuffer, temprect, 0);
+        }
     }
 
     if(map.extrarow==0 || (map.custommode && map.roomname!=""))

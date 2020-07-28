@@ -1096,13 +1096,19 @@ void gamelogic()
                         obj.entities[i].yp += 232;
                         obj.entities[i].oldyp += 232;
                     }
+                    else if (game.swnroommode == 2) { // If deathfall, wrap in a smaller area
+                        if (obj.entities[i].yp > 170) {
+                            obj.entities[i].yp -= 128;
+                            obj.entities[i].oldyp -= 128;
+                        }
+                    }
                     else if (obj.entities[i].yp > 226)
                     {
                         if (obj.entities[i].isplatform) obj.removeblockat(obj.entities[i].xp, obj.entities[i].yp);
                         obj.entities[i].yp -= 232;
                         obj.entities[i].oldyp -= 232;
                     }
-                }
+                } // 122
             }
         }
 

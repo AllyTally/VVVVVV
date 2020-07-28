@@ -1649,11 +1649,27 @@ void Graphics::drawentities()
                     BlitSurfaceColoured((*spritesvec)[obj.entities[i].drawframe],NULL, backBuffer, &drawRect, ct);
                 }
             }
-            else if (map.warpy)
+            if (map.warpy)
             {
                 if (tpoint.y < 0)
                 {
                     tpoint.y += 230;
+                    drawRect = sprites_rect;
+                    drawRect.x += tpoint.x;
+                    drawRect.y += tpoint.y;
+                    BlitSurfaceColoured((*spritesvec)[obj.entities[i].drawframe],NULL, backBuffer, &drawRect, ct);
+                }
+                else if ((tpoint.y < 68) && (game.swnroommode == 2))
+                {
+                    tpoint.y += 126;
+                    drawRect = sprites_rect;
+                    drawRect.x += tpoint.x;
+                    drawRect.y += tpoint.y;
+                    BlitSurfaceColoured((*spritesvec)[obj.entities[i].drawframe],NULL, backBuffer, &drawRect, ct);
+                }
+                else if ((tpoint.y > 164) && (game.swnroommode == 2)) // If deathfall
+                {
+                    tpoint.y -= 135;
                     drawRect = sprites_rect;
                     drawRect.x += tpoint.x;
                     drawRect.y += tpoint.y;
