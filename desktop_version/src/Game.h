@@ -18,6 +18,7 @@ namespace Menu
     enum MenuName
     {
         mainmenu,
+        playmodes,
         youwannaquit,
         graphicoptions,
         options,
@@ -84,6 +85,8 @@ public:
     void loadstats(int *width, int *height, bool *vsync);
 
     void  savestats();
+
+    void saveswnrecords();
 
     void deletestats();
 
@@ -205,8 +208,9 @@ public:
     int swngame, swnstate, swnstate2, swnstate3, swnstate4, swndelay, swndeaths;
     int swntimer, swncolstate, swncoldelay;
     int swnroommode;
-    bool swnmodesunlocked[1];
-    int swnrecords[1];
+    // MODE COUNT = 3. search for "MODE COUNT" in files
+    bool swnmodesunlocked[2]; // Should be one less than below
+    int swnrecords[3];
     int  swnrecord, swnbestrank, swnrank, swnmessage;
 
     //SuperCrewMate Stuff

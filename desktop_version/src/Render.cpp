@@ -37,6 +37,38 @@ void menurender()
 		graphics.Print( 10, 230, "Port by Ally", tr/2, tg/2, tb/2);
         graphics.Print( 310 - (16*8), 230, "1.0 (VVVVVV 2.3)", tr/2, tg/2, tb/2);
         break;
+    case Menu::playmodes:
+    {
+        switch (game.currentmenuoption)
+        {
+        case 0:
+            graphics.bigprint( -1, 30, "Normal", tr, tg, tb, true);
+            graphics.Print( -1, 65, "The normal Super Gravitron from", tr, tg, tb, true);
+            graphics.Print( -1, 75, "the game VVVVVV", tr, tg, tb, true);
+            break;
+        case 1:
+            if (game.swnmodesunlocked[0]) {
+                graphics.bigprint( -1, 30, "Free fall", tr, tg, tb, true);
+                graphics.Print( -1, 65, "The normal Super Gravitron but", tr, tg, tb, true);
+                graphics.Print( -1, 75, "both gravity lines are missing", tr, tg, tb, true);
+            } else {
+                graphics.bigprint( -1, 30, "Free fall...?", tr, tg, tb, true);
+                graphics.Print( -1, 65, "You cheater...", tr, tg, tb, true);
+            }
+            break;
+        case 2:
+            if (game.swnmodesunlocked[1]) {
+                graphics.bigprint( -1, 30, "Death fall", tr, tg, tb, true);
+                graphics.Print( -1, 65, "Free fall mode, but your", tr, tg, tb, true);
+                graphics.Print( -1, 75, "vertical space is smaller", tr, tg, tb, true);
+            } else {
+                graphics.bigprint( -1, 30, "???", tr, tg, tb, true);
+                graphics.Print( -1, 65, "TO UNLOCK: Play 20 Free fall games", tr, tg, tb, true);
+            }
+            break;
+        }
+        break;
+    }
     case Menu::options:
     {
         int flipmode_offset = 0;

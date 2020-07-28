@@ -4758,6 +4758,43 @@ void Game::savestats()
     FILESYSTEM_saveTiXml2Document("saves/unlock.vvv", doc);
 }
 
+void Game::saveswnrecords()
+{
+    tinyxml2::XMLDocument doc;
+    tinyxml2::XMLElement * msg;
+    tinyxml2::XMLDeclaration * decl = doc.NewDeclaration();
+    doc.LinkEndChild( decl );
+
+    tinyxml2::XMLElement * root = doc.NewElement( "Save" );
+    doc.LinkEndChild( root );
+
+    tinyxml2::XMLComment * comment = doc.NewComment(" Save file for Super Gravitron" );
+    root->LinkEndChild( comment );
+
+    tinyxml2::XMLElement * dataNode = doc.NewElement( "Data" );
+    root->LinkEndChild( dataNode );
+
+    std::string s_swnmodesunlocked;
+    for(size_t i = 0; i < SDL_arraysize(swnmodesunlocked); i++ )
+    {
+        s_swnmodesunlocked += help.String(swnmodesunlocked[i]) + ",";
+    }
+    msg = doc.NewElement( "swnmodesunlocked" );
+    msg->LinkEndChild( doc.NewText( s_swnmodesunlocked.c_str() ));
+    dataNode->LinkEndChild( msg );
+
+    std::string s_swnrecords;
+    for(size_t i = 0; i < SDL_arraysize(swnrecords); i++ )
+    {
+        s_swnrecords += help.String(swnrecords[i]) + ",";
+    }
+    msg = doc.NewElement( "swnrecords" );
+    msg->LinkEndChild( doc.NewText( s_swnrecords.c_str() ));
+    dataNode->LinkEndChild( msg );
+
+    FILESYSTEM_saveTiXml2Document("saves/supergravsave.vvv", doc);
+}
+
 void Game::customstart()
 {
     jumpheld = true;
@@ -6501,6 +6538,13 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("quit game");
         menuyoff = 0;
         maxspacing = 15;
+        break;
+    case Menu::playmodes:
+        option("normal");
+        if (game.swnmodesunlocked[0]) option("free fall"); else option("free fall???");
+        if (game.swnmodesunlocked[1]) option("death fall"); else option("???", false);
+        option("return");
+        menuyoff = 0;
         break;
     case Menu::youwannaquit:
         option("yes, quit");

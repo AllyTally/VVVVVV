@@ -124,10 +124,25 @@ void menuactionpress()
         {
         case 0:
             //Play
-            music.playef(11);
-            game.swnroommode = 0;
-            game.mainmenu = 11;
-            graphics.fademode = 2;
+            {
+                bool unlocked = false;
+                // MODE COUNT = 3. search for "MODE COUNT" in files
+                for (int i = 0; i < 3; i++) {
+                    if (game.swnmodesunlocked[i]) { // If something's unlocked...
+                        unlocked = true; // Set unlocked to true and stop the loop.
+                        break;
+                    }
+                }
+                music.playef(11);
+                if (unlocked) { // If something is unlocked, go to the mode menu.
+                    game.createmenu(Menu::playmodes);
+                    map.nexttowercolour();
+                } else { // If nothing's unlocked, just start the game.
+                    game.swnroommode = 0;
+                    game.mainmenu = 11;
+                    graphics.fademode = 2;
+                }
+            }
             break;
         case 1:
             //About VVVVVV
@@ -154,6 +169,27 @@ void menuactionpress()
             graphics.fademode = 2;
             break;
         }
+        break;
+    case Menu::playmodes:
+        if (game.currentmenuoption == (int)game.menuoptions.size() - 1) {
+            game.returnmenu();
+            map.nexttowercolour();
+        } else {
+            if (game.currentmenuoption == 0) {
+                game.swnroommode = 0;
+                game.mainmenu = 11;
+                graphics.fademode = 2;
+            }
+            else if (game.swnmodesunlocked[game.currentmenuoption - 1]) {
+                game.swnroommode = game.currentmenuoption;
+                game.mainmenu = 11;
+                graphics.fademode = 2;
+            } else {
+                music.playef(2);
+            }
+        }
+
+
         break;
     case Menu::graphicoptions:
         switch (game.currentmenuoption)

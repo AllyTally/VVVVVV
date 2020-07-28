@@ -560,7 +560,9 @@ void gamelogic()
                     if (game.swnmessage == 0)
                     {
                         music.playef(25);
-                        game.savestats();
+                        game.saveswnrecords();
+                        // Let's not actually save unlock.vvv as we don't modify it
+                        // game.savestats();
                     }
                     game.swnmessage = 1;
                 }
