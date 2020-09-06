@@ -9,6 +9,9 @@
 #include "Music.h"
 #include "Script.h"
 #include "UtilityClass.h"
+#if defined(DISPLAY_GIT_HASH)
+#include "version.h"
+#endif
 
 int tr;
 int tg;
@@ -41,7 +44,12 @@ void menurender()
 #if defined(MAKEANDPLAY)
         graphics.Print(-1,temp+35,"     MAKE AND PLAY EDITION",tr, tg, tb, true);
 #endif
+#if defined(DISPLAY_GIT_HASH)
+        graphics.Print( 310 - (4*8), 220, "v2.3", tr/2, tg/2, tb/2);
+        graphics.Print( 310 - (7*8), 230, GIT_HASH, tr/2, tg/2, tb/2);
+#else
         graphics.Print( 310 - (4*8), 230, "v2.3", tr/2, tg/2, tb/2);
+#endif
 
         if(music.mmmmmm){
             graphics.Print( 10, 230, "[MMMMMM Mod Installed]", tr/2, tg/2, tb/2);

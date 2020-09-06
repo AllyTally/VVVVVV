@@ -10,6 +10,7 @@ OPTION(ENABLE_WERROR "Treat compilation warnings as errors" OFF)
 SET(CUSTOM_LEVEL_SUPPORT ENABLED CACHE STRING "Optionally disable playing and/or editing of custom levels")
 SET_PROPERTY(CACHE CUSTOM_LEVEL_SUPPORT PROPERTY STRINGS ENABLED NO_EDITOR DISABLED)
 
+SET(DISPLAY_HASH OFF CACHE BOOL "Print the current git commit's hash on the main menu")
 SET(STEAM OFF CACHE BOOL "Use the Steam API")
 SET(GOG OFF CACHE BOOL "Use the GOG API")
 
@@ -108,6 +109,23 @@ SET(VVV_SRC
 	src/main.cpp
 	src/Network.c
 )
+
+IF(DISPLAY_HASH)
+	# Git commit hash
+	find_package(Git)
+	execute_process(COMMAND
+		"${GIT_EXECUTABLE}" rev-parse --short HEAD
+		WORKING_DIRECTORY "/src"
+		OUTPUT_VARIABLE GIT_HASH
+		ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+	# Generate version.cpp
+	configure_file("src/version.cpp.in" "version.cpp" @ONLY)
+
+	list(APPEND VVV_SRC "version.cpp" "src/version.h")
+	ADD_DEFINITIONS(-DDISPLAY_GIT_HASH)
+ENDIF()
+
 IF(NOT CUSTOM_LEVEL_SUPPORT STREQUAL "DISABLED")
 	LIST(APPEND VVV_SRC src/editor.cpp)
 ENDIF()
