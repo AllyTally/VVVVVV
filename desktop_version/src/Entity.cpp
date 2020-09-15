@@ -2079,6 +2079,40 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
     {
         entity.drawframe++;
     }
+    // Make sure our crewmates are facing the player if applicable
+    // Also make sure they're flipped if they're flipped
+    // FIXME: Duplicated from updateentities!
+    if (entity.rule == 6 || entity.rule == 7)
+    {
+        if (entity.tile == 144 || entity.tile == 144+6)
+        {
+            entity.drawframe = 144;
+        }
+        if (entity.state == 18)
+        {
+            // Face the player
+            // FIXME: Duplicated from updateentities!
+            int j = getplayer();
+            if (j > -1 && entities[j].xp > entity.xp + 5)
+            {
+                entity.dir = 1;
+            }
+            else if (j > -1 && entities[j].xp < entity.xp - 5)
+            {
+                entity.dir = 0;
+            }
+        }
+        // Fix drawframe
+        // FIXME: Duplicated from animateentities!
+        if (entity.rule == 7)
+        {
+            entity.drawframe += 6;
+        }
+        if (entity.dir == 0)
+        {
+            entity.drawframe += 3;
+        }
+    }
 
     entities.push_back(entity);
 }
@@ -2913,6 +2947,7 @@ bool entityclass::updateentities( int i )
             else if (entities[i].state == 18)
             {
                 //Stand still and face the player
+                //FIXME: Duplicated in createentity!
                 int j = getplayer();
                 if (j > -1 && entities[j].xp > entities[i].xp + 5)
                 {
@@ -3561,6 +3596,7 @@ void entityclass::animateentities( int _i )
         case 12:
         case 55:
         case 14: //Crew member! Very similar to hero
+            //FIXME: Duplicated in createentity!
             entities[_i].framedelay--;
             if(entities[_i].dir==1)
             {
@@ -4615,12 +4651,16 @@ void entityclass::entitycollisioncheck()
 
     for (size_t i = 0; i < entities.size(); i++)
     {
+        if (entities[i].rule != 0)
+        {
+            continue;
+        }
         //We test entity to entity
         for (size_t j = 0; j < entities.size(); j++)
         {
             if (i!=j)
             {
-                if (entities[i].rule == 0 && entities[j].rule == 1 && entities[j].harmful)
+                if (entities[j].rule == 1 && entities[j].harmful)
                 {
                     //player i hits enemy or enemy bullet j
                     if (entitycollide(i, j) && !map.invincibility)
@@ -4649,18 +4689,18 @@ void entityclass::entitycollisioncheck()
                         }
                     }
                 }
-                if (entities[i].rule == 0 && entities[j].rule == 2)   //Moving platforms
+                if (entities[j].rule == 2)   //Moving platforms
                 {
                     if (entitycollide(i, j)) removeblockat(entities[j].xp, entities[j].yp);
                 }
-                if (entities[i].rule == 0 && entities[j].rule == 3)   //Entity to entity
+                if (entities[j].rule == 3)   //Entity to entity
                 {
                     if(entities[j].onentity>0)
                     {
                         if (entitycollide(i, j)) entities[j].state = entities[j].onentity;
                     }
                 }
-                if (entities[i].rule == 0 && entities[j].rule == 4)   //Player vs horizontal line!
+                if (entities[j].rule == 4)   //Player vs horizontal line!
                 {
                     if(game.deathseq==-1)
                     {
@@ -4688,7 +4728,7 @@ void entityclass::entitycollisioncheck()
                         }
                     }
                 }
-                if (entities[i].rule == 0 && entities[j].rule == 5)   //Player vs vertical line!
+                if (entities[j].rule == 5)   //Player vs vertical gravity/warp line!
                 {
                     if(game.deathseq==-1)
                     {
@@ -4702,7 +4742,7 @@ void entityclass::entitycollisioncheck()
                         }
                     }
                 }
-                if (entities[i].rule == 0 && entities[j].rule == 6)   //Player versus crumbly blocks! Special case
+                if (entities[j].rule == 6)   //Player versus crumbly blocks! Special case
                 {
                     if (entities[j].onentity > 0)
                     {
@@ -4718,10 +4758,29 @@ void entityclass::entitycollisioncheck()
                         }
                     }
                 }
-                if (game.supercrewmate)
+                if (entities[j].rule == 7) // Player versus horizontal warp line, pre-2.1
                 {
-                    //some extra collisions
-                    if (entities[i].type == 14)   //i is the supercrewmate
+                    if (game.glitchrunnermode
+                    && game.deathseq == -1
+                    && entities[j].onentity > 0
+                    && entityhlinecollide(i, j))
+                    {
+                        entities[j].state = entities[j].onentity;
+                    }
+                }
+            }
+        }
+    }
+    if (game.supercrewmate)
+    {
+        for (size_t i = 0; i < entities.size(); i++)
+        {
+            //some extra collisions
+            if (entities[i].type == 14)   //i is the supercrewmate
+            {
+                for (size_t j = 0; j < entities.size(); j++)
+                {
+                    if (i != j)
                     {
                         if (entities[j].rule == 1 && entities[j].harmful)  //j is a harmful enemy
                         {
