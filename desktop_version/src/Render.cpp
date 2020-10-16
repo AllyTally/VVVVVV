@@ -42,8 +42,12 @@ void menurender()
         graphics.drawsprite((160 - 96) + 4 * 32, temp, 23, tr, tg, tb);
         graphics.drawsprite((160 - 96) + 5 * 32, temp, 23, tr, tg, tb);
 #if defined(MAKEANDPLAY)
-        graphics.Print(-1,temp+35,"     MAKE AND PLAY EDITION",tr, tg, tb, true);
+        graphics.Print(-1,temp+35,"    MAKE AND PLAY + tweaks",tr, tg, tb, true);
+#else
+        graphics.Print(-1,temp+35,"                    tweaks",tr, tg, tb, true);
+        graphics.Print(-1,temp+35,"                    tweaks",tr, tg, tb, true);
 #endif
+
 #if defined(DISPLAY_GIT_HASH)
         graphics.Print( 310 - (4*8), 220, "v2.3", tr/2, tg/2, tb/2);
         graphics.Print( 310 - (7*8), 230, GIT_HASH, tr/2, tg/2, tb/2);
@@ -51,8 +55,9 @@ void menurender()
         graphics.Print( 310 - (4*8), 230, "v2.3", tr/2, tg/2, tb/2);
 #endif
 
+        graphics.Print( 10, 230, "made with <3 by ally", tr/2, tg/2, tb/2);
         if(music.mmmmmm){
-            graphics.Print( 10, 230, "[MMMMMM Mod Installed]", tr/2, tg/2, tb/2);
+            graphics.Print( 10, 220, "[MMMMMM Mod Installed]", tr/2, tg/2, tb/2);
         }
         break;
 #if !defined(NO_CUSTOM_LEVELS)
@@ -1182,7 +1187,10 @@ void titlerender()
         graphics.drawsprite((160 - 96) + 4 * 32, temp, 23, tr, tg, tb);
         graphics.drawsprite((160 - 96) + 5 * 32, temp, 23, tr, tg, tb);
 #if defined(MAKEANDPLAY)
-        graphics.Print(-1,temp+35,"     MAKE AND PLAY EDITION",tr, tg, tb, true);
+        graphics.Print(-1,temp+35,"    MAKE AND PLAY + tweaks",tr, tg, tb, true);
+#else
+        graphics.Print(-1,temp+35,"                    tweaks",tr, tg, tb, true);
+        graphics.Print(-1,temp+35,"                    tweaks",tr, tg, tb, true);
 #endif
 
         graphics.Print(5, 175, "[ Press ACTION to Start ]", tr, tg, tb, true);
