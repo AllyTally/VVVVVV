@@ -1,5 +1,6 @@
 #if !defined(NO_CUSTOM_LEVELS)
 
+#define ED_DEFINITION
 #include "editor.h"
 
 #include <physfs.h>
@@ -491,9 +492,9 @@ void editorclass::insertline(int t)
 
 void editorclass::getlin(const enum textmode mode, const std::string& prompt, std::string* ptr)
 {
-    ed.textmod = mode;
-    ed.textptr = ptr;
-    ed.textdesc = prompt;
+    textmod = mode;
+    textptr = ptr;
+    textdesc = prompt;
     key.enabletextentry();
     if (ptr)
     {
@@ -502,10 +503,10 @@ void editorclass::getlin(const enum textmode mode, const std::string& prompt, st
     else
     {
         key.keybuffer = "";
-        ed.textptr = &(key.keybuffer);
+        textptr = &(key.keybuffer);
     }
 
-    ed.oldenttext = key.keybuffer;
+    oldenttext = key.keybuffer;
 }
 
 const short* editorclass::loadlevel( int rxi, int ryi )
@@ -1525,7 +1526,7 @@ void editorclass::findstartpoint()
         game.edsaverx = 100+tx;
         game.edsavery = 100+ty;
         game.edsavegc = 0;
-        game.edsavey--;
+        game.edsavey++;
         game.edsavedir=1-edentity[testeditor].p1;
     }
 }
@@ -1567,7 +1568,7 @@ void editorclass::switch_tileset(const bool reversed /*= false*/)
 {
     const char* tilesets[] = {"Space Station", "Outside", "Lab", "Warp Zone", "Ship"};
     const size_t roomnum = levx + levy*maxwidth;
-    if (roomnum >= SDL_arraysize(level))
+    if (!INBOUNDS_ARR(roomnum, level))
     {
         return;
     }
@@ -1601,7 +1602,7 @@ void editorclass::switch_tileset(const bool reversed /*= false*/)
 void editorclass::switch_tilecol(const bool reversed /*= false*/)
 {
     const size_t roomnum = levx + levy*maxwidth;
-    if (roomnum >= SDL_arraysize(level))
+    if (!INBOUNDS_ARR(roomnum, level))
     {
         return;
     }
@@ -1626,7 +1627,7 @@ void editorclass::switch_tilecol(const bool reversed /*= false*/)
 void editorclass::clamp_tilecol(const int rx, const int ry, const bool wrap /*= false*/)
 {
     const size_t roomnum = rx + ry*maxwidth;
-    if (roomnum >= SDL_arraysize(level))
+    if (!INBOUNDS_ARR(roomnum, level))
     {
         return;
     }
@@ -1676,7 +1677,7 @@ void editorclass::clamp_tilecol(const int rx, const int ry, const bool wrap /*= 
 void editorclass::switch_enemy(const bool reversed /*= false*/)
 {
     const size_t roomnum = levx + levy*maxwidth;
-    if (roomnum >= SDL_arraysize(level))
+    if (!INBOUNDS_ARR(roomnum, level))
     {
         return;
     }
@@ -2124,7 +2125,7 @@ bool editorclass::save(std::string& _path)
     data->LinkEndChild( msg );
 
     msg = doc.NewElement( "levelMetaData" );
-    for(int i = 0; i < 400; i++)
+    for(size_t i = 0; i < SDL_arraysize(level); i++)
     {
         tinyxml2::XMLElement *edlevelclassElement = doc.NewElement( "edLevelClass" );
         edlevelclassElement->SetAttribute( "tileset", level[i].tileset);
@@ -2272,22 +2273,22 @@ void editorclass::generatecustomminimap()
     int tm=0;
     int temp=0;
     //Scan over the map size
-    if(ed.mapheight<=5 && ed.mapwidth<=5)
+    if(mapheight<=5 && mapwidth<=5)
     {
         //4x map
-        for(int j2=0; j2<ed.mapheight; j2++)
+        for(int j2=0; j2<mapheight; j2++)
         {
-            for(int i2=0; i2<ed.mapwidth; i2++)
+            for(int i2=0; i2<mapwidth; i2++)
             {
                 //Ok, now scan over each square
                 tm=196;
-                if(ed.level[i2 + (j2*ed.maxwidth)].tileset==1) tm=96;
+                if(level[i2 + (j2*maxwidth)].tileset==1) tm=96;
 
                 for(int j=0; j<36; j++)
                 {
                     for(int i=0; i<48; i++)
                     {
-                        temp=ed.absfree(int(i*0.83) + (i2*40),int(j*0.83)+(j2*30));
+                        temp=absfree(int(i*0.83) + (i2*40),int(j*0.83)+(j2*30));
                         if(temp>=1)
                         {
                             //Fill in this pixel
@@ -2298,22 +2299,22 @@ void editorclass::generatecustomminimap()
             }
         }
     }
-    else if(ed.mapheight<=10 && ed.mapwidth<=10)
+    else if(mapheight<=10 && mapwidth<=10)
     {
         //2x map
-        for(int j2=0; j2<ed.mapheight; j2++)
+        for(int j2=0; j2<mapheight; j2++)
         {
-            for(int i2=0; i2<ed.mapwidth; i2++)
+            for(int i2=0; i2<mapwidth; i2++)
             {
                 //Ok, now scan over each square
                 tm=196;
-                if(ed.level[i2 + (j2*ed.maxwidth)].tileset==1) tm=96;
+                if(level[i2 + (j2*maxwidth)].tileset==1) tm=96;
 
                 for(int j=0; j<18; j++)
                 {
                     for(int i=0; i<24; i++)
                     {
-                        temp=ed.absfree(int(i*1.6) + (i2*40),int(j*1.6)+(j2*30));
+                        temp=absfree(int(i*1.6) + (i2*40),int(j*1.6)+(j2*30));
                         if(temp>=1)
                         {
                             //Fill in this pixel
@@ -2326,19 +2327,19 @@ void editorclass::generatecustomminimap()
     }
     else
     {
-        for(int j2=0; j2<ed.mapheight; j2++)
+        for(int j2=0; j2<mapheight; j2++)
         {
-            for(int i2=0; i2<ed.mapwidth; i2++)
+            for(int i2=0; i2<mapwidth; i2++)
             {
                 //Ok, now scan over each square
                 tm=196;
-                if(ed.level[i2 + (j2*ed.maxwidth)].tileset==1) tm=96;
+                if(level[i2 + (j2*maxwidth)].tileset==1) tm=96;
 
                 for(int j=0; j<9; j++)
                 {
                     for(int i=0; i<12; i++)
                     {
-                        temp=ed.absfree(3+(i*3) + (i2*40),(j*3)+(j2*30));
+                        temp=absfree(3+(i*3) + (i2*40),(j*3)+(j2*30));
                         if(temp>=1)
                         {
                             //Fill in this pixel
@@ -2354,6 +2355,7 @@ void editorclass::generatecustomminimap()
 #if !defined(NO_EDITOR)
 void editormenurender(int tr, int tg, int tb)
 {
+    extern editorclass ed;
     switch (game.currentmenuname)
     {
     case Menu::ed_settings:
@@ -2532,6 +2534,7 @@ void editormenurender(int tr, int tg, int tb)
 
 void editorrender()
 {
+    extern editorclass ed;
     if (game.shouldreturntoeditor)
     {
         graphics.backgrounddrawn = false;
@@ -2642,6 +2645,13 @@ void editorrender()
 
     int temp2=edentat(ed.tilex+ (ed.levx*40),ed.tiley+ (ed.levy*30));
 
+    // Special case for drawing gray entities
+    int current_room = (ed.levx+(ed.levy*ed.maxwidth));
+    bool custom_gray = INBOUNDS_ARR(current_room, ed.level)
+    && ed.level[current_room].tileset == 3 && ed.level[current_room].tilecol == 6;
+    colourTransform gray_ct;
+    gray_ct.colour = 0xFFFFFFFF;
+
     // Draw entities backward to remain accurate with ingame
     for (int i = edentity.size() - 1; i >= 0; i--)
     {
@@ -2657,6 +2667,10 @@ void editorrender()
             switch(edentity[i].t)
             {
             case 1: //Entities
+                if (custom_gray) {
+                    graphics.setcol(18);
+                    ed.entcolreal = graphics.ct.colour;
+                }
                 graphics.drawsprite((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8),ed.getenemyframe(ed.level[ed.levx+(ed.levy*ed.maxwidth)].enemytype),ed.entcolreal);
                 if(edentity[i].p1==0) graphics.Print((edentity[i].x*8)- (ed.levx*40*8)+4,(edentity[i].y*8)- (ed.levy*30*8)+4, "V", 255, 255, 255 - help.glow, false);
                 if(edentity[i].p1==1) graphics.Print((edentity[i].x*8)- (ed.levx*40*8)+4,(edentity[i].y*8)- (ed.levy*30*8)+4, "^", 255, 255, 255 - help.glow, false);
@@ -2665,18 +2679,20 @@ void editorrender()
                 fillboxabs((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8),16,16,graphics.getBGR(255,164,255));
                 break;
             case 2: //Threadmills & platforms
+                if (!INBOUNDS_VEC(obj.customplatformtile, graphics.entcolours))
+                {
+                    continue;
+                }
                 tpoint.x = (edentity[i].x*8)- (ed.levx*40*8);
                 tpoint.y = (edentity[i].y*8)- (ed.levy*30*8);
                 drawRect = graphics.tiles_rect;
                 drawRect.x += tpoint.x;
                 drawRect.y += tpoint.y;
-                BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
-                drawRect.x += 8;
-                BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
-                drawRect.x += 8;
-                BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
-                drawRect.x += 8;
-                BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL,graphics.backBuffer, &drawRect);
+                for (int j = 0; j < 4; j++) {
+                    if (custom_gray) BlitSurfaceTinted(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect, gray_ct);
+                    else BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
+                    drawRect.x += 8;
+                }
 
                 if(edentity[i].p1<=4)
                 {
@@ -2705,14 +2721,11 @@ void editorrender()
                     drawRect = graphics.tiles_rect;
                     drawRect.x += tpoint.x;
                     drawRect.y += tpoint.y;
-                    BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
-                    drawRect.x += 8;
-                    BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
-                    drawRect.x += 8;
-                    BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
-                    drawRect.x += 8;
-                    BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL,graphics.backBuffer, &drawRect);
-
+                    for (int j = 0; j < 4; j++) {
+                        if (custom_gray) BlitSurfaceTinted(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect, gray_ct);
+                        else BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
+                        drawRect.x += 8;
+                    }
                 }
 
                 if(edentity[i].p1==7)
@@ -2727,18 +2740,20 @@ void editorrender()
                 }
                 break;
             case 3: //Disappearing Platform
+                if (!INBOUNDS_VEC(obj.customplatformtile, graphics.entcolours))
+                {
+                    continue;
+                }
                 tpoint.x = (edentity[i].x*8)- (ed.levx*40*8);
                 tpoint.y = (edentity[i].y*8)- (ed.levy*30*8);
                 drawRect = graphics.tiles_rect;
                 drawRect.x += tpoint.x;
                 drawRect.y += tpoint.y;
-                BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
-                drawRect.x += 8;
-                BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
-                drawRect.x += 8;
-                BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
-                drawRect.x += 8;
-                BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL,graphics.backBuffer, &drawRect);
+                for (int j = 0; j < 4; j++) {
+                    if (custom_gray) BlitSurfaceTinted(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect, gray_ct);
+                    else BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
+                    drawRect.x += 8;
+                }
 
                 graphics.Print((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8), "////", 255 - help.glow, 255 - help.glow, 255 - help.glow, false);
                 fillboxabs((edentity[i].x*8)- (ed.levx*40*8),(edentity[i].y*8)- (ed.levy*30*8),32,8,graphics.getBGR(255,255,255));
@@ -2993,7 +3008,7 @@ void editorrender()
         for (int i = 0; i < (int)ed.ghosts.size(); i++) {
             if (i <= ed.currentghosts) { // We don't want all of them to show up at once :)
                 if (ed.ghosts[i].rx != ed.levx || ed.ghosts[i].ry != ed.levy
-                || !INBOUNDS(ed.ghosts[i].frame, graphics.sprites))
+                || !INBOUNDS_VEC(ed.ghosts[i].frame, graphics.sprites))
                     continue;
                 point tpoint;
                 tpoint.x = ed.ghosts[i].x;
@@ -3648,6 +3663,7 @@ void editorrender()
 
 void editorlogic()
 {
+    extern editorclass ed;
     //Misc
     help.updateglow();
     graphics.updatetitlecolours();
@@ -3748,6 +3764,7 @@ void editorlogic()
 
 void editormenuactionpress()
 {
+    extern editorclass ed;
     switch (game.currentmenuname)
     {
     case Menu::ed_desc:
@@ -3900,6 +3917,7 @@ void editormenuactionpress()
 
 void editorinput()
 {
+    extern editorclass ed;
     game.mx = (float) key.mx;
     game.my = (float) key.my;
     ed.tilex=(game.mx - (game.mx%8))/8;
@@ -4173,6 +4191,9 @@ void editorinput()
                 key.keybuffer=ed.sb[ed.pagey+ed.sby];
                 ed.keydelay=6;
             }
+
+            // Remove all pipes, they are the line separator in the XML
+            key.keybuffer.erase(std::remove(key.keybuffer.begin(), key.keybuffer.end(), '|'), key.keybuffer.end());
 
             ed.sb[ed.pagey+ed.sby]=key.keybuffer;
             ed.sbx = utf8::unchecked::distance(ed.sb[ed.pagey+ed.sby].begin(), ed.sb[ed.pagey+ed.sby].end());
@@ -4695,8 +4716,16 @@ void editorinput()
                             game.edsavey = (edentity[testeditor].y%30)*8;
                             game.edsaverx = 100+tx;
                             game.edsavery = 100+ty;
-                            game.edsavegc = 1-edentity[testeditor].p1;
-                            game.edsavey--;
+                            if (edentity[testeditor].p1 == 0) // NOT a bool check!
+                            {
+                                game.edsavegc = 1;
+                                game.edsavey -= 2;
+                            }
+                            else
+                            {
+                                game.edsavegc = 0;
+                                game.edsavey -= 7;
+                            }
                             game.edsavedir = 0;
                         }
                         else
@@ -4709,7 +4738,7 @@ void editorinput()
                             game.edsaverx = 100+tx;
                             game.edsavery = 100+ty;
                             game.edsavegc = 0;
-                            game.edsavey--;
+                            game.edsavey++;
                             game.edsavedir=1-edentity[testeditor].p1;
                         }
 
@@ -5691,7 +5720,7 @@ Uint32 editorclass::getonewaycol(const int rx, const int ry)
 Uint32 editorclass::getonewaycol()
 {
     if (game.gamestate == EDITORMODE)
-        return getonewaycol(ed.levx, ed.levy);
+        return getonewaycol(levx, levy);
     else if (map.custommode)
         return getonewaycol(game.roomx - 100, game.roomy - 100);
 

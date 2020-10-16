@@ -1,3 +1,4 @@
+#define GRAPHICS_DEFINITION
 #include "Graphics.h"
 
 #include <stdio.h>
@@ -167,7 +168,7 @@ int Graphics::font_idx(uint32_t ch) {
 
 void Graphics::drawspritesetcol(int x, int y, int t, int c)
 {
-    if (!INBOUNDS(t, sprites))
+    if (!INBOUNDS_VEC(t, sprites))
     {
         return;
     }
@@ -257,23 +258,33 @@ void Graphics::Makebfont()
     unsigned char* charmap = NULL;
     size_t length;
     FILESYSTEM_loadFileToMemory("graphics/font.txt", &charmap, &length);
-    if (charmap != NULL) {
+    if (charmap != NULL)
+    {
         unsigned char* current = charmap;
         unsigned char* end = charmap + length;
         int pos = 0;
-        while (current != end) {
+        while (current != end)
+        {
             int codepoint = utf8::unchecked::next(current);
             font_positions[codepoint] = pos;
             ++pos;
         }
         FILESYSTEM_freeMemory(&charmap);
     }
+    else
+    {
+        font_positions.clear();
+    }
 }
 
-int Graphics::bfontlen(uint32_t ch) {
-    if (ch < 32) {
+int Graphics::bfontlen(uint32_t ch)
+{
+    if (ch < 32)
+    {
         return 6;
-    } else {
+    }
+    else
+    {
         return 8;
     }
 }
@@ -380,7 +391,7 @@ void Graphics::PrintAlpha( int _x, int _y, std::string _s, int r, int g, int b, 
         fontRect.y = tpoint.y ;
 
         idx = font_idx(curr);
-        if (INBOUNDS(idx, font))
+        if (INBOUNDS_VEC(idx, font))
         {
             BlitSurfaceColoured( font[idx], NULL, backBuffer, &fontRect , ct);
         }
@@ -422,7 +433,7 @@ void Graphics::bigprint(  int _x, int _y, std::string _s, int r, int g, int b, b
         */
 
         idx = font_idx(curr);
-        if (INBOUNDS(idx, font))
+        if (INBOUNDS_VEC(idx, font))
         {
             SDL_Surface* tempPrint = ScaleSurface(font[idx], font[idx]->w *sc,font[idx]->h *sc);
             SDL_Rect printrect = { static_cast<Sint16>((_x) + bfontpos), static_cast<Sint16>(_y) , static_cast<Sint16>((bfont_rect.w*sc)+1), static_cast<Sint16>((bfont_rect.h * sc)+1)};
@@ -475,7 +486,7 @@ void Graphics::PrintOffAlpha( int _x, int _y, std::string _s, int r, int g, int 
         fontRect.y = tpoint.y ;
 
         idx = font_idx(curr);
-        if (INBOUNDS(idx, font))
+        if (INBOUNDS_VEC(idx, font))
         {
             BlitSurfaceColoured( font[idx], NULL, backBuffer, &fontRect , ct);
         }
@@ -534,7 +545,7 @@ void Graphics::RPrint( int _x, int _y, std::string _s, int r, int g, int b, bool
         fontRect.y = tpoint.y ;
 
         idx = font_idx(curr);
-        if (INBOUNDS(idx, font))
+        if (INBOUNDS_VEC(idx, font))
         {
             BlitSurfaceColoured( font[idx], NULL, backBuffer, &fontRect , ct);
         }
@@ -622,6 +633,11 @@ void Graphics::printcrewnamestatus( int x, int y, int t )
 
 void Graphics::drawsprite( int x, int y, int t, int r, int g,  int b )
 {
+    if (!INBOUNDS_VEC(t, sprites))
+    {
+        WHINE_ONCE("drawsprite() out-of-bounds!");
+    }
+
     SDL_Rect rect = { Sint16(x), Sint16(y), sprites_rect.w, sprites_rect.h };
     setcolreal(getRGB(r,g,b));
     BlitSurfaceColoured(sprites[t], NULL, backBuffer, &rect, ct);
@@ -629,6 +645,11 @@ void Graphics::drawsprite( int x, int y, int t, int r, int g,  int b )
 
 void Graphics::drawsprite(int x, int y, int t, Uint32 c)
 {
+    if (!INBOUNDS_VEC(t, sprites))
+    {
+        WHINE_ONCE("drawsprite() out-of-bounds!");
+    }
+
     SDL_Rect rect = { Sint16(x), Sint16(y), sprites_rect.w, sprites_rect.h };
     setcolreal(c);
     BlitSurfaceColoured(sprites[t], NULL, backBuffer, &rect, ct);
@@ -636,7 +657,7 @@ void Graphics::drawsprite(int x, int y, int t, Uint32 c)
 
 void Graphics::drawtile( int x, int y, int t )
 {
-    if (!INBOUNDS(t, tiles))
+    if (!INBOUNDS_VEC(t, tiles))
     {
         WHINE_ONCE("drawtile() out-of-bounds!")
         return;
@@ -660,7 +681,7 @@ void Graphics::drawtile( int x, int y, int t )
 
 void Graphics::drawtile2( int x, int y, int t )
 {
-    if (!INBOUNDS(t, tiles2))
+    if (!INBOUNDS_VEC(t, tiles2))
     {
         WHINE_ONCE("drawtile2() out-of-bounds!")
         return;
@@ -686,7 +707,7 @@ void Graphics::drawtile2( int x, int y, int t )
 void Graphics::drawtile3( int x, int y, int t, int off, int height_subtract /*= 0*/ )
 {
     t += off * 30;
-    if (!INBOUNDS(t, tiles3))
+    if (!INBOUNDS_VEC(t, tiles3))
     {
         WHINE_ONCE("drawtile3() out-of-bounds!")
         return;
@@ -698,7 +719,7 @@ void Graphics::drawtile3( int x, int y, int t, int off, int height_subtract /*= 
 
 void Graphics::drawentcolours( int x, int y, int t)
 {
-    if (!INBOUNDS(t, entcolours))
+    if (!INBOUNDS_VEC(t, entcolours))
     {
         WHINE_ONCE("drawentcolours() out-of-bounds!")
         return;
@@ -709,7 +730,7 @@ void Graphics::drawentcolours( int x, int y, int t)
 
 void Graphics::drawtowertile( int x, int y, int t )
 {
-    if (!INBOUNDS(t, tiles2))
+    if (!INBOUNDS_VEC(t, tiles2))
     {
         WHINE_ONCE("drawtowertile() out-of-bounds!")
         return;
@@ -722,7 +743,7 @@ void Graphics::drawtowertile( int x, int y, int t )
 void Graphics::drawtowertile3( int x, int y, int t, int off )
 {
     t += off*30;
-    if (!INBOUNDS(t, tiles3))
+    if (!INBOUNDS_VEC(t, tiles3))
     {
         WHINE_ONCE("drawtowertile3() out-of-bounds!")
         return;
@@ -895,7 +916,7 @@ void Graphics::updatetextboxes()
 
 void Graphics::drawimagecol( int t, int xp, int yp, int r = 0, int g = 0, int b = 0, bool cent/*= false*/ )
 {
-    if (!INBOUNDS(t, images))
+    if (!INBOUNDS_VEC(t, images))
     {
         return;
     }
@@ -930,7 +951,7 @@ void Graphics::drawimagecol( int t, int xp, int yp, int r = 0, int g = 0, int b 
 
 void Graphics::drawimage( int t, int xp, int yp, bool cent/*=false*/ )
 {
-    if (!INBOUNDS(t, images))
+    if (!INBOUNDS_VEC(t, images))
     {
         return;
     }
@@ -958,7 +979,7 @@ void Graphics::drawimage( int t, int xp, int yp, bool cent/*=false*/ )
 
 void Graphics::drawpartimage( int t, int xp, int yp, int wp, int hp)
 {
-  if (!INBOUNDS(t, images))
+  if (!INBOUNDS_VEC(t, images))
   {
     return;
   }
@@ -1181,7 +1202,7 @@ void Graphics::textboxremove()
 
 void Graphics::textboxtimer( int t )
 {
-    if (!INBOUNDS(m, textbox))
+    if (!INBOUNDS_VEC(m, textbox))
     {
         puts("textboxtimer() out-of-bounds!");
         return;
@@ -1192,7 +1213,7 @@ void Graphics::textboxtimer( int t )
 
 void Graphics::addline( std::string t )
 {
-    if (!INBOUNDS(m, textbox))
+    if (!INBOUNDS_VEC(m, textbox))
     {
         puts("addline() out-of-bounds!");
         return;
@@ -1203,7 +1224,7 @@ void Graphics::addline( std::string t )
 
 void Graphics::textboxadjust()
 {
-    if (!INBOUNDS(m, textbox))
+    if (!INBOUNDS_VEC(m, textbox))
     {
         puts("textboxadjust() out-of-bounds!");
         return;
@@ -1372,7 +1393,7 @@ void Graphics::drawmenu( int cr, int cg, int cb, bool levelmenu /*= false*/ )
 
 void Graphics::drawcoloredtile( int x, int y, int t, int r, int g, int b )
 {
-    if (!INBOUNDS(t, tiles))
+    if (!INBOUNDS_VEC(t, tiles))
     {
         return;
     }
@@ -1430,7 +1451,7 @@ bool Graphics::Hitest(SDL_Surface* surface1, point p1, SDL_Surface* surface2, po
 
 void Graphics::drawgravityline( int t )
 {
-    if (obj.entities[t].life == 0)
+    if (obj.entities[t].life == 0 || obj.entities[t].onentity == 1) // FIXME: Remove 'onentity == 1' when game loop order is fixed!
     {
         switch(linestate)
         {
@@ -1569,7 +1590,7 @@ void Graphics::drawentities()
 #if !defined(NO_CUSTOM_LEVELS)
     // Special case for gray Warp Zone tileset!
     int room = game.roomx-100 + (game.roomy-100) * ed.maxwidth;
-    bool custom_gray = room >= 0 && room < 400
+    bool custom_gray = INBOUNDS_ARR(room, ed.level)
     && ed.level[room].tileset == 3 && ed.level[room].tilecol == 6;
 #else
     bool custom_gray = false;
@@ -1612,15 +1633,15 @@ void Graphics::drawentities()
             continue;
         }
 
-        int xp = lerp(obj.entities[i].oldxp, obj.entities[i].xp);
-        int yp = lerp(obj.entities[i].oldyp, obj.entities[i].yp);
+        int xp = lerp(obj.entities[i].lerpoldxp, obj.entities[i].xp);
+        int yp = lerp(obj.entities[i].lerpoldyp, obj.entities[i].yp);
 
         switch (obj.entities[i].size)
         {
         case 0:
         {
             // Sprites
-            if (!INBOUNDS(obj.entities[i].drawframe, (*spritesvec)))
+            if (!INBOUNDS_VEC(obj.entities[i].drawframe, (*spritesvec)))
             {
                 continue;
             }
@@ -1632,7 +1653,7 @@ void Graphics::drawentities()
             drawRect.x += tpoint.x;
             drawRect.y += tpoint.y;
             BlitSurfaceColoured((*spritesvec)[obj.entities[i].drawframe], NULL, backBuffer, &drawRect, ct);
-            
+
             //screenwrapping!
             point wrappedPoint;
             bool wrapX = false;
@@ -1688,7 +1709,7 @@ void Graphics::drawentities()
         }
         case 1:
             // Tiles
-            if (!INBOUNDS(obj.entities[i].drawframe, tiles))
+            if (!INBOUNDS_VEC(obj.entities[i].drawframe, tiles))
             {
                 continue;
             }
@@ -1703,7 +1724,7 @@ void Graphics::drawentities()
         case 8:
         {
             // Special: Moving platform, 4 tiles or 8 tiles
-            if (!INBOUNDS(obj.entities[i].drawframe, (*tilesvec)))
+            if (!INBOUNDS_VEC(obj.entities[i].drawframe, (*tilesvec)))
             {
                 continue;
             }
@@ -1770,7 +1791,7 @@ void Graphics::drawentities()
             // Note: This code is in the 4-tile code
             break;
         case 9:         // Really Big Sprite! (2x2)
-            if (!INBOUNDS(obj.entities[i].drawframe, (*spritesvec)))
+            if (!INBOUNDS_VEC(obj.entities[i].drawframe, (*spritesvec)))
             {
                 continue;
             }
@@ -1809,7 +1830,7 @@ void Graphics::drawentities()
             BlitSurfaceColoured((*spritesvec)[obj.entities[i].drawframe + 13],NULL, backBuffer, &drawRect, ct);
             break;
         case 10:         // 2x1 Sprite
-            if (!INBOUNDS(obj.entities[i].drawframe, (*spritesvec)))
+            if (!INBOUNDS_VEC(obj.entities[i].drawframe, (*spritesvec)))
             {
                 continue;
             }
@@ -1836,7 +1857,7 @@ void Graphics::drawentities()
             drawimagecol(3, xp, yp - yoff);
             break;
         case 12:         // Regular sprites that don't wrap
-            if (!INBOUNDS(obj.entities[i].drawframe, (*spritesvec)))
+            if (!INBOUNDS_VEC(obj.entities[i].drawframe, (*spritesvec)))
             {
                 continue;
             }
@@ -1895,7 +1916,7 @@ void Graphics::drawentities()
         case 13:
         {
             //Special for epilogue: huge hero!
-            if (!INBOUNDS(obj.entities[i].drawframe, (*spritesvec)))
+            if (!INBOUNDS_VEC(obj.entities[i].drawframe, (*spritesvec)))
             {
                 continue;
             }
@@ -2717,7 +2738,7 @@ void Graphics::setcol( int t )
 		break;
 
 	default:
-		ct.colour = 0xFFFFFF;
+		ct.colour = getRGB(255, 255, 255);
 		break;
 	}
 }
@@ -2767,7 +2788,7 @@ void Graphics::menuoffrender()
 
 void Graphics::drawhuetile( int x, int y, int t )
 {
-	if (!INBOUNDS(t, tiles))
+	if (!INBOUNDS_VEC(t, tiles))
 	{
 		return;
 	}
@@ -2820,7 +2841,7 @@ void Graphics::setwarprect( int a, int b, int c, int d )
 
 void Graphics::textboxcenter()
 {
-	if (!INBOUNDS(m, textbox))
+	if (!INBOUNDS_VEC(m, textbox))
 	{
 		puts("textboxcenter() out-of-bounds!");
 		return;
@@ -2832,7 +2853,7 @@ void Graphics::textboxcenter()
 
 void Graphics::textboxcenterx()
 {
-	if (!INBOUNDS(m, textbox))
+	if (!INBOUNDS_VEC(m, textbox))
 	{
 		puts("textboxcenterx() out-of-bounds!");
 		return;
@@ -2843,7 +2864,7 @@ void Graphics::textboxcenterx()
 
 int Graphics::textboxwidth()
 {
-	if (!INBOUNDS(m, textbox))
+	if (!INBOUNDS_VEC(m, textbox))
 	{
 		puts("textboxwidth() out-of-bounds!");
 		return 0;
@@ -2854,7 +2875,7 @@ int Graphics::textboxwidth()
 
 void Graphics::textboxmove(int xo, int yo)
 {
-	if (!INBOUNDS(m, textbox))
+	if (!INBOUNDS_VEC(m, textbox))
 	{
 		puts("textboxmove() out-of-bounds!");
 		return;
@@ -2866,7 +2887,7 @@ void Graphics::textboxmove(int xo, int yo)
 
 void Graphics::textboxmoveto(int xo)
 {
-	if (!INBOUNDS(m, textbox))
+	if (!INBOUNDS_VEC(m, textbox))
 	{
 		puts("textboxmoveto() out-of-bounds!");
 		return;
@@ -2877,7 +2898,7 @@ void Graphics::textboxmoveto(int xo)
 
 void Graphics::textboxcentery()
 {
-	if (!INBOUNDS(m, textbox))
+	if (!INBOUNDS_VEC(m, textbox))
 	{
 		puts("textboxcentery() out-of-bounds!");
 		return;
@@ -2971,16 +2992,16 @@ void Graphics::renderwithscreeneffects()
 {
 	if (game.flashlight > 0 && !game.noflashingmode)
 	{
-		graphics.flashlight();
+		flashlight();
 	}
 
 	if (game.screenshake > 0 && !game.noflashingmode)
 	{
-		graphics.screenshake();
+		screenshake();
 	}
 	else
 	{
-		graphics.render();
+		render();
 	}
 }
 
@@ -3013,7 +3034,7 @@ void Graphics::bigrprint(int x, int y, std::string& t, int r, int g, int b, bool
 	while (iter != t.end()) {
 		cur = utf8::unchecked::next(iter);
 		idx = font_idx(cur);
-		if (INBOUNDS(idx, font))
+		if (INBOUNDS_VEC(idx, font))
 		{
 			SDL_Surface* tempPrint = ScaleSurface(font[idx], font[idx]->w *sc,font[idx]->h *sc);
 			SDL_Rect printrect = { Sint16((x) + bfontpos), Sint16(y) , Sint16(bfont_rect.w*sc), Sint16(bfont_rect.h * sc)};
@@ -3030,7 +3051,7 @@ void Graphics::drawtele(int x, int y, int t, Uint32 c)
 
 	SDL_Rect telerect;
 	setRect(telerect, x , y, tele_rect.w, tele_rect.h );
-	if (INBOUNDS(0, tele))
+	if (INBOUNDS_VEC(0, tele))
 	{
 		BlitSurfaceColoured(tele[0], NULL, backBuffer, &telerect, ct);
 	}
@@ -3040,7 +3061,7 @@ void Graphics::drawtele(int x, int y, int t, Uint32 c)
 	if (t < 0) t = 0;
 
 	setRect(telerect, x , y, tele_rect.w, tele_rect.h );
-	if (INBOUNDS(t, tele))
+	if (INBOUNDS_VEC(t, tele))
 	{
 		BlitSurfaceColoured(tele[t], NULL, backBuffer, &telerect, ct);
 	}
@@ -3086,7 +3107,7 @@ void Graphics::setcolreal(Uint32 t)
 
 void Graphics::drawforetile(int x, int y, int t)
 {
-	if (!INBOUNDS(t, tiles))
+	if (!INBOUNDS_VEC(t, tiles))
 	{
 		WHINE_ONCE("drawforetile() out-of-bounds!")
 		return;
@@ -3110,7 +3131,7 @@ void Graphics::drawforetile(int x, int y, int t)
 
 void Graphics::drawforetile2(int x, int y, int t)
 {
-	if (!INBOUNDS(t, tiles2))
+	if (!INBOUNDS_VEC(t, tiles2))
 	{
 		WHINE_ONCE("drawforetile2() out-of-bounds!")
 		return;
@@ -3135,7 +3156,7 @@ void Graphics::drawforetile2(int x, int y, int t)
 void Graphics::drawforetile3(int x, int y, int t, int off)
 {
 	t += off * 30;
-	if (!INBOUNDS(t, tiles3))
+	if (!INBOUNDS_VEC(t, tiles3))
 	{
 		WHINE_ONCE("drawforetile3() out-of-bounds!")
 		return;

@@ -1,3 +1,4 @@
+#define GAME_DEFINITION
 #include "Game.h"
 
 #include <sstream>
@@ -397,7 +398,7 @@ void Game::lifesequence()
     if (lifeseq > 0)
     {
         int i = obj.getplayer();
-        if (i > -1)
+        if (INBOUNDS_VEC(i, obj.entities))
         {
             obj.entities[i].invis = false;
             if (lifeseq == 2) obj.entities[i].invis = true;
@@ -407,7 +408,7 @@ void Game::lifesequence()
         if (lifeseq > 5) gravitycontrol = savegc;
 
         lifeseq--;
-        if (i > -1 && lifeseq <= 0)
+        if (INBOUNDS_VEC(i, obj.entities) && lifeseq <= 0)
         {
             obj.entities[i].invis = false;
         }
@@ -641,7 +642,6 @@ void Game::savecustomlevelstats()
 
 void Game::updatestate()
 {
-    int i, j;
     statedelay--;
     if(statedelay<=0){
         statedelay=0;
@@ -863,7 +863,7 @@ void Game::updatestate()
         {
             //leaving the naughty corner
             int i = obj.getplayer();
-            if (i > -1)
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[obj.getplayer()].tile = 0;
             }
@@ -874,7 +874,7 @@ void Game::updatestate()
         {
             //entering the naughty corner
             int i = obj.getplayer();
-            if(i > -1 && obj.entities[i].tile == 0)
+            if(INBOUNDS_VEC(i, obj.entities) && obj.entities[i].tile == 0)
             {
                 obj.entities[i].tile = 144;
                 music.playef(2);
@@ -1469,14 +1469,14 @@ void Game::updatestate()
         {
 
 
-            i = obj.getplayer();
+            int i = obj.getplayer();
             hascontrol = false;
-            if (i > -1 && obj.entities[i].onroof > 0 && gravitycontrol == 1)
+            if (INBOUNDS_VEC(i, obj.entities) && obj.entities[i].onroof > 0 && gravitycontrol == 1)
             {
                 gravitycontrol = 0;
                 music.playef(1);
             }
-            if (i > -1 && obj.entities[i].onground > 0)
+            if (INBOUNDS_VEC(i, obj.entities) && obj.entities[i].onground > 0)
             {
                 state++;
             }
@@ -1487,8 +1487,8 @@ void Game::updatestate()
 
 
             companion = 6;
-            i = obj.getcompanion();
-            if (i > -1)
+            int i = obj.getcompanion();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].tile = 0;
                 obj.entities[i].state = 1;
@@ -1516,8 +1516,8 @@ void Game::updatestate()
             state++;
             music.playef(2);
             graphics.textboxactive();
-            i = obj.getcompanion();
-            if (i > -1)
+            int i = obj.getcompanion();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].tile = 54;
                 obj.entities[i].state = 0;
@@ -1534,8 +1534,8 @@ void Game::updatestate()
         case 110:
         {
 
-            i = obj.getcompanion();
-            if (i > -1)
+            int i = obj.getcompanion();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].tile = 0;
                 obj.entities[i].state = 1;
@@ -1559,11 +1559,8 @@ void Game::updatestate()
             //
             //                       Test script for space station, totally delete me!
             //
-        {
-            i = obj.getplayer();
             hascontrol = false;
             state++;
-        }
         break;
         case 116:
             advancetext = true;
@@ -1596,14 +1593,14 @@ void Game::updatestate()
         case 121:
         {
 
-            i = obj.getplayer();
+            int i = obj.getplayer();
             hascontrol = false;
-            if (i > -1 && obj.entities[i].onground > 0 && gravitycontrol == 0)
+            if (INBOUNDS_VEC(i, obj.entities) && obj.entities[i].onground > 0 && gravitycontrol == 0)
             {
                 gravitycontrol = 1;
                 music.playef(1);
             }
-            if (i > -1 && obj.entities[i].onroof > 0)
+            if (INBOUNDS_VEC(i, obj.entities) && obj.entities[i].onroof > 0)
             {
                 state++;
             }
@@ -1611,9 +1608,10 @@ void Game::updatestate()
         }
         break;
         case 122:
+        {
             companion = 7;
-            i = obj.getcompanion();
-            if (i > -1)
+            int i = obj.getcompanion();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].tile = 6;
                 obj.entities[i].state = 1;
@@ -1626,14 +1624,17 @@ void Game::updatestate()
             state++;
             music.playef(14);
             break;
+        }
         case 124:
+        {
             graphics.createtextbox("I've found a teleporter, but", 60-20, 90 - 40, 255, 255, 134);
             graphics.addline("I can't get it to go anywhere...");
             state++;
             music.playef(2);
             graphics.textboxactive();
-            i = obj.getcompanion(); if (i > -1) {	/*obj.entities[i].tile = 66;	obj.entities[i].state = 0;*/	}
+            int i = obj.getcompanion(); if (INBOUNDS_VEC(i, obj.entities)) {	/*obj.entities[i].tile = 66;	obj.entities[i].state = 0;*/	}
             break;
+        }
         case 126:
             graphics.createtextbox("I can help with that!", 125, 152-40, 164, 164, 255);
             state++;
@@ -1649,17 +1650,19 @@ void Game::updatestate()
             break;
 
         case 130:
+        {
             graphics.createtextbox("Yey! Let's go home!", 60-30, 90-35, 255, 255, 134);
             state++;
             music.playef(14);
             graphics.textboxactive();
-            i = obj.getcompanion();
-            if (i > -1)
+            int i = obj.getcompanion();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].tile = 6;
                 obj.entities[i].state = 1;
             }
             break;
+        }
         case 132:
             graphics.textboxremove();
             hascontrol = true;
@@ -1973,19 +1976,19 @@ void Game::updatestate()
             state++;
             statedelay = 5;
 
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].colour = 0;
                 obj.entities[i].invis = false;
 
                 int j = obj.getteleporter();
-                if (j > -1)
+                if (INBOUNDS_VEC(j, obj.entities))
                 {
                     obj.entities[i].xp = obj.entities[j].xp+44;
                     obj.entities[i].yp = obj.entities[j].yp+44;
-                    obj.entities[i].oldxp = obj.entities[i].xp;
-                    obj.entities[i].oldyp = obj.entities[i].yp;
+                    obj.entities[i].lerpoldxp = obj.entities[i].xp;
+                    obj.entities[i].lerpoldyp = obj.entities[i].yp;
                 }
                 obj.entities[i].ay = -6;
                 obj.entities[i].ax = 6;
@@ -1994,7 +1997,7 @@ void Game::updatestate()
             }
 
             i = obj.getteleporter();
-            if (i > -1)
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].tile = 1;
                 obj.entities[i].colour = 101;
@@ -2002,62 +2005,76 @@ void Game::updatestate()
             break;
         }
         case 2503:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 10;
             }
             break;
+        }
         case 2504:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 //obj.entities[i].xp += 10;
             }
             break;
+        }
         case 2505:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 8;
             }
             break;
+        }
         case 2506:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 6;
             }
             break;
+        }
         case 2507:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 //obj.entities[i].xp += 4;
             }
             break;
+        }
         case 2508:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 2;
             }
             break;
+        }
         case 2509:
+        {
             state++;
             statedelay = 15;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 1;
             }
             break;
+        }
         case 2510:
             advancetext = true;
             hascontrol = false;
@@ -2123,6 +2140,7 @@ void Game::updatestate()
             music.playef(10);
             break;
         case 3005:
+        {
             //Activating a teleporter 2
             state++;
             statedelay = 50;
@@ -2151,26 +2169,27 @@ void Game::updatestate()
                 break; //Intermission 1
             }
 
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].colour = 0;
                 obj.entities[i].invis = true;
             }
 
             i = obj.getcompanion();
-            if(i>-1)
+            if(INBOUNDS_VEC(i, obj.entities))
             {
                 obj.removeentity(i);
             }
 
             i = obj.getteleporter();
-            if (i > -1)
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].tile = 1;
                 obj.entities[i].colour = 100;
             }
             break;
+        }
 
         case 3006:
             //Level complete! (warp zone)
@@ -2631,7 +2650,6 @@ void Game::updatestate()
                 state++;
                 statedelay = 30;
                 graphics.textboxremove();
-                crewstats[1] = 0; //Set violet's rescue script to 0 to make the next bit easier
                 teleportscript = "";
             }
             break;
@@ -2644,13 +2662,20 @@ void Game::updatestate()
             if(graphics.fademode==1)
             {
                 startscript = true;
-                if (nocutscenes)
+                if (crewrescued() == 6)
                 {
-                    newscript="bigopenworldskip";
+                    newscript = "startlevel_final";
                 }
                 else
                 {
-                    newscript = "bigopenworld";
+                    if (nocutscenes)
+                    {
+                        newscript="bigopenworldskip";
+                    }
+                    else
+                    {
+                        newscript = "bigopenworld";
+                    }
                 }
                 state = 0;
             }
@@ -3148,9 +3173,10 @@ void Game::updatestate()
             }
             break;
         case 3511:
+        {
             //Activating a teleporter (long version for level complete)
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].colour = 102;
             }
@@ -3161,6 +3187,7 @@ void Game::updatestate()
             screenshake = 90;
             music.playef(9);
             break;
+        }
         case 3512:
             //Activating a teleporter 2
             state++;
@@ -3183,14 +3210,15 @@ void Game::updatestate()
             music.playef(9);
             break;
         case 3515:
+        {
             //Activating a teleporter 2
             state++;
             statedelay = 0;
             flashlight = 5;
             screenshake = 0;
 
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].colour = 0;
                 obj.entities[i].invis = true;
@@ -3200,6 +3228,7 @@ void Game::updatestate()
             music.playef(10);
             statedelay = 60;
             break;
+        }
         case 3516:
             graphics.fademode = 2;
             state++;
@@ -3272,6 +3301,7 @@ void Game::updatestate()
             music.playef(10);
             break;
         case 4002:
+        {
             //Activating a teleporter 2
             state++;
             statedelay = 10;
@@ -3280,20 +3310,21 @@ void Game::updatestate()
             //state = 3020; //Space Station
             //state = 3040; //Lab
 
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].colour = 0;
                 obj.entities[i].invis = true;
             }
 
             i = obj.getteleporter();
-            if(i>-1)
+            if(INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].tile = 1;
                 obj.entities[i].colour = 100;
             }
             break;
+        }
         case 4003:
             state = 0;
             statedelay = 0;
@@ -3317,20 +3348,21 @@ void Game::updatestate()
             music.playef(10);
             break;
         case 4012:
+        {
             //Activating a teleporter 2
             state++;
             statedelay = 5;
 
-            i = obj.getplayer();
-            j = obj.getteleporter();
-            if (i > -1)
+            int i = obj.getplayer();
+            int j = obj.getteleporter();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
-                if (j != -1)
+                if (INBOUNDS_VEC(j, obj.entities))
                 {
                     obj.entities[i].xp = obj.entities[j].xp+44;
                     obj.entities[i].yp = obj.entities[j].yp+44;
-                    obj.entities[i].oldxp = obj.entities[i].xp;
-                    obj.entities[i].oldyp = obj.entities[i].yp;
+                    obj.entities[i].lerpoldxp = obj.entities[i].xp;
+                    obj.entities[i].lerpoldyp = obj.entities[i].yp;
                     obj.entities[j].tile = 2;
                     obj.entities[j].colour = 101;
                 }
@@ -3344,56 +3376,70 @@ void Game::updatestate()
                 obj.entities[i].vx = 6;
             }
             break;
+        }
         case 4013:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 10;
             }
             break;
+        }
         case 4014:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 10;
             }
             break;
+        }
         case 4015:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 8;
             }
             break;
+        }
         case 4016:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 6;
             }
             break;
+        }
         case 4017:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 3;
             }
             break;
+        }
         case 4018:
+        {
             state++;
             statedelay = 15;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 1;
             }
             break;
+        }
         case 4019:
+        {
             if (intimetrial || nodeathmode || inintermission)
             {
             }
@@ -3401,9 +3447,9 @@ void Game::updatestate()
             {
                 savetele();
             }
-            i = obj.getteleporter();
+            int i = obj.getteleporter();
             activetele = true;
-            if (i > -1)
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 teleblock.x = obj.entities[i].xp - 32;
                 teleblock.y = obj.entities[i].yp - 32;
@@ -3414,6 +3460,7 @@ void Game::updatestate()
             advancetext = false;
             state = 0;
             break;
+        }
 
         case 4020:
             //Activating a teleporter (default appear)
@@ -3432,20 +3479,21 @@ void Game::updatestate()
             music.playef(10);
             break;
         case 4022:
+        {
             //Activating a teleporter 2
             state++;
             statedelay = 5;
 
-            i = obj.getplayer();
-            j = obj.getteleporter();
-            if (i > -1)
+            int i = obj.getplayer();
+            int j = obj.getteleporter();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
-                if (j != -1)
+                if (INBOUNDS_VEC(j, obj.entities))
                 {
                     obj.entities[i].xp = obj.entities[j].xp+44;
                     obj.entities[i].yp = obj.entities[j].yp+44;
-                    obj.entities[i].oldxp = obj.entities[i].xp;
-                    obj.entities[i].oldyp = obj.entities[i].yp;
+                    obj.entities[i].lerpoldxp = obj.entities[i].xp;
+                    obj.entities[i].lerpoldyp = obj.entities[i].yp;
                     obj.entities[j].tile = 2;
                     obj.entities[j].colour = 101;
                 }
@@ -3459,55 +3507,68 @@ void Game::updatestate()
                 obj.entities[i].vx = 6;
             }
             break;
+        }
         case 4023:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 12;
             }
             break;
+        }
         case 4024:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 12;
             }
             break;
+        }
         case 4025:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 10;
             }
             break;
+        }
         case 4026:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 8;
             }
             break;
+        }
         case 4027:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 5;
             }
             break;
+        }
         case 4028:
+        {
             state++;
             statedelay = 15;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 2;
             }
             break;
+        }
         case 4029:
             hascontrol = true;
             advancetext = false;
@@ -3531,20 +3592,21 @@ void Game::updatestate()
             music.playef(10);
             break;
         case 4032:
+        {
             //Activating a teleporter 2
             state++;
             statedelay = 5;
 
-            i = obj.getplayer();
-            j = obj.getteleporter();
-            if (i > -1)
+            int i = obj.getplayer();
+            int j = obj.getteleporter();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
-                if (j != -1)
+                if (INBOUNDS_VEC(j, obj.entities))
                 {
                     obj.entities[i].xp = obj.entities[j].xp+44;
                     obj.entities[i].yp = obj.entities[j].yp+44;
-                    obj.entities[i].oldxp = obj.entities[i].xp;
-                    obj.entities[i].oldyp = obj.entities[i].yp;
+                    obj.entities[i].lerpoldxp = obj.entities[i].xp;
+                    obj.entities[i].lerpoldyp = obj.entities[i].yp;
                     obj.entities[j].tile = 2;
                     obj.entities[j].colour = 101;
                 }
@@ -3558,55 +3620,68 @@ void Game::updatestate()
                 obj.entities[i].vx = -6;
             }
             break;
+        }
         case 4033:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp -= 12;
             }
             break;
+        }
         case 4034:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp -= 12;
             }
             break;
+        }
         case 4035:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp -= 10;
             }
             break;
+        }
         case 4036:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp -= 8;
             }
             break;
+        }
         case 4037:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp -= 5;
             }
             break;
+        }
         case 4038:
+        {
             state++;
             statedelay = 15;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp -= 2;
             }
             break;
+        }
         case 4039:
             hascontrol = true;
             advancetext = false;
@@ -3630,20 +3705,21 @@ void Game::updatestate()
             music.playef(10);
             break;
         case 4042:
+        {
             //Activating a teleporter 2
             state++;
             statedelay = 5;
 
-            i = obj.getplayer();
-            j = obj.getteleporter();
-            if (i > -1)
+            int i = obj.getplayer();
+            int j = obj.getteleporter();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
-                if (j != -1)
+                if (INBOUNDS_VEC(j, obj.entities))
                 {
                     obj.entities[i].xp = obj.entities[j].xp+44;
                     obj.entities[i].yp = obj.entities[j].yp+44;
-                    obj.entities[i].oldxp = obj.entities[i].xp;
-                    obj.entities[i].oldyp = obj.entities[i].yp;
+                    obj.entities[i].lerpoldxp = obj.entities[i].xp;
+                    obj.entities[i].lerpoldyp = obj.entities[i].yp;
                     obj.entities[j].tile = 2;
                     obj.entities[j].colour = 101;
                 }
@@ -3657,60 +3733,73 @@ void Game::updatestate()
                 obj.entities[i].vx = 6;
             }
             break;
+        }
         case 4043:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 12;
                 obj.entities[i].yp -= 15;
             }
             break;
+        }
         case 4044:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 12;
                 obj.entities[i].yp -= 10;
             }
             break;
+        }
         case 4045:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 12;
                 obj.entities[i].yp -= 10;
             }
             break;
+        }
         case 4046:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 8;
                 obj.entities[i].yp -= 8;
             }
             break;
+        }
         case 4047:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 6;
                 obj.entities[i].yp -= 8;
             }
             break;
+        }
         case 4048:
+        {
             state++;
             statedelay = 15;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 3;
             }
             break;
+        }
         case 4049:
             hascontrol = true;
             advancetext = false;
@@ -3734,20 +3823,21 @@ void Game::updatestate()
             music.playef(10);
             break;
         case 4052:
+        {
             //Activating a teleporter 2
             state++;
             statedelay = 5;
 
-            i = obj.getplayer();
-            j = obj.getteleporter();
-            if (i > -1)
+            int i = obj.getplayer();
+            int j = obj.getteleporter();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
-                if (j != -1)
+                if (INBOUNDS_VEC(j, obj.entities))
                 {
                     obj.entities[i].xp = obj.entities[j].xp+44;
                     obj.entities[i].yp = obj.entities[j].yp+44;
-                    obj.entities[i].oldxp = obj.entities[i].xp;
-                    obj.entities[i].oldyp = obj.entities[i].yp;
+                    obj.entities[i].lerpoldxp = obj.entities[i].xp;
+                    obj.entities[i].lerpoldyp = obj.entities[i].yp;
                     obj.entities[j].tile = 2;
                     obj.entities[j].colour = 101;
                 }
@@ -3761,60 +3851,73 @@ void Game::updatestate()
                 obj.entities[i].vx = 6;
             }
             break;
+        }
         case 4053:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 4;
                 obj.entities[i].yp -= 15;
             }
             break;
+        }
         case 4054:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 4;
                 obj.entities[i].yp -= 10;
             }
             break;
+        }
         case 4055:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 4;
                 obj.entities[i].yp -= 10;
             }
             break;
+        }
         case 4056:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 4;
                 obj.entities[i].yp -= 8;
             }
             break;
+        }
         case 4057:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 2;
                 obj.entities[i].yp -= 8;
             }
             break;
+        }
         case 4058:
+        {
             state++;
             statedelay = 15;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 1;
             }
             break;
+        }
         case 4059:
             hascontrol = true;
             advancetext = false;
@@ -3838,20 +3941,21 @@ void Game::updatestate()
             music.playef(10);
             break;
         case 4062:
+        {
             //Activating a teleporter 2
             state++;
             statedelay = 5;
 
-            i = obj.getplayer();
-            j = obj.getteleporter();
-            if (i > -1)
+            int i = obj.getplayer();
+            int j = obj.getteleporter();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
-                if (j != -1)
+                if (INBOUNDS_VEC(j, obj.entities))
                 {
                     obj.entities[i].xp = obj.entities[j].xp+44;
                     obj.entities[i].yp = obj.entities[j].yp+44;
-                    obj.entities[i].oldxp = obj.entities[i].xp;
-                    obj.entities[i].oldyp = obj.entities[i].yp;
+                    obj.entities[i].lerpoldxp = obj.entities[i].xp;
+                    obj.entities[i].lerpoldyp = obj.entities[i].yp;
                     obj.entities[j].tile = 2;
                     obj.entities[j].colour = 101;
                 }
@@ -3865,57 +3969,70 @@ void Game::updatestate()
                 obj.entities[i].vx = -6;
             }
             break;
+        }
         case 4063:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp -= 28;
                 obj.entities[i].yp -= 8;
             }
             break;
+        }
         case 4064:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp -= 28;
                 obj.entities[i].yp -= 8;
             }
             break;
+        }
         case 4065:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp -= 25;
             }
             break;
+        }
         case 4066:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp -= 25;
             }
             break;
+        }
         case 4067:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp -= 20;
             }
             break;
+        }
         case 4068:
+        {
             state++;
             statedelay = 15;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp -= 16;
             }
             break;
+        }
         case 4069:
             hascontrol = true;
             advancetext = false;
@@ -3940,20 +4057,21 @@ void Game::updatestate()
             music.playef(10);
             break;
         case 4072:
+        {
             //Activating a teleporter 2
             state++;
             statedelay = 5;
 
-            i = obj.getplayer();
-            j = obj.getteleporter();
-            if (i > -1)
+            int i = obj.getplayer();
+            int j = obj.getteleporter();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
-                if (j != -1)
+                if (INBOUNDS_VEC(j, obj.entities))
                 {
                     obj.entities[i].xp = obj.entities[j].xp+44;
                     obj.entities[i].yp = obj.entities[j].yp+44;
-                    obj.entities[i].oldxp = obj.entities[i].xp;
-                    obj.entities[i].oldyp = obj.entities[i].yp;
+                    obj.entities[i].lerpoldxp = obj.entities[i].xp;
+                    obj.entities[i].lerpoldyp = obj.entities[i].yp;
                     obj.entities[j].tile = 2;
                     obj.entities[j].colour = 101;
                 }
@@ -3967,55 +4085,68 @@ void Game::updatestate()
                 obj.entities[i].vx = 6;
             }
             break;
+        }
         case 4073:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 10;
             }
             break;
+        }
         case 4074:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 10;
             }
             break;
+        }
         case 4075:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 8;
             }
             break;
+        }
         case 4076:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 6;
             }
             break;
+        }
         case 4077:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 3;
             }
             break;
+        }
         case 4078:
+        {
             state++;
             statedelay = 15;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 1;
             }
             break;
+        }
         case 4079:
             state = 0;
             startscript = true;
@@ -4039,20 +4170,21 @@ void Game::updatestate()
             music.playef(10);
             break;
         case 4082:
+        {
             //Activating a teleporter 2
             state++;
             statedelay = 5;
 
-            i = obj.getplayer();
-            j = obj.getteleporter();
-            if (i > -1)
+            int i = obj.getplayer();
+            int j = obj.getteleporter();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
-                if (j != -1)
+                if (INBOUNDS_VEC(j, obj.entities))
                 {
                     obj.entities[i].xp = obj.entities[j].xp+44;
                     obj.entities[i].yp = obj.entities[j].yp+44;
-                    obj.entities[i].oldxp = obj.entities[i].xp;
-                    obj.entities[i].oldyp = obj.entities[i].yp;
+                    obj.entities[i].lerpoldxp = obj.entities[i].xp;
+                    obj.entities[i].lerpoldyp = obj.entities[i].yp;
                     obj.entities[j].tile = 2;
                     obj.entities[j].colour = 101;
                 }
@@ -4066,55 +4198,68 @@ void Game::updatestate()
                 obj.entities[i].vx = 6;
             }
             break;
+        }
         case 4083:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 10;
             }
             break;
+        }
         case 4084:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 10;
             }
             break;
+        }
         case 4085:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 8;
             }
             break;
+        }
         case 4086:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 6;
             }
             break;
+        }
         case 4087:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 3;
             }
             break;
+        }
         case 4088:
+        {
             state++;
             statedelay = 15;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 1;
             }
             break;
+        }
         case 4089:
             startscript = true;
             newscript = "gamecomplete_ending";
@@ -4138,20 +4283,21 @@ void Game::updatestate()
             music.playef(10);
             break;
         case 4092:
+        {
             //Activating a teleporter 2
             state++;
             statedelay = 5;
 
-            i = obj.getplayer();
-            j = obj.getteleporter();
-            if (i > -1)
+            int i = obj.getplayer();
+            int j = obj.getteleporter();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
-                if (j != -1)
+                if (INBOUNDS_VEC(j, obj.entities))
                 {
                     obj.entities[i].xp = obj.entities[j].xp+44;
                     obj.entities[i].yp = obj.entities[j].yp+44;
-                    obj.entities[i].oldxp = obj.entities[i].xp;
-                    obj.entities[i].oldyp = obj.entities[i].yp;
+                    obj.entities[i].lerpoldxp = obj.entities[i].xp;
+                    obj.entities[i].lerpoldyp = obj.entities[i].yp;
                     obj.entities[j].tile = 2;
                     obj.entities[j].colour = 101;
                 }
@@ -4165,55 +4311,68 @@ void Game::updatestate()
                 obj.entities[i].vx = 6;
             }
             break;
+        }
         case 4093:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 10;
             }
             break;
+        }
         case 4094:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 10;
             }
             break;
+        }
         case 4095:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 8;
             }
             break;
+        }
         case 4096:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 6;
             }
             break;
+        }
         case 4097:
+        {
             state++;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 3;
             }
             break;
+        }
         case 4098:
+        {
             state++;
             statedelay = 15;
-            i = obj.getplayer();
-            if (i > -1)
+            int i = obj.getplayer();
+            if (INBOUNDS_VEC(i, obj.entities))
             {
                 obj.entities[i].xp += 1;
             }
             break;
+        }
         case 4099:
             if (nocutscenes)
             {
@@ -4880,7 +5039,7 @@ void Game::deathsequence()
     {
         i = obj.getplayer();
     }
-    if (i > -1)
+    if (INBOUNDS_VEC(i, obj.entities))
     {
         obj.entities[i].colour = 1;
 
@@ -4895,7 +5054,7 @@ void Game::deathsequence()
         }
         deathcounts++;
         music.playef(2);
-        if (i > -1)
+        if (INBOUNDS_VEC(i, obj.entities))
         {
             obj.entities[i].invis = true;
         }
@@ -4916,7 +5075,7 @@ void Game::deathsequence()
             }
         }
     }
-    if (i > -1)
+    if (INBOUNDS_VEC(i, obj.entities))
     {
         if (deathseq == 25) obj.entities[i].invis = true;
         if (deathseq == 20) obj.entities[i].invis = true;
@@ -4927,7 +5086,7 @@ void Game::deathsequence()
     }
     if (!nodeathmode)
     {
-        if (i > -1 && deathseq <= 1) obj.entities[i].invis = false;
+        if (INBOUNDS_VEC(i, obj.entities) && deathseq <= 1) obj.entities[i].invis = false;
     }
     else
     {
@@ -5051,6 +5210,11 @@ void Game::loadquick()
     tinyxml2::XMLDocument doc;
     if (!FILESYSTEM_loadTiXml2Document("saves/qsave.vvv", doc)) return;
 
+    readmaingamesave(doc);
+}
+
+void Game::readmaingamesave(tinyxml2::XMLDocument& doc)
+{
     tinyxml2::XMLHandle hDoc(&doc);
     tinyxml2::XMLElement* pElem;
     tinyxml2::XMLHandle hRoot(NULL);
@@ -5587,8 +5751,6 @@ void Game::initteleportermode()
 
 void Game::savetele()
 {
-    //TODO make this code a bit cleaner.
-
     if (map.custommode || inspecial())
     {
         //Don't trash save data!
@@ -5596,6 +5758,54 @@ void Game::savetele()
     }
 
     tinyxml2::XMLDocument doc;
+    telesummary = writemaingamesave(doc);
+
+    if(FILESYSTEM_saveTiXml2Document("saves/tsave.vvv", doc))
+    {
+        printf("Game saved\n");
+    }
+    else
+    {
+        printf("Could Not Save game!\n");
+        printf("Failed: %s%s\n", saveFilePath.c_str(), "tsave.vvv");
+    }
+}
+
+
+void Game::savequick()
+{
+    if (map.custommode || inspecial())
+    {
+        //Don't trash save data!
+        return;
+    }
+
+    tinyxml2::XMLDocument doc;
+    quicksummary = writemaingamesave(doc);
+
+    if(FILESYSTEM_saveTiXml2Document("saves/qsave.vvv", doc))
+    {
+        printf("Game saved\n");
+    }
+    else
+    {
+        printf("Could Not Save game!\n");
+        printf("Failed: %s%s\n", saveFilePath.c_str(), "qsave.vvv");
+    }
+
+}
+
+// Returns summary of save
+std::string Game::writemaingamesave(tinyxml2::XMLDocument& doc)
+{
+    //TODO make this code a bit cleaner.
+
+    if (map.custommode || inspecial())
+    {
+        //Don't trash save data!
+        return "";
+    }
+
     tinyxml2::XMLElement* msg;
     tinyxml2::XMLDeclaration* decl = doc.NewDeclaration();
     doc.LinkEndChild( decl );
@@ -5769,214 +5979,9 @@ void Game::savetele()
     msg->LinkEndChild( doc.NewText( summary.c_str() ));
     msgs->LinkEndChild( msg );
 
-    telesummary = summary;
-
-    if(FILESYSTEM_saveTiXml2Document("saves/tsave.vvv", doc))
-    {
-        printf("Game saved\n");
-    }
-    else
-    {
-        printf("Could Not Save game!\n");
-        printf("Failed: %s%s\n", saveFilePath.c_str(), "tsave.vvv");
-    }
+    return summary;
 }
 
-
-void Game::savequick()
-{
-    if (map.custommode || inspecial())
-    {
-        //Don't trash save data!
-        return;
-    }
-
-    tinyxml2::XMLDocument doc;
-    tinyxml2::XMLElement* msg;
-    tinyxml2::XMLDeclaration* decl = doc.NewDeclaration();
-    doc.LinkEndChild( decl );
-
-    tinyxml2::XMLElement * root = doc.NewElement( "Save" );
-    doc.LinkEndChild( root );
-
-    tinyxml2::XMLComment * comment = doc.NewComment(" Save file " );
-    root->LinkEndChild( comment );
-
-    tinyxml2::XMLElement * msgs = doc.NewElement( "Data" );
-    root->LinkEndChild( msgs );
-
-
-    //Flags, map and stats
-
-    std::string mapExplored;
-    for(size_t i = 0; i < SDL_arraysize(map.explored); i++ )
-    {
-        mapExplored += help.String(map.explored[i]) + ",";
-    }
-    msg = doc.NewElement( "worldmap" );
-    msg->LinkEndChild( doc.NewText( mapExplored.c_str() ));
-    msgs->LinkEndChild( msg );
-
-    std::string flags;
-    for(size_t i = 0; i < SDL_arraysize(obj.flags); i++ )
-    {
-        flags += help.String((int) obj.flags[i]) + ",";
-    }
-    msg = doc.NewElement( "flags" );
-    msg->LinkEndChild( doc.NewText( flags.c_str() ));
-    msgs->LinkEndChild( msg );
-
-    std::string crewstatsString;
-    for(size_t i = 0; i < SDL_arraysize(crewstats); i++ )
-    {
-        crewstatsString += help.String(crewstats[i]) + ",";
-    }
-    msg = doc.NewElement( "crewstats" );
-    msg->LinkEndChild( doc.NewText( crewstatsString.c_str() ));
-    msgs->LinkEndChild( msg );
-
-    std::string collect;
-    for(size_t i = 0; i < SDL_arraysize(obj.collect); i++ )
-    {
-        collect += help.String((int) obj.collect[i]) + ",";
-    }
-    msg = doc.NewElement( "collect" );
-    msg->LinkEndChild( doc.NewText( collect.c_str() ));
-    msgs->LinkEndChild( msg );
-
-    //Position
-
-    msg = doc.NewElement( "finalx" );
-    msg->LinkEndChild( doc.NewText( help.String(map.finalx).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "finaly" );
-    msg->LinkEndChild( doc.NewText( help.String(map.finaly).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "savex" );
-    msg->LinkEndChild( doc.NewText( help.String(savex).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "savey" );
-    msg->LinkEndChild( doc.NewText( help.String(savey).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "saverx" );
-    msg->LinkEndChild( doc.NewText( help.String(saverx).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "savery" );
-    msg->LinkEndChild( doc.NewText( help.String(savery).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "savegc" );
-    msg->LinkEndChild( doc.NewText( help.String(savegc).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "savedir" );
-    msg->LinkEndChild( doc.NewText( help.String(savedir).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "savepoint" );
-    msg->LinkEndChild( doc.NewText( help.String(savepoint).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "trinkets" );
-    msg->LinkEndChild( doc.NewText( help.String(trinkets()).c_str() ));
-    msgs->LinkEndChild( msg );
-
-
-    //Special stats
-
-    if(music.nicefade==1)
-    {
-        msg = doc.NewElement( "currentsong" );
-        msg->LinkEndChild( doc.NewText( help.String(music.nicechange).c_str() ));
-        msgs->LinkEndChild( msg );
-    }
-    else
-    {
-        msg = doc.NewElement( "currentsong" );
-        msg->LinkEndChild( doc.NewText( help.String(music.currentsong).c_str() ));
-        msgs->LinkEndChild( msg );
-    }
-
-    msg = doc.NewElement( "teleportscript" );
-    msg->LinkEndChild( doc.NewText( teleportscript.c_str() ));
-    msgs->LinkEndChild( msg );
-    msg = doc.NewElement( "companion" );
-    msg->LinkEndChild( doc.NewText( help.String(companion).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "lastsaved" );
-    msg->LinkEndChild( doc.NewText( help.String(lastsaved).c_str() ));
-    msgs->LinkEndChild( msg );
-    msg = doc.NewElement( "supercrewmate" );
-    msg->LinkEndChild( doc.NewText( BoolToString(supercrewmate) ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "scmprogress" );
-    msg->LinkEndChild( doc.NewText( help.String(scmprogress).c_str() ));
-    msgs->LinkEndChild( msg );
-    msg = doc.NewElement( "scmmoveme" );
-    msg->LinkEndChild( doc.NewText( BoolToString(scmmoveme) ));
-    msgs->LinkEndChild( msg );
-
-
-    msg = doc.NewElement( "finalmode" );
-    msg->LinkEndChild( doc.NewText( BoolToString(map.finalmode) ));
-    msgs->LinkEndChild( msg );
-    msg = doc.NewElement( "finalstretch" );
-    msg->LinkEndChild( doc.NewText( BoolToString(map.finalstretch) ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "frames" );
-    msg->LinkEndChild( doc.NewText( help.String(frames).c_str() ));
-    msgs->LinkEndChild( msg );
-    msg = doc.NewElement( "seconds" );
-    msg->LinkEndChild( doc.NewText( help.String(seconds).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "minutes" );
-    msg->LinkEndChild( doc.NewText( help.String(minutes).c_str()) );
-    msgs->LinkEndChild( msg );
-    msg = doc.NewElement( "hours" );
-    msg->LinkEndChild( doc.NewText( help.String(hours).c_str()) );
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "deathcounts" );
-    msg->LinkEndChild( doc.NewText( help.String(deathcounts).c_str() ));
-    msgs->LinkEndChild( msg );
-    msg = doc.NewElement( "totalflips" );
-    msg->LinkEndChild( doc.NewText( help.String(totalflips).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "hardestroom" );
-    msg->LinkEndChild( doc.NewText( hardestroom.c_str() ));
-    msgs->LinkEndChild( msg );
-    msg = doc.NewElement( "hardestroomdeaths" );
-    msg->LinkEndChild( doc.NewText( help.String(hardestroomdeaths).c_str() ));
-    msgs->LinkEndChild( msg );
-
-    msg = doc.NewElement( "summary" );
-    std::string summary = savearea + ", " + timestring();
-    msg->LinkEndChild( doc.NewText( summary.c_str() ));
-    msgs->LinkEndChild( msg );
-
-    quicksummary = summary;
-
-    if(FILESYSTEM_saveTiXml2Document("saves/qsave.vvv", doc))
-    {
-        printf("Game saved\n");
-    }
-    else
-    {
-        printf("Could Not Save game!\n");
-        printf("Failed: %s%s\n", saveFilePath.c_str(), "qsave.vvv");
-    }
-
-}
 
 void Game::customsavequick(std::string savfile)
 {
@@ -6192,172 +6197,7 @@ void Game::loadtele()
     tinyxml2::XMLDocument doc;
     if (!FILESYSTEM_loadTiXml2Document("saves/tsave.vvv", doc)) return;
 
-    tinyxml2::XMLHandle hDoc(&doc);
-    tinyxml2::XMLElement* pElem;
-    tinyxml2::XMLHandle hRoot(NULL);
-
-
-    {
-        pElem=hDoc.FirstChildElement().ToElement();
-        // should always have a valid root but handle gracefully if it does
-        if (!pElem)
-        {
-            printf("Save Not Found\n");
-        }
-
-        // save this for later
-        hRoot=tinyxml2::XMLHandle(pElem);
-    }
-
-
-    for( pElem = hRoot.FirstChildElement( "Data" ).FirstChild().ToElement(); pElem; pElem=pElem->NextSiblingElement())
-    {
-        std::string pKey(pElem->Value());
-        const char* pText = pElem->GetText() ;
-        if(pText == NULL)
-        {
-            pText = "";
-        }
-
-        LOAD_ARRAY_RENAME(worldmap, map.explored)
-
-        LOAD_ARRAY_RENAME(flags, obj.flags)
-
-        LOAD_ARRAY(crewstats)
-
-        LOAD_ARRAY_RENAME(collect, obj.collect)
-
-        if (pKey == "finalmode")
-        {
-            map.finalmode = help.Int(pText);
-        }
-        if (pKey == "finalstretch")
-        {
-            map.finalstretch = help.Int(pText);
-        }
-
-        if (map.finalmode)
-        {
-            map.final_colormode = false;
-            map.final_mapcol = 0;
-            map.final_colorframe = 0;
-        }
-        if (map.finalstretch)
-        {
-            map.finalstretch = true;
-            map.final_colormode = true;
-            map.final_mapcol = 0;
-            map.final_colorframe = 1;
-        }
-
-
-        if (pKey == "finalx")
-        {
-            map.finalx = help.Int(pText);
-        }
-        else if (pKey == "finaly")
-        {
-            map.finaly = help.Int(pText);
-        }
-        else if (pKey == "savex")
-        {
-            savex = help.Int(pText);
-        }
-        else if (pKey == "savey")
-        {
-            savey = help.Int(pText);
-        }
-        else if (pKey == "saverx")
-        {
-            saverx = help.Int(pText);
-        }
-        else if (pKey == "savery")
-        {
-            savery = help.Int(pText);
-        }
-        else if (pKey == "savegc")
-        {
-            savegc = help.Int(pText);
-        }
-        else if (pKey == "savedir")
-        {
-            savedir= help.Int(pText);
-        }
-        else if (pKey == "savepoint")
-        {
-            savepoint = help.Int(pText);
-        }
-        else if (pKey == "companion")
-        {
-            companion = help.Int(pText);
-        }
-        else if (pKey == "lastsaved")
-        {
-            lastsaved = help.Int(pText);
-        }
-        else if (pKey == "teleportscript")
-        {
-            teleportscript = pText;
-        }
-        else if (pKey == "supercrewmate")
-        {
-            supercrewmate = help.Int(pText);
-        }
-        else if (pKey == "scmprogress")
-        {
-            scmprogress = help.Int(pText);
-        }
-        else if (pKey == "scmmoveme")
-        {
-            scmmoveme = help.Int(pText);
-        }
-        else if (pKey == "frames")
-        {
-            frames = help.Int(pText);
-            frames = 0;
-        }
-        else if (pKey == "seconds")
-        {
-            seconds = help.Int(pText);
-        }
-        else if (pKey == "minutes")
-        {
-            minutes = help.Int(pText);
-        }
-        else if (pKey == "hours")
-        {
-            hours = help.Int(pText);
-        }
-        else if (pKey == "deathcounts")
-        {
-            deathcounts = help.Int(pText);
-        }
-        else if (pKey == "totalflips")
-        {
-            totalflips = help.Int(pText);
-        }
-        else if (pKey == "hardestroom")
-        {
-            hardestroom = pText;
-        }
-        else if (pKey == "hardestroomdeaths")
-        {
-            hardestroomdeaths = help.Int(pText);
-        }
-        else if (pKey == "currentsong")
-        {
-            int song = help.Int(pText);
-            if (song != -1)
-            {
-                music.play(song);
-            }
-        }
-
-    }
-
-    map.showteleporters = true;
-    if(obj.flags[12]) map.showtargets = true;
-    if (obj.flags[42]) map.showtrinkets = true;
+    readmaingamesave(doc);
 }
 
 std::string Game::unrescued()
@@ -6780,8 +6620,8 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("animated backgrounds");
         option("screen effects");
         option("text outline");
-        option("invincibility", !ingame_titlemode || (!game.insecretlab && !game.intimetrial && !game.nodeathmode));
-        option("slowdown", !ingame_titlemode || (!game.insecretlab && !game.intimetrial && !game.nodeathmode));
+        option("invincibility", !ingame_titlemode || (!insecretlab && !intimetrial && !nodeathmode));
+        option("slowdown", !ingame_titlemode || (!insecretlab && !intimetrial && !nodeathmode));
         option("return");
         menuyoff = 0;
         break;
@@ -7333,7 +7173,7 @@ void Game::returntolab()
     graphics.fademode = 4;
     map.gotoroom(119, 107);
     int player = obj.getplayer();
-    if (player > -1)
+    if (INBOUNDS_VEC(player, obj.entities))
     {
         obj.entities[player].xp = 132;
         obj.entities[player].yp = 137;
@@ -7346,7 +7186,7 @@ void Game::returntolab()
     savex = 132;
     savey = 137;
     savegc = 0;
-    if (player > -1)
+    if (INBOUNDS_VEC(player, obj.entities))
     {
         savedir = obj.entities[player].dir;
     }
@@ -7357,13 +7197,13 @@ void Game::returntolab()
 #if !defined(NO_CUSTOM_LEVELS)
 void Game::returntoeditor()
 {
-    game.gamestate = EDITORMODE;
+    gamestate = EDITORMODE;
 
     graphics.textbox.clear();
-    game.hascontrol = true;
-    game.advancetext = false;
-    game.completestop = false;
-    game.state = 0;
+    hascontrol = true;
+    advancetext = false;
+    completestop = false;
+    state = 0;
     graphics.showcutscenebars = false;
     graphics.fademode = 0;
 
@@ -7395,13 +7235,13 @@ void Game::returntopausemenu()
     map.kludge_to_bg();
     map.tdrawback = true;
     graphics.backgrounddrawn = false;
-    game.mapheld = true;
+    mapheld = true;
     graphics.flipmode = graphics.setflipmode;
     if (!map.custommode && !graphics.flipmode)
     {
         obj.flags[73] = true;
     }
-    game.shouldreturntopausemenu = true;
+    shouldreturntopausemenu = true;
 }
 
 void Game::unlockAchievement(const char *name) {

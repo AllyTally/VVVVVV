@@ -62,7 +62,7 @@ void menurender()
       graphics.Print( -1, 100, "ERROR: No levels found.", tr, tg, tb, true);
       }
       int tmp=game.currentmenuoption+(game.levelpage*8);
-      if(tmp>=0 && tmp < (int) ed.ListOfMetaData.size()){ // FIXME: size_t/int! -flibit
+      if(INBOUNDS_VEC(tmp, ed.ListOfMetaData)){
         //Don't show next/previous page or return to menu options here!
         if(game.menuoptions.size() - game.currentmenuoption<=3){
 
@@ -1685,7 +1685,7 @@ void gamerender()
     }
 
     float act_alpha = graphics.lerp(game.prev_act_fade, game.act_fade) / 10.0f;
-    if (game.activeactivity > -1)
+    if (INBOUNDS_VEC(game.activeactivity, obj.entities))
     {
         game.activity_lastprompt = obj.blocks[game.activeactivity].prompt;
         game.activity_r = obj.blocks[game.activeactivity].r;

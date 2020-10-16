@@ -1,10 +1,10 @@
+#define MUSIC_DEFINITION
 #include "Music.h"
 
 #include <SDL.h>
 #include <stdio.h>
 
 #include "BinaryBlob.h"
-#include "Game.h"
 #include "Map.h"
 #include "UtilityClass.h"
 
@@ -132,7 +132,7 @@ void musicclass::init()
 
 	safeToProcessMusic= false;
 	m_doFadeInVol = false;
-	musicVolume = 128;
+	musicVolume = MIX_MAX_VOLUME;
 	FadeVolAmountPerFrame = 0;
 
 	currentsong = 0;
@@ -152,6 +152,7 @@ void musicclass::init()
 
 void songend()
 {
+	extern musicclass music;
 	music.songEnd = SDL_GetPerformanceCounter();
 	music.currentsong = -1;
 }
@@ -176,13 +177,13 @@ void musicclass::play(int t, const double position_sec /*= 0.0*/, const int fade
 		t += num_mmmmmm_tracks;
 	}
 	safeToProcessMusic = true;
-	Mix_VolumeMusic(128);
+	musicVolume = MIX_MAX_VOLUME;
 	if (currentsong !=t)
 	{
 		if (t != -1)
 		{
 			currentsong = t;
-			if (!INBOUNDS(t, musicTracks))
+			if (!INBOUNDS_VEC(t, musicTracks))
 			{
 				puts("play() out-of-bounds!");
 				currentsong = -1;
@@ -245,7 +246,6 @@ void musicclass::haltdasmusik()
 
 void musicclass::silencedasmusik()
 {
-	Mix_VolumeMusic(0) ;
 	musicVolume = 0;
 }
 
@@ -263,11 +263,7 @@ void musicclass::fadeout()
 
 void musicclass::processmusicfadein()
 {
-	// Instead of returning early if music is muted, this should still increase `musicVolume`
-	// so that anything that relies on this won't break. We'll simply just not set the volume
-	// if the music is muted
 	musicVolume += FadeVolAmountPerFrame;
-	if (!game.musicmuted) Mix_VolumeMusic(musicVolume);
 	if (musicVolume >= MIX_MAX_VOLUME)
 	{
 		m_doFadeInVol = false;
@@ -352,7 +348,7 @@ void musicclass::changemusicarea(int x, int y)
 
 void musicclass::playef(int t)
 {
-	if (t < 0 || t >= (int) soundTracks.size())
+	if (!INBOUNDS_VEC(t, soundTracks))
 	{
 		return;
 	}

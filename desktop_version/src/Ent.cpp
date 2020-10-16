@@ -38,11 +38,9 @@ entclass::entclass()
 	x2 = 320;
 	y2 = 240;
 
-	jumping = false;
 	gravity = false;
 	onground = 0;
 	onroof = 0;
-	jumpframe = 0;
 
 	onentity = 0;
 	harmful = false;
@@ -58,6 +56,8 @@ entclass::entclass()
 	actionframe = 0;
 
 	realcol = 0;
+	lerpoldxp = 0;
+	lerpoldyp = 0;
 }
 
 bool entclass::outside()
