@@ -7,6 +7,8 @@ void gameinput();
 
 void mapinput();
 
+void tweakinput();
+
 void teleporterinput();
 
 void gamecompleteinput();

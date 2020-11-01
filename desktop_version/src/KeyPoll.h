@@ -73,6 +73,8 @@ public:
 
 	Uint64 pauseStart;
 
+	bool tweakkeyheld;
+
 private:
 	std::map<SDL_JoystickID, SDL_GameController*> controllers;
 	std::map<SDL_GameControllerButton, bool> buttonmap;

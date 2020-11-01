@@ -7,6 +7,8 @@ void gamerender();
 
 void maprender();
 
+void tweakmenurender();
+
 void teleporterrender();
 
 void gamecompleterender();

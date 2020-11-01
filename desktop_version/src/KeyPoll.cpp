@@ -61,6 +61,8 @@ KeyPoll::KeyPoll()
 
 	pauseStart = 0;
 
+	tweakkeyheld = false;
+
 	isActive = true;
 }
 

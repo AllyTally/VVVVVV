@@ -1,0 +1,74 @@
+From 81b2a2adcac114170acb63fb9f6dad32da251a76 Mon Sep 17 00:00:00 2001
+From: Misa <infoteddyatgitgud@cock.li>
+Date: Fri, 23 Oct 2020 17:53:21 -0700
+Subject: [PATCH] Allow using internal commands in simplified (TEMP)
+
+Temp commit, ported from VCE (which is dead). One issue with this is
+that one-line internal scripts will get executed twice if you
+iftrinkets() to it, which would happen if it's a level that assumes it
+can't simply use internal commands in simplified and has to use
+iftrinkets() instead.
+---
+ desktop_version/src/Script.cpp | 35 ++++++++++++++++++++++++++++++----
+ 1 file changed, 31 insertions(+), 4 deletions(-)
+
+diff --git a/desktop_version/src/Script.cpp b/desktop_version/src/Script.cpp
+index 1bc9be8be..8dc155954 100644
+--- a/desktop_version/src/Script.cpp
++++ b/desktop_version/src/Script.cpp
+@@ -3803,7 +3803,11 @@ void scriptclass::loadcustom(const std::string& t)
+ 	//Now run the script
+ 	for(size_t i=0; i<lines.size(); i++){
+ 		words[0]="nothing"; //Default!
+-		words[1]="1"; //Default!
++		if (words[0] == "flash") {
++			words[1] = "unused";
++		} else {
++			words[1]="1"; //Default!
++		}
+ 		tokenize(lines[i]);
+ 		for (size_t ii = 0; ii < words[0].length(); ii++)
+ 		{
+@@ -3828,9 +3832,13 @@ void scriptclass::loadcustom(const std::string& t)
+ 			add("play(15)");
+ 		}else if(words[0] == "flash"){
+ 			if(customtextmode==1){ add("endtext"); customtextmode=0;}
+-			add("flash(5)");
+-			add("shake(20)");
+-			add("playef(9)");
++			if (words[1] == "unused") {
++				add("flash(5)");
++				add("shake(20)");
++				add("playef(9)");
++			} else {
++				add("flash("+words[1]+")");
++			}
+ 		}else if(words[0] == "sad" || words[0] == "cry"){
+ 			if(customtextmode==1){ add("endtext"); customtextmode=0;}
+ 			if(words[1]=="player"){
+@@ -4034,6 +4042,25 @@ void scriptclass::loadcustom(const std::string& t)
+ 			add("position(player,above)");
+ 			add("speak_active");
+ 			customtextmode=1;
++		} else {
++			if(customtextmode==1){ add("endtext"); customtextmode=0;}
++
++			// Add the line anyway, even if it's internal.
++			// But skip over it so it doesn't get parsed as simplified
++			// if it's the contents of a text() command
++			if (words[0] == "text") {
++				int lines_ = ss_toi(words[4]);
++				for (int c = 0; c < lines_; c++) {
++					if (INBOUNDS_VEC(i, lines)) {
++						add(lines[i]);
++					}
++					i++;
++				}
++			}
++
++			if (INBOUNDS_VEC(i, lines)) {
++				add(lines[i]);
++			}
+ 		}
+ 	}
+ 

@@ -248,6 +248,14 @@ int main(int argc, char *argv[])
     SDL_SetSurfaceBlendMode(graphics.ghostbuffer, SDL_BLENDMODE_BLEND);
     SDL_SetSurfaceAlphaMod(graphics.ghostbuffer, 127);
 
+    graphics.coverbuffer = CREATE_SURFACE(320, 240);
+    SDL_SetSurfaceBlendMode(graphics.coverbuffer, SDL_BLENDMODE_BLEND);
+    SDL_SetSurfaceAlphaMod(graphics.coverbuffer, 127);
+
+    graphics.tweaksbuffer = CREATE_SURFACE(320, 240);
+    SDL_SetSurfaceBlendMode(graphics.tweaksbuffer, SDL_BLENDMODE_BLEND);
+    SDL_SetSurfaceAlphaMod(graphics.tweaksbuffer, 255);
+
     graphics.Makebfont();
 
     graphics.foregroundBuffer =  CREATE_SURFACE(320, 240);
@@ -446,6 +454,10 @@ void inline deltaloop()
         case MAPMODE:
             maprender();
             break;
+        case TWEAKMENUMODE:
+            gamerender();
+            tweakmenurender();
+            break;
         case TELEPORTERMODE:
             teleporterrender();
             break;
@@ -558,6 +570,10 @@ void inline fixedloop()
             mapinput();
             maplogic();
             break;
+        case TWEAKMENUMODE:
+            tweakinput();
+            //tweaklogic();
+            break;
         case TELEPORTERMODE:
             if(game.useteleporter)
             {
@@ -595,20 +611,22 @@ void inline fixedloop()
 
     }
 
-    //Screen effects timers
-    if (key.isActive && game.flashlight > 0)
-    {
-        game.flashlight--;
-    }
-    if (key.isActive && game.screenshake > 0)
-    {
-        game.screenshake--;
-        graphics.updatescreenshake();
-    }
+    if (game.gamestate != TWEAKMENUMODE) {
+        //Screen effects timers
+        if (key.isActive && game.flashlight > 0)
+        {
+            game.flashlight--;
+        }
+        if (key.isActive && game.screenshake > 0)
+        {
+            game.screenshake--;
+            graphics.updatescreenshake();
+        }
 
-    if (graphics.screenbuffer->badSignalEffect)
-    {
-        UpdateFilter();
+        if (graphics.screenbuffer->badSignalEffect)
+        {
+            UpdateFilter();
+        }
     }
 
     //We did editorinput, now it's safe to turn this off

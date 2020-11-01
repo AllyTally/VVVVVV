@@ -108,6 +108,10 @@ public:
 
 	void Print(int _x, int _y, std::string _s, int r, int g, int b, bool cen = false);
 
+	void PrintSurface(int _x, int _y, std::string _s, int r, int g, int b, SDL_Surface* surface, bool cen = false);
+
+	void PrintAlphaSurface(int _x, int _y, std::string _s, int r, int g, int b, int a, SDL_Surface* surface, bool cen = false);
+
 	void PrintAlpha(int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen = false);
 
 	void RPrint(int _x, int _y, std::string _s, int r, int g, int b, bool cen = false);
@@ -116,9 +120,15 @@ public:
 
 	void PrintOffAlpha(int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen = false);
 
+	void PrintOffAlphaSurface(int _x, int _y, std::string _s, int r, int g, int b, int a, SDL_Surface* surface, bool cen = false);
+
 	void bprint(int x, int y, std::string t, int r, int g, int b, bool cen = false);
 
+	void bprintsurface(int x, int y, std::string t, int r, int g, int b, SDL_Surface* surface, bool cen = false);
+
 	void bprintalpha(int x, int y, std::string t, int r, int g, int b, int a, bool cen = false);
+
+	void bprintalphasurface(int x, int y, std::string t, int r, int g, int b, int a, SDL_Surface* surface, bool cen = false);
 
 	int len(std::string t);
 	void bigprint( int _x, int _y, std::string _s, int r, int g, int b, bool cen = false, int sc = 2 );
@@ -243,6 +253,9 @@ public:
 	SDL_Rect prect;
 	SDL_Rect footerrect;
 	SDL_Surface* footerbuffer;
+
+	SDL_Surface* coverbuffer;
+	SDL_Surface* tweaksbuffer;
 
 	int linestate, linedelay;
 	int backoffset;

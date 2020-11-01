@@ -2074,6 +2074,14 @@ void gameinput()
     {
         game.deathseq = 30;
     }
+
+    if (key.isDown(SDLK_F8) && !key.tweakkeyheld) {
+        game.gamestate = TWEAKMENUMODE;
+        key.tweakkeyheld = true;
+    }
+    if (!key.isDown(SDLK_F8)) {
+        key.tweakkeyheld = false;
+    }
 }
 
 void mapmenuactionpress();
@@ -2390,6 +2398,16 @@ void mapmenuactionpress()
         graphics.updatetowerbackground();
         titleupdatetextcol();
         break;
+    }
+}
+
+void tweakinput() {
+    if (key.isDown(SDLK_F8) && !key.tweakkeyheld) {
+        game.gamestate = GAMEMODE;
+        key.tweakkeyheld = true;
+    }
+    if (!key.isDown(SDLK_F8)) {
+        key.tweakkeyheld = false;
     }
 }
 

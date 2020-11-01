@@ -120,6 +120,8 @@ void Graphics::init()
     towerbuffer = NULL;
     towerbuffer_lerp = NULL;
     footerbuffer = NULL;
+    coverbuffer = NULL;
+    tweaksbuffer = NULL;
     ghostbuffer = NULL;
     trinketr = 0;
     trinketg = 0;
@@ -363,7 +365,15 @@ void Graphics::Print( int _x, int _y, std::string _s, int r, int g, int b, bool 
     return PrintAlpha(_x,_y,_s,r,g,b,255,cen);
 }
 
-void Graphics::PrintAlpha( int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen /*= false*/ )
+void Graphics::PrintSurface( int _x, int _y, std::string _s, int r, int g, int b, SDL_Surface* surface, bool cen /*= false*/) {
+    return PrintAlphaSurface(_x,_y,_s,r,g,b,255,surface,cen);
+}
+
+void Graphics::PrintAlpha( int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen /*= false*/ ) {
+    return PrintAlphaSurface(_x,_y,_s,r,g,b,255,backBuffer,cen);
+}
+
+void Graphics::PrintAlphaSurface( int _x, int _y, std::string _s, int r, int g, int b, int a, SDL_Surface* surface, bool cen /*= false*/)
 {
     std::vector<SDL_Surface*>& font = flipmode ? flipbfont : bfont;
 
@@ -393,7 +403,7 @@ void Graphics::PrintAlpha( int _x, int _y, std::string _s, int r, int g, int b, 
         idx = font_idx(curr);
         if (INBOUNDS_VEC(idx, font))
         {
-            BlitSurfaceColoured( font[idx], NULL, backBuffer, &fontRect , ct);
+            BlitSurfaceColoured( font[idx], NULL, surface, &fontRect , ct);
         }
         bfontpos+=bfontlen(curr) ;
     }
@@ -459,7 +469,10 @@ void Graphics::PrintOff( int _x, int _y, std::string _s, int r, int g, int b, bo
     PrintOffAlpha(_x,_y,_s,r,g,b,255,cen);
 }
 
-void Graphics::PrintOffAlpha( int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen /*= false*/ )
+void Graphics::PrintOffAlpha( int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen /*= false*/ ) {
+    PrintOffAlphaSurface(_x,_y,_s,r,g,b,a,backBuffer,cen);
+}
+void Graphics::PrintOffAlphaSurface( int _x, int _y, std::string _s, int r, int g, int b, int a, SDL_Surface* surface, bool cen /*= false*/ )
 {
     std::vector<SDL_Surface*>& font = flipmode ? flipbfont : bfont;
 
@@ -498,25 +511,32 @@ void Graphics::bprint( int x, int y, std::string t, int r, int g, int b, bool ce
     bprintalpha(x,y,t,r,g,b,255,cen);
 }
 
-void Graphics::bprintalpha( int x, int y, std::string t, int r, int g, int b, int a, bool cen /*= false*/ )
+void Graphics::bprintsurface( int x, int y, std::string t, int r, int g, int b, SDL_Surface* surface, bool cen /*= false*/ ) {
+    bprintalphasurface(x,y,t,r,g,b,255,surface,cen);
+}
+
+void Graphics::bprintalpha( int x, int y, std::string t, int r, int g, int b, int a, bool cen /*= false*/ ) {
+    bprintalphasurface(x,y,t,r,g,b,255,backBuffer,cen);
+}
+void Graphics::bprintalphasurface( int x, int y, std::string t, int r, int g, int b, int a, SDL_Surface* surface, bool cen /*= false*/ )
 {
     if (!notextoutline)
     {
-        PrintAlpha(x, y - 1, t, 0, 0, 0, a, cen);
+        PrintAlphaSurface(x, y - 1, t, 0, 0, 0, a, surface, cen);
         if (cen)
         {
-            PrintOffAlpha(-1, y, t, 0, 0, 0, a, cen);
-            PrintOffAlpha(1, y, t, 0, 0, 0, a, cen);
+            PrintOffAlphaSurface(-1, y, t, 0, 0, 0, a, surface, cen);
+            PrintOffAlphaSurface(1, y, t, 0, 0, 0, a, surface, cen);
         }
         else
         {
-            PrintAlpha(x  -1, y, t, 0, 0, 0, a, cen);
-            PrintAlpha(x  +1, y, t, 0, 0, 0, a, cen);
+            PrintAlphaSurface(x  -1, y, t, 0, 0, 0, a, surface, cen);
+            PrintAlphaSurface(x  +1, y, t, 0, 0, 0, a, surface, cen);
         }
-        PrintAlpha(x, y+1, t, 0, 0, 0, a, cen);
+        PrintAlphaSurface(x, y+1, t, 0, 0, 0, a, surface, cen);
     }
 
-    PrintAlpha(x, y, t, r, g, b, a, cen);
+    PrintAlphaSurface(x, y, t, r, g, b, a, surface, cen);
 }
 
 void Graphics::RPrint( int _x, int _y, std::string _s, int r, int g, int b, bool cen /*= false*/ )
