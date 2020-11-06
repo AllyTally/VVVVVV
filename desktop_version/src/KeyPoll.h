@@ -74,6 +74,7 @@ public:
 	Uint64 pauseStart;
 
 	bool tweakkeyheld;
+	bool frameadvanceheld;
 
 private:
 	std::map<SDL_JoystickID, SDL_GameController*> controllers;

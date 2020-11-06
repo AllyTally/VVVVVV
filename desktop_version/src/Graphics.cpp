@@ -121,7 +121,7 @@ void Graphics::init()
     towerbuffer_lerp = NULL;
     footerbuffer = NULL;
     coverbuffer = NULL;
-    tweaksbuffer = NULL;
+    tweakbuffer = NULL;
     ghostbuffer = NULL;
     trinketr = 0;
     trinketg = 0;
@@ -1340,7 +1340,7 @@ void Graphics::processfade()
     }
 }
 
-void Graphics::drawmenu( int cr, int cg, int cb, bool levelmenu /*= false*/ )
+void Graphics::drawmenu( int cr, int cg, int cb, bool levelmenu /*= false*/, bool tweakmenu /*= false*/ )
 {
     for (size_t i = 0; i < game.menuoptions.size(); i++)
     {
@@ -1406,7 +1406,11 @@ void Graphics::drawmenu( int cr, int cg, int cb, bool levelmenu /*= false*/ )
             SDL_strlcpy(buffer, tempstring, sizeof(buffer));
         }
 
-        Print(x, y, buffer, fr, fg, fb);
+        if (tweakmenu) {
+            PrintSurface(x, y, buffer, fr, fg, fb, tweakbuffer);
+        } else {
+            Print(x, y, buffer, fr, fg, fb);
+        }
     }
 }
 

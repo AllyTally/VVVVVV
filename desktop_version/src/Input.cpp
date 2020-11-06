@@ -1596,6 +1596,12 @@ void menuactionpress()
         game.returnmenu();
         map.nexttowercolour();
         break;
+    case Menu::tweakmenu:
+        if (game.currentmenuoption == 0) {
+            music.playef(11);
+            game.frameadvance = true;
+        }
+        break;
     default:
         break;
     }
@@ -2077,8 +2083,10 @@ void gameinput()
 
     if (key.isDown(SDLK_F8) && !key.tweakkeyheld) {
         game.gamestate = TWEAKMENUMODE;
+        game.createmenu(Menu::tweakmenu);
         key.tweakkeyheld = true;
     }
+
     if (!key.isDown(SDLK_F8)) {
         key.tweakkeyheld = false;
     }
@@ -2409,6 +2417,15 @@ void tweakinput() {
     if (!key.isDown(SDLK_F8)) {
         key.tweakkeyheld = false;
     }
+    if (key.isDown(SDLK_F9) && !key.frameadvanceheld) {
+        music.playef(11);
+        game.frameadvance = true;
+        key.frameadvanceheld = true;
+    }
+    if (!key.isDown(SDLK_F9)) {
+        key.frameadvanceheld = false;
+    }
+    titleinput();
 }
 
 void teleporterinput()

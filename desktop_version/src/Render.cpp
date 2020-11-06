@@ -2466,14 +2466,16 @@ void maprender()
 void tweakmenurender()
 {
     SDL_FillRect(graphics.coverbuffer, NULL, SDL_MapRGBA(graphics.coverbuffer->format, 0, 0, 0, 255));
-    SDL_FillRect(graphics.tweaksbuffer, NULL, SDL_MapRGBA(graphics.tweaksbuffer->format, 0, 0, 0, 0));
+    SDL_FillRect(graphics.tweakbuffer, NULL, SDL_MapRGBA(graphics.tweakbuffer->format, 0, 0, 0, 0));
 
 
-    graphics.bprintsurface(-1, 10, "[ PAUSED ]", 196, 196, 255 - help.glow, graphics.tweaksbuffer, true);
+    graphics.bprintsurface(-1, 10, "[ PAUSED ]", 196, 196, 255 - help.glow, graphics.tweakbuffer, true);
+
+    graphics.drawmenu(196, 196, 255 - help.glow, false, true);
 
 
     SDL_BlitSurface(graphics.coverbuffer, NULL, graphics.backBuffer, &graphics.bg_rect);
-    SDL_BlitSurface(graphics.tweaksbuffer, NULL, graphics.backBuffer, &graphics.bg_rect);
+    SDL_BlitSurface(graphics.tweakbuffer, NULL, graphics.backBuffer, &graphics.bg_rect);
     graphics.renderwithscreeneffects();
 }
 

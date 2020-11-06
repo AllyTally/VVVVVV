@@ -38,7 +38,7 @@ public:
 
 	void drawcoloredtile(int x, int y, int t, int r, int g, int b);
 
-	void drawmenu(int cr, int cg, int cb, bool levelmenu = false);
+	void drawmenu(int cr, int cg, int cb, bool levelmenu = false, bool tweakmenu = false);
 
 	void processfade();
 
@@ -255,7 +255,7 @@ public:
 	SDL_Surface* footerbuffer;
 
 	SDL_Surface* coverbuffer;
-	SDL_Surface* tweaksbuffer;
+	SDL_Surface* tweakbuffer;
 
 	int linestate, linedelay;
 	int backoffset;

@@ -69,6 +69,7 @@ namespace Menu
         timetrialcomplete2,
         timetrialcomplete3,
         gamecompletecontinue,
+        tweakmenu,
     };
 };
 
@@ -423,6 +424,8 @@ public:
     void unlockAchievement(const char *name);
 
     bool disablepause;
+
+    bool frameadvance;
 };
 
 #ifndef GAME_DEFINITION

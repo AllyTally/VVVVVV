@@ -252,9 +252,9 @@ int main(int argc, char *argv[])
     SDL_SetSurfaceBlendMode(graphics.coverbuffer, SDL_BLENDMODE_BLEND);
     SDL_SetSurfaceAlphaMod(graphics.coverbuffer, 127);
 
-    graphics.tweaksbuffer = CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.tweaksbuffer, SDL_BLENDMODE_BLEND);
-    SDL_SetSurfaceAlphaMod(graphics.tweaksbuffer, 255);
+    graphics.tweakbuffer = CREATE_SURFACE(320, 240);
+    SDL_SetSurfaceBlendMode(graphics.tweakbuffer, SDL_BLENDMODE_BLEND);
+    SDL_SetSurfaceAlphaMod(graphics.tweakbuffer, 255);
 
     graphics.Makebfont();
 
@@ -571,6 +571,11 @@ void inline fixedloop()
             maplogic();
             break;
         case TWEAKMENUMODE:
+            if (game.frameadvance) {
+                game.frameadvance = false;
+                gameinput();
+                gamelogic();
+            }
             tweakinput();
             //tweaklogic();
             break;

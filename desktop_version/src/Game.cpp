@@ -275,6 +275,9 @@ void Game::init(void)
     swnrank = 0;
     swnmessage = 0;
 
+    // tweaks
+    frameadvance = false;
+
     clearcustomlevelstats();
 
     saveFilePath = FILESYSTEM_getUserSaveDirectory();
@@ -6938,6 +6941,11 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
     case Menu::gamecompletecontinue:
         option("return to play menu");
         menuyoff = 70;
+        break;
+    case Menu::tweakmenu:
+        option("frame advance");
+        option("a");
+        menuyoff = 0;
         break;
     }
 
