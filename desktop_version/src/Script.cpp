@@ -627,10 +627,28 @@ void scriptclass::run()
 			{
 				//Ok, actually display the textbox we've initilised now!
 				//If using "speak", don't make the textbox active (so we can use multiple textboxes)
-				if (txt.empty())
-				{
-					txt.resize(1);
-				}
+                txt.clear();
+
+                if (r == 164 && g == 164 && b == 255) {
+                    txt.push_back("I'm a captain!");
+                } else if (r == 255 && g == 60 && b == 60) {
+                    txt.push_back("I'm an officer!");
+                }
+                else if (r == 144 && g == 255 && b == 144) {
+                    txt.push_back("I'm a chief!");
+                }
+                else if (r == 255 && g == 255 && b == 134) {
+                    txt.push_back("I'm a professor!");
+                }
+                else if (r == 95 && g == 95 && b == 255) {
+                    txt.push_back("I'm a doctor!");
+                }
+                else if (r == 255 && g == 134 && b == 255) {
+                    txt.push_back("I'm a doctor!");
+                } else {
+                    txt.push_back("I'm a terminal!");
+                }
+
 				graphics.createtextbox(txt[0], textx, texty, r, g, b);
 				if ((int) txt.size() > 1)
 				{
