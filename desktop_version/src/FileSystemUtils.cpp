@@ -296,92 +296,92 @@ void FILESYSTEM_freeMemory(unsigned char **mem)
 }
 
 static size_t write_data(void* ptr, size_t size, size_t nmemb, PHYSFS_File* stream) {
-    //size_t written = fwrite(ptr, size, nmemb, stream);
-    size_t written = PHYSFS_writeBytes(stream, ptr, size * nmemb);
-    return written;
+	//size_t written = fwrite(ptr, size, nmemb, stream);
+	size_t written = PHYSFS_writeBytes(stream, ptr, size * nmemb);
+	return written;
 }
 
 
 SDL_atomic_t progress;
 
 int FILESYSTEM_getDownloadProgress() {
-    return SDL_AtomicGet(&progress);
+	return SDL_AtomicGet(&progress);
 }
 
 static int progress_func(void* ptr, double TotalToDownload, double NowDownloaded,
-    double TotalToUpload, double NowUploaded)
+	double TotalToUpload, double NowUploaded)
 {
-    if (TotalToDownload <= 0.0) {
-        return 0;
-    }
-    double fractiondownloaded = NowDownloaded / TotalToDownload;
+	if (TotalToDownload <= 0.0) {
+		return 0;
+	}
+	double fractiondownloaded = NowDownloaded / TotalToDownload;
 
-    int percent = fractiondownloaded * 100;
+	int percent = fractiondownloaded * 100;
 
-    if (percent != 100) {
+	if (percent != 100) {
 	SDL_AtomicSet(&progress, fractiondownloaded * 100);
-    }
+	}
 
-    int chars_to_display = round(fractiondownloaded * 40);
+	int chars_to_display = round(fractiondownloaded * 40);
 
-    // Create the bar
-    int ii = 0;
-    printf("Downloading level... %3.0f%% [", fractiondownloaded * 100);
-    // Fill in what's already done
-    for (; ii < chars_to_display; ii++) {
-        printf("#");
-    }
-    // remaining part (spaces)
-    for (; ii < 40; ii++) {
-        printf(" ");
-    }
-    // and back to line begin - do not forget the fflush to avoid output buffering problems!
-    printf("]\r");
-    fflush(stdout);
-    // if you don't return 0, the transfer will be aborted - see the documentation
+	// Create the bar
+	int ii = 0;
+	printf("Downloading level... %3.0f%% [", fractiondownloaded * 100);
+	// Fill in what's already done
+	for (; ii < chars_to_display; ii++) {
+		printf("#");
+	}
+	// remaining part (spaces)
+	for (; ii < 40; ii++) {
+		printf(" ");
+	}
+	// and back to line begin - do not forget the fflush to avoid output buffering problems!
+	printf("]\r");
+	fflush(stdout);
+	// if you don't return 0, the transfer will be aborted - see the documentation
 
-    return 0;
+	return 0;
 }
 
 static int download_thread(void* data) {
-    void** args = (void**) data;
-    CURL* curl = (CURL*) args[0];
-    PHYSFS_File* fp = (PHYSFS_File*) args[1];
-    free(data);
-    curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-    PHYSFS_close(fp);
-    SDL_AtomicSet(&progress, 100);
-    return 0;
+	void** args = (void**) data;
+	CURL* curl = (CURL*) args[0];
+	PHYSFS_File* fp = (PHYSFS_File*) args[1];
+	free(data);
+	curl_easy_perform(curl);
+	curl_easy_cleanup(curl);
+	PHYSFS_close(fp);
+	SDL_AtomicSet(&progress, 100);
+	return 0;
 }
 
 bool FILESYSTEM_downloadFile(const char* name, const char* url) {
-    SDL_AtomicSet(&progress, 0);
+	SDL_AtomicSet(&progress, 0);
 
-    CURL* curl;
-    PHYSFS_File* fp;
-    curl = curl_easy_init();
-    if (curl)
-    {
-        fp = PHYSFS_openWrite(name);
-        curl_easy_setopt(curl, CURLOPT_URL, url);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
-        curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_func);
-	void** args = (void**) malloc(sizeof(void*) * 2);
-	args[0] = curl;
-	args[1] = fp;
-	SDL_Thread* thread = SDL_CreateThread(download_thread, "download", (void*) args);
-	if (!thread) {
-	    printf("SDL_CreateThread failed: %s\n", SDL_GetError());
+	CURL* curl;
+	PHYSFS_File* fp;
+	curl = curl_easy_init();
+	if (curl)
+	{
+		fp = PHYSFS_openWrite(name);
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
+		curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_func);
+		void** args = (void**) malloc(sizeof(void*) * 2);
+		args[0] = curl;
+		args[1] = fp;
+		SDL_Thread* thread = SDL_CreateThread(download_thread, "download", (void*) args);
+		if (!thread) {
+			printf("SDL_CreateThread failed: %s\n", SDL_GetError());
+		}
 	}
-    }
-    else
-    {
-        return false;
-    }
-    return true;
+	else
+	{
+		return false;
+	}
+	return true;
 }
 
 bool FILESYSTEM_saveTiXml2Document(const char *name, tinyxml2::XMLDocument& doc)
