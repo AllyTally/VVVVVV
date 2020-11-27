@@ -7,7 +7,6 @@
 #include <physfs.h>
 #include <stdio.h>
 #include <string>
-#include <sstream>
 #include <tinyxml2.h>
 #include <utf8/unchecked.h>
 
@@ -212,18 +211,13 @@ bool editorclass::loadOnlineLevels()
     curl = curl_easy_init();
     if (!curl) return false;
 
-    std::stringstream request_url;
-    request_url.seekp(0, std::ios_base::end);
+    char buffer[1024];
 
-    request_url << "https://vsix.dev/levels/api/levels"
-                << "?page=" << current_page
-                << "&order=" << "newest";
+    SDL_snprintf(buffer, sizeof(buffer), "https://vsix.dev/levels/api/levels?page=%i&order=newest", current_page);
 
-    std::string temp_string = request_url.str();
+    std::cout << "Sending request to " << buffer << std::endl;
 
-    std::cout << "Sending request to " << request_url.str() << std::endl;
-
-    curl_easy_setopt(curl, CURLOPT_URL, temp_string.c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, buffer);
 
     // Make sure it works with https
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
