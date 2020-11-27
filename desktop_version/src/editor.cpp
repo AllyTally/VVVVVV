@@ -3,9 +3,11 @@
 #define ED_DEFINITION
 #include "editor.h"
 
+#include <iostream>
 #include <physfs.h>
 #include <stdio.h>
 #include <string>
+#include <sstream>
 #include <tinyxml2.h>
 #include <utf8/unchecked.h>
 
@@ -272,7 +274,7 @@ bool editorclass::loadOnlineLevels()
         }
     }
     pElem = hRoot.FirstChildElement("Pages").ToElement();
-    ed.max_pages = pElem->IntAttribute("total");
+    max_pages = pElem->IntAttribute("total");
     return true;
 
 }
