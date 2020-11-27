@@ -27,15 +27,15 @@ void titleupdatetextcol()
 void titlelogic()
 {
     //Misc
-    //map.updatetowerglow();
+    //map.updatetowerglow(graphics.titlebg);
     help.updateglow();
 
-    map.bypos -= 2;
-    map.bscroll = -2;
+    graphics.titlebg.bypos -= 2;
+    graphics.titlebg.bscroll = -2;
 
     if (!game.colourblindmode)
     {
-        graphics.updatetowerbackground();
+        graphics.updatetowerbackground(graphics.titlebg);
     }
 
     if (!game.menustart)
@@ -86,16 +86,6 @@ void maplogic()
     help.updateglow();
     graphics.updatetextboxes();
     graphics.updatetitlecolours();
-
-    if (game.shouldreturntopausemenu)
-    {
-        game.shouldreturntopausemenu = false;
-        graphics.backgrounddrawn = false;
-        if (map.background == 3 || map.background == 4)
-        {
-            graphics.updatebackground(map.background);
-        }
-    }
 
     graphics.crewframedelay--;
     if (graphics.crewframedelay <= 0)
@@ -149,31 +139,23 @@ void maplogic()
 void gamecompletelogic()
 {
     //Misc
-    map.updatetowerglow();
+    map.updatetowerglow(graphics.titlebg);
     help.updateglow();
     graphics.crewframe = 0;
-    map.scrolldir = 1;
+    graphics.titlebg.scrolldir = 1;
     graphics.updatetitlecolours();
 
-    graphics.col_tr = map.r - (help.glow / 4) - fRandom() * 4;
-    graphics.col_tg = map.g - (help.glow / 4) - fRandom() * 4;
-    graphics.col_tb = map.b - (help.glow / 4) - fRandom() * 4;
-    if (graphics.col_tr < 0) graphics.col_tr = 0;
-    if(graphics.col_tr>255) graphics.col_tr=255;
-    if (graphics.col_tg < 0) graphics.col_tg = 0;
-    if(graphics.col_tg>255) graphics.col_tg=255;
-    if (graphics.col_tb < 0) graphics.col_tb = 0;
-    if(graphics.col_tb>255) graphics.col_tb=255;
+    titleupdatetextcol();
 
     game.creditposition--;
     if (game.creditposition <= -Credits::creditmaxposition)
     {
         game.creditposition = -Credits::creditmaxposition;
-        map.bscroll = 0;
+        graphics.titlebg.bscroll = 0;
     }
     else if (!game.press_action)
     {
-        map.bscroll = +1;
+        graphics.titlebg.bscroll = +1;
     }
 
     if (graphics.fademode == 1)
@@ -182,8 +164,8 @@ void gamecompletelogic()
         graphics.showcutscenebars = false;
         graphics.cutscenebarspos = 0;
         graphics.oldcutscenebarspos = 0;
-        map.scrolldir = 0;
-        map.bypos = 0;
+        graphics.titlebg.scrolldir = 0;
+        graphics.titlebg.bypos = 0;
         //Return to game
         game.gamestate = GAMECOMPLETE2;
         graphics.fademode = 4;
@@ -193,7 +175,7 @@ void gamecompletelogic()
 void gamecompletelogic2()
 {
     //Misc
-    map.updatetowerglow();
+    map.updatetowerglow(graphics.titlebg);
     help.updateglow();
 
     game.creditposdelay--;
@@ -222,7 +204,7 @@ void gamecompletelogic2()
         game.savetele();
         music.currentsong=tmp;
         //Return to game
-        map.colstate = 10;
+        graphics.titlebg.colstate = 10;
         game.gamestate = TITLEMODE;
         graphics.fademode = 4;
         FILESYSTEM_unmountassets(); // should be before music.playef(18)
@@ -267,7 +249,7 @@ void gamelogic()
     //Misc
     if (map.towermode)
     {
-        map.updatetowerglow();
+        map.updatetowerglow(graphics.towerbg);
     }
     help.updateglow();
 
@@ -331,28 +313,28 @@ void gamelogic()
                 //do nothing!
                 //a trigger will set this off in the game
                 map.cameramode = 1;
-                map.bscroll = 0;
+                graphics.towerbg.bscroll = 0;
             }
             else if (map.cameramode == 1)
             {
                 //move normally
-                if(map.scrolldir==0)
+                if(graphics.towerbg.scrolldir==0)
                 {
                     map.ypos -= 2;
-                    map.bypos -= 1;
-                    map.bscroll = -1;
+                    graphics.towerbg.bypos -= 1;
+                    graphics.towerbg.bscroll = -1;
                 }
                 else
                 {
                     map.ypos += 2;
-                    map.bypos += 1;
-                    map.bscroll = 1;
+                    graphics.towerbg.bypos += 1;
+                    graphics.towerbg.bscroll = 1;
                 }
             }
             else if (map.cameramode == 2)
             {
                 //do nothing, but cycle colours (for taking damage)
-                map.bscroll = 0;
+                graphics.towerbg.bscroll = 0;
             }
             else if (map.cameramode == 4)
             {
@@ -367,7 +349,7 @@ void gamelogic()
 
                 map.cameramode = 5;
 
-                map.bscroll = map.cameraseek/2;
+                graphics.towerbg.bscroll = map.cameraseek/2;
             }
             else if (map.cameramode == 5)
             {
@@ -393,7 +375,7 @@ void gamelogic()
                         }
                     }
                     map.cameraseekframe--;
-                    map.bypos = map.ypos / 2;
+                    graphics.towerbg.bypos = map.ypos / 2;
                 }
                 else
                 {
@@ -402,7 +384,7 @@ void gamelogic()
                     {
                         map.ypos = obj.entities[i].yp - 120;
                     }
-                    map.bypos = map.ypos / 2;
+                    graphics.towerbg.bypos = map.ypos / 2;
                     map.cameramode = 0;
                     map.colsuperstate = 0;
                 }
@@ -410,22 +392,22 @@ void gamelogic()
         }
         else
         {
-            map.bscroll = 0;
+            graphics.towerbg.bscroll = 0;
         }
 
         if (map.ypos <= 0)
         {
             map.ypos = 0;
-            map.bypos = 0;
-            map.bscroll = 0;
+            graphics.towerbg.bypos = 0;
+            graphics.towerbg.bscroll = 0;
         }
         if (map.towermode && map.minitowermode)
         {
             if (map.ypos >= 568)
             {
                 map.ypos = 568;
-                map.bypos = map.ypos / 2;
-                map.bscroll = 0;
+                graphics.towerbg.bypos = map.ypos / 2;
+                graphics.towerbg.bscroll = 0;
             } //100-29 * 8 = 568
         }
         else
@@ -433,7 +415,7 @@ void gamelogic()
             if (map.ypos >= 5368)
             {
                 map.ypos = 5368;    //700-29 * 8 = 5368
-                map.bypos = map.ypos / 2.0;
+                graphics.towerbg.bypos = map.ypos / 2.0;
             }
         }
 
@@ -483,8 +465,17 @@ void gamelogic()
                 {
                     if (obj.entities[i].xp < 152)
                     {
+                        //Move the platform to the right side of the disappearing platform,
+                        //otherwise it will get stuck on the kludge 18,9 tile we placed
+                        //(and if the tile wasn't there it would pass straight through again)
+                        int prevx = obj.entities[i].xp;
+                        int prevy = obj.entities[i].yp;
+                        obj.nocollisionat(prevx, prevy);
+
                         obj.entities[i].xp = 152;
                         obj.entities[i].newxp = 152;
+
+                        obj.moveblockto(prevx, prevy, obj.entities[i].xp, obj.entities[i].yp, obj.entities[i].w, obj.entities[i].h);
                     }
                 }
             }
@@ -939,6 +930,7 @@ void gamelogic()
                 if (INBOUNDS_VEC(i, obj.entities) && j > -1000)
                 {
                     obj.entities[i].newxp = obj.entities[i].xp + j;
+                    obj.entities[i].newyp = obj.entities[i].yp;
                     obj.entitymapcollision(i);
                 }
                 else
@@ -947,6 +939,7 @@ void gamelogic()
                     if (INBOUNDS_VEC(i, obj.entities) && j > -1000)
                     {
                         obj.entities[i].newxp = obj.entities[i].xp + j;
+                        obj.entities[i].newyp = obj.entities[i].yp;
                         obj.entitymapcollision(i);
                     }
                 }
@@ -996,14 +989,14 @@ void gamelogic()
                     if (obj.entities[player].yp-map.ypos <= 0)
                     {
                         map.ypos-=10;
-                        map.bypos = map.ypos / 2;
-                        map.bscroll = 0;
+                        graphics.towerbg.bypos = map.ypos / 2;
+                        graphics.towerbg.bscroll = 0;
                     }
                     else if (obj.entities[player].yp-map.ypos >= 208)
                     {
                         map.ypos+=2;
-                        map.bypos = map.ypos / 2;
-                        map.bscroll = 0;
+                        graphics.towerbg.bypos = map.ypos / 2;
+                        graphics.towerbg.bscroll = 0;
                     }
                 }
 
@@ -1205,7 +1198,7 @@ void gamelogic()
         //Right so! Screenwraping for tower:
         if (map.towermode && map.minitowermode)
         {
-            if (map.scrolldir == 1)
+            if (graphics.towerbg.scrolldir == 1)
             {
                 //This is minitower 1!
                 int player = obj.getplayer();
@@ -1710,7 +1703,7 @@ void gamelogic()
     {
         if (map.towermode)
         {
-            graphics.updatetowerbackground();
+            graphics.updatetowerbackground(graphics.towerbg);
         }
         else
         {

@@ -2361,7 +2361,7 @@ bool entityclass::updateentities( int i )
                     {
                         return removeentity(i);
                     }
-                    if (game.roomy == 108)
+                    if (game.roomx == 113 && game.roomy == 108)
                     {
                         if (entities[i].yp <= 60)
                         {
@@ -2773,7 +2773,7 @@ bool entityclass::updateentities( int i )
                 }
 
                 //Special rules:
-                if (game.roomx == 110 && game.roomy == 105)
+                if (game.roomx == 110 && game.roomy == 105 && !map.custommode)
                 {
                     if (entities[i].xp < 155)
                     {
@@ -4674,6 +4674,11 @@ void entityclass::collisioncheck(int i, int j, bool scm /*= false*/)
         }
         break;
     case 2:   //Moving platforms
+        if (entities[j].behave >= 8 && entities[j].behave < 10)
+        {
+            //We don't want conveyors, moving platforms only
+            break;
+        }
         if (entitycollide(i, j))
         {
             //Disable collision temporarily so we don't push the person out!

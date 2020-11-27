@@ -11,6 +11,7 @@
 #include "Maths.h"
 #include "Screen.h"
 #include "Textbox.h"
+#include "TowerBG.h"
 
 class Graphics
 {
@@ -149,6 +150,8 @@ public:
 
 	void drawentities();
 
+	void drawentity(const int i, const int yoff);
+
 	void drawtrophytext();
 
 	void bigrprint(int x, int y, std::string& t, int r, int g, int b, bool cen = false, float sc = 2);
@@ -178,7 +181,7 @@ public:
 	void drawtile2( int x, int y, int t );
 	void drawtile( int x, int y, int t );
 	void drawtowertile( int x, int y, int t );
-	void drawtowertile3( int x, int y, int t, int off );
+	void drawtowertile3( int x, int y, int t, TowerBG& bg_obj );
 
 	void drawmap();
 
@@ -202,15 +205,15 @@ public:
 
 	void menuoffrender();
 
-	void drawtowerbackground();
-	void updatetowerbackground();
+	void drawtowerbackground(const TowerBG& bg_obj);
+	void updatetowerbackground(TowerBG& bg_obj);
 
 	void setcol(int t);
 	void drawfinalmap();
 
 	colourTransform ct;
 
-	int bcol, bcol2, rcol;
+	int rcol;
 
 
 
@@ -231,15 +234,17 @@ public:
 	bool flipmode;
 	bool setflipmode;
 	bool notextoutline;
-	point tl;
 	//buffer objects. //TODO refactor buffer objects
 	SDL_Surface* backBuffer;
 	Screen* screenbuffer;
 	SDL_Surface* menubuffer;
-	SDL_Surface* towerbuffer;
-	SDL_Surface* towerbuffer_lerp;
 	SDL_Surface* foregroundBuffer;
 	SDL_Surface* tempBuffer;
+	SDL_Surface* warpbuffer;
+	SDL_Surface* warpbuffer_lerp;
+
+	TowerBG towerbg;
+	TowerBG titlebg;
 
 	SDL_Rect bfont_rect;
 	SDL_Rect tiles_rect;
@@ -248,6 +253,7 @@ public:
 	SDL_Rect bg_rect;
 	SDL_Rect line_rect;
 	SDL_Rect tele_rect;
+	SDL_Rect towerbuffer_rect;
 
 	SDL_Rect foot_rect;
 	SDL_Rect prect;

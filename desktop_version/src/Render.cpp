@@ -10,9 +10,6 @@
 #include "Music.h"
 #include "Script.h"
 #include "UtilityClass.h"
-#if defined(DISPLAY_GIT_HASH)
-#include "version.h"
-#endif
 
 int tr;
 int tg;
@@ -48,13 +45,13 @@ void menurender()
         graphics.Print(-1,temp+35,"                    tweaks",tr, tg, tb, true);
         graphics.Print(-1,temp+35,"                    tweaks",tr, tg, tb, true);
 #endif
-
-#if defined(DISPLAY_GIT_HASH)
-        graphics.Print( 310 - (4*8), 220, "v2.3", tr/2, tg/2, tb/2);
-        graphics.Print( 310 - (7*8), 230, GIT_HASH, tr/2, tg/2, tb/2);
-#else
-        graphics.Print( 310 - (4*8), 230, "v2.3", tr/2, tg/2, tb/2);
+#ifdef COMMIT_DATE
+        graphics.Print( 310 - (10*8), 210, COMMIT_DATE, tr/2, tg/2, tb/2);
 #endif
+#ifdef INTERIM_COMMIT
+        graphics.Print( 310 - SDL_strlen(INTERIM_COMMIT) * 8, 220, INTERIM_COMMIT, tr/2, tg/2, tb/2);
+#endif
+        graphics.Print( 310 - (4*8), 230, "v2.3", tr/2, tg/2, tb/2);
 
         graphics.Print( 10, 230, "made with <3 by ally", tr/2, tg/2, tb/2);
         if(music.mmmmmm){
@@ -1199,7 +1196,7 @@ void titlerender()
     }
     else
     {
-        if(!game.colourblindmode) graphics.drawtowerbackground();
+        if(!game.colourblindmode) graphics.drawtowerbackground(graphics.titlebg);
 
         tr = graphics.col_tr;
         tg = graphics.col_tg;
@@ -1228,7 +1225,7 @@ void gamecompleterender()
 {
     FillRect(graphics.backBuffer, 0x000000);
 
-    if(!game.colourblindmode) graphics.drawtowerbackground();
+    if(!game.colourblindmode) graphics.drawtowerbackground(graphics.titlebg);
 
     tr = graphics.col_tr;
     tg = graphics.col_tg;
@@ -1414,7 +1411,7 @@ void gamerender()
         {
             if (!game.colourblindmode)
             {
-                graphics.drawtowerbackground();
+                graphics.drawtowerbackground(graphics.towerbg);
             }
             else
             {
@@ -2231,6 +2228,10 @@ void maprender()
         {
             graphics.Print(0, 115, "Cannot Save in Secret Lab", 146, 146, 180, true);
         }
+        else if (game.gamesavefailed)
+        {
+            graphics.Print(0, 115, "ERROR: Could not save game!", 146, 146, 180, true);
+        }
         else if (map.custommode)
         {
             if (game.gamesaved)
@@ -2531,10 +2532,10 @@ void teleporterrender()
         //Draw the chosen destination coordinate!
         //TODO
         //draw the coordinates //destination
-        int tempx = map.teleporters[game.teleport_to_teleporter].x;
-        int tempy = map.teleporters[game.teleport_to_teleporter].y;
-        graphics.drawrect(40 + (tempx * 12) + 1, 21 + (tempy * 9) + 1, 12 - 2, 9 - 2, 245 - (help.glow * 2), 16, 16);
-        graphics.drawrect(40 + (tempx * 12) + 3, 21 + (tempy * 9) + 3, 12 - 6, 9 - 6, 245 - (help.glow * 2), 16, 16);
+        int tempx_ = map.teleporters[game.teleport_to_teleporter].x;
+        int tempy_ = map.teleporters[game.teleport_to_teleporter].y;
+        graphics.drawrect(40 + (tempx_ * 12) + 1, 21 + (tempy_ * 9) + 1, 12 - 2, 9 - 2, 245 - (help.glow * 2), 16, 16);
+        graphics.drawrect(40 + (tempx_ * 12) + 3, 21 + (tempy_ * 9) + 3, 12 - 6, 9 - 6, 245 - (help.glow * 2), 16, 16);
     }
 
     //draw legend details

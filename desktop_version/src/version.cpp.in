@@ -1,3 +1,0 @@
-#include "version.h"
-
-const char* GIT_HASH = "@GIT_HASH@";

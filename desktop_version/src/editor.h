@@ -191,6 +191,7 @@ class editorclass{
   std::string note;
   std::string keybuffer;
   std::string filename;
+  std::string loaded_filepath;
 
   int drawmode;
   int tilex, tiley;
@@ -239,10 +240,6 @@ class editorclass{
   std::string sbscript;
   int sbx, sby;
   int pagey;
-
-  std::string author;
-  std::string description;
-  std::string title;
 
   //Functions for interfacing with the script:
   void addhook(std::string t);

@@ -316,6 +316,7 @@ void BlitSurfaceTinted(
 }
 
 
+int oldscrollamount = 0;
 int scrollamount = 0;
 bool isscrolling = 0;
 
@@ -326,12 +327,14 @@ void UpdateFilter()
         isscrolling = true;
     }
 
+    oldscrollamount = scrollamount;
     if(isscrolling == true)
     {
         scrollamount += 20;
         if(scrollamount > 240)
         {
             scrollamount = 0;
+            oldscrollamount = 0;
             isscrolling = false;
         }
     }
@@ -348,7 +351,7 @@ SDL_Surface* ApplyFilter( SDL_Surface* _src )
     {
         for(int y = 0; y < _src->h; y++)
         {
-            int sampley = (y + scrollamount )% 240;
+            int sampley = (y + (int) graphics.lerp(oldscrollamount, scrollamount) )% 240;
 
             Uint32 pixel = ReadPixel(_src, x,sampley);
 
@@ -379,8 +382,8 @@ SDL_Surface* ApplyFilter( SDL_Surface* _src )
                 blue =  static_cast<Uint8>(blue / 1.2f);
             }
 
-            int distX =  static_cast<int>((abs (160.0f -x ) / 160.0f) *16);
-            int distY =  static_cast<int>((abs (120.0f -y ) / 120.0f)*32);
+            int distX =  static_cast<int>((SDL_abs (160.0f -x ) / 160.0f) *16);
+            int distY =  static_cast<int>((SDL_abs (120.0f -y ) / 120.0f)*32);
 
             red = std::max(red - ( distX +distY), 0);
             green = std::max(green - ( distX +distY), 0);
