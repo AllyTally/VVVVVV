@@ -13,9 +13,31 @@ SET_PROPERTY(CACHE CUSTOM_LEVEL_SUPPORT PROPERTY STRINGS ENABLED NO_EDITOR DISAB
 SET(STEAM OFF CACHE BOOL "Use the Steam API")
 SET(GOG OFF CACHE BOOL "Use the GOG API")
 
-IF(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+SET(OFFICIAL_BUILD OFF CACHE BOOL "Compile an official build of the game")
+
+IF(OFFICIAL_BUILD)
 	SET(STEAM ON)
 	SET(GOG ON)
+ELSE()
+	# Get interim commit and date of commit
+	FIND_PACKAGE(Git)
+	IF(GIT_FOUND)
+		EXECUTE_PROCESS(
+			COMMAND "${GIT_EXECUTABLE}" log -1 --format=%h
+			OUTPUT_VARIABLE INTERIM_COMMIT
+			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
+
+		ADD_DEFINITIONS(-DINTERIM_COMMIT="${INTERIM_COMMIT}")
+
+		EXECUTE_PROCESS(
+			COMMAND "${GIT_EXECUTABLE}" log -1 --format=%cs
+			OUTPUT_VARIABLE COMMIT_DATE
+			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
+
+		ADD_DEFINITIONS(-DCOMMIT_DATE="${COMMIT_DATE}")
+	ENDIF()
 ENDIF()
 
 # Set standard to C++98/C++03
@@ -105,6 +127,7 @@ SET(VVV_SRC
 	src/Tower.cpp
 	src/UtilityClass.cpp
 	src/WarpClass.cpp
+	src/XMLUtils.cpp
 	src/main.cpp
 	src/Network.c
 )
@@ -199,7 +222,7 @@ TARGET_LINK_LIBRARIES(VVVVVV physfs-static tinyxml2-static lodepng-static)
 # SDL2 Dependency (Detection pulled from FAudio)
 if (DEFINED SDL2_INCLUDE_DIRS AND DEFINED SDL2_LIBRARIES)
 	message(STATUS "Using pre-defined SDL2 variables SDL2_INCLUDE_DIRS and SDL2_LIBRARIES")
-	target_include_directories(VVVVVV PUBLIC "$<BUILD_INTERFACE:${SDL2_INCLUDE_DIRS}>")
+	target_include_directories(VVVVVV SYSTEM PUBLIC "$<BUILD_INTERFACE:${SDL2_INCLUDE_DIRS}>")
 	target_link_libraries(VVVVVV ${SDL2_LIBRARIES})
 else()
 	# Only try to autodetect if both SDL2 variables aren't explicitly set
@@ -213,7 +236,7 @@ else()
 	else()
 		message(STATUS "No TARGET SDL2::SDL2, or SDL2, using variables")
 		find_path(SDL2_MIXER_INCLUDE_DIRS NAMES SDL_mixer.h PATH_SUFFIXES SDL2)
-		target_include_directories(VVVVVV PUBLIC "$<BUILD_INTERFACE:${SDL2_INCLUDE_DIRS}>" ${SDL2_MIXER_INCLUDE_DIRS})
+		target_include_directories(VVVVVV SYSTEM PUBLIC "$<BUILD_INTERFACE:${SDL2_INCLUDE_DIRS}>" ${SDL2_MIXER_INCLUDE_DIRS})
 		target_link_libraries(VVVVVV ${SDL2_LIBRARIES} SDL2_mixer)
 	endif()
 endif()

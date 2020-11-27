@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
         {
             ARG_INNER({
                 savefileplaytest = true;
-                int v = std::atoi(argv[i+1]);
+                int v = help.Int(argv[i+1]);
                 if (ARG("-playx")) savex = v;
                 else if (ARG("-playy")) savey = v;
                 else if (ARG("-playrx")) saverx = v;
@@ -134,6 +134,11 @@ int main(int argc, char *argv[])
         }
 #undef ARG_INNER
 #undef ARG
+        else
+        {
+            printf("Error: invalid option: %s\n", argv[i]);
+            return 1;
+        }
     }
 
     if(!FILESYSTEM_init(argv[0], baseDir, assetsPath))
@@ -148,6 +153,10 @@ int main(int argc, char *argv[])
         SDL_INIT_JOYSTICK |
         SDL_INIT_GAMECONTROLLER
     );
+    if (SDL_IsTextInputActive() == SDL_TRUE)
+    {
+        SDL_StopTextInput();
+    }
 
     NETWORK_init();
 
@@ -201,13 +210,19 @@ int main(int argc, char *argv[])
     game.mainmenu = 0;
 
     map.ypos = (700-29) * 8;
-    map.bypos = map.ypos / 2;
+    graphics.towerbg.bypos = map.ypos / 2;
+    graphics.titlebg.bypos = map.ypos / 2;
 
     //Moved screensetting init here from main menu V2.1
     int width = 320;
     int height = 240;
     bool vsync = false;
+
+    // Prioritize unlock.vvv first (2.2 and below),
+    // but settings have been migrated to settings.vvv (2.3 and up)
     game.loadstats(&width, &height, &vsync);
+    game.loadsettings(&width, &height, &vsync);
+
     gameScreen.init(
         width,
         height,
@@ -242,16 +257,28 @@ int main(int argc, char *argv[])
     graphics.Makebfont();
 
     graphics.foregroundBuffer =  CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.foregroundBuffer, SDL_BLENDMODE_NONE);
+    SDL_SetSurfaceBlendMode(graphics.foregroundBuffer, SDL_BLENDMODE_BLEND);
 
     graphics.menubuffer = CREATE_SURFACE(320, 240);
     SDL_SetSurfaceBlendMode(graphics.menubuffer, SDL_BLENDMODE_NONE);
 
-    graphics.towerbuffer =  CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.towerbuffer, SDL_BLENDMODE_NONE);
+    graphics.warpbuffer = CREATE_SURFACE(320 + 16, 240 + 16);
+    SDL_SetSurfaceBlendMode(graphics.warpbuffer, SDL_BLENDMODE_NONE);
 
-    graphics.towerbuffer_lerp = CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.towerbuffer, SDL_BLENDMODE_NONE);
+    graphics.warpbuffer_lerp = CREATE_SURFACE(320 + 16, 240 + 16);
+    SDL_SetSurfaceBlendMode(graphics.warpbuffer_lerp, SDL_BLENDMODE_NONE);
+
+    graphics.towerbg.buffer =  CREATE_SURFACE(320 + 16, 240 + 16);
+    SDL_SetSurfaceBlendMode(graphics.towerbg.buffer, SDL_BLENDMODE_NONE);
+
+    graphics.towerbg.buffer_lerp = CREATE_SURFACE(320 + 16, 240 + 16);
+    SDL_SetSurfaceBlendMode(graphics.towerbg.buffer_lerp, SDL_BLENDMODE_NONE);
+
+    graphics.titlebg.buffer = CREATE_SURFACE(320 + 16, 240 + 16);
+    SDL_SetSurfaceBlendMode(graphics.titlebg.buffer, SDL_BLENDMODE_NONE);
+
+    graphics.titlebg.buffer_lerp = CREATE_SURFACE(320 + 16, 240 + 16);
+    SDL_SetSurfaceBlendMode(graphics.titlebg.buffer_lerp, SDL_BLENDMODE_NONE);
 
     graphics.tempBuffer = CREATE_SURFACE(320, 240);
     SDL_SetSurfaceBlendMode(graphics.tempBuffer, SDL_BLENDMODE_NONE);
@@ -274,39 +301,39 @@ int main(int argc, char *argv[])
 
     //Check to see if you've already unlocked some achievements here from before the update
     if (game.swnbestrank > 0){
-        if(game.swnbestrank >= 1) NETWORK_unlockAchievement("vvvvvvsupgrav5");
-        if(game.swnbestrank >= 2) NETWORK_unlockAchievement("vvvvvvsupgrav10");
-        if(game.swnbestrank >= 3) NETWORK_unlockAchievement("vvvvvvsupgrav15");
-        if(game.swnbestrank >= 4) NETWORK_unlockAchievement("vvvvvvsupgrav20");
-        if(game.swnbestrank >= 5) NETWORK_unlockAchievement("vvvvvvsupgrav30");
-        if(game.swnbestrank >= 6) NETWORK_unlockAchievement("vvvvvvsupgrav60");
+        if(game.swnbestrank >= 1) game.unlockAchievement("vvvvvvsupgrav5");
+        if(game.swnbestrank >= 2) game.unlockAchievement("vvvvvvsupgrav10");
+        if(game.swnbestrank >= 3) game.unlockAchievement("vvvvvvsupgrav15");
+        if(game.swnbestrank >= 4) game.unlockAchievement("vvvvvvsupgrav20");
+        if(game.swnbestrank >= 5) game.unlockAchievement("vvvvvvsupgrav30");
+        if(game.swnbestrank >= 6) game.unlockAchievement("vvvvvvsupgrav60");
     }
 
-    if(game.unlock[5]) NETWORK_unlockAchievement("vvvvvvgamecomplete");
-    if(game.unlock[19]) NETWORK_unlockAchievement("vvvvvvgamecompleteflip");
-    if(game.unlock[20]) NETWORK_unlockAchievement("vvvvvvmaster");
+    if(game.unlock[5]) game.unlockAchievement("vvvvvvgamecomplete");
+    if(game.unlock[19]) game.unlockAchievement("vvvvvvgamecompleteflip");
+    if(game.unlock[20]) game.unlockAchievement("vvvvvvmaster");
 
     if (game.bestgamedeaths > -1) {
         if (game.bestgamedeaths <= 500) {
-            NETWORK_unlockAchievement("vvvvvvcomplete500");
+            game.unlockAchievement("vvvvvvcomplete500");
         }
         if (game.bestgamedeaths <= 250) {
-            NETWORK_unlockAchievement("vvvvvvcomplete250");
+            game.unlockAchievement("vvvvvvcomplete250");
         }
         if (game.bestgamedeaths <= 100) {
-            NETWORK_unlockAchievement("vvvvvvcomplete100");
+            game.unlockAchievement("vvvvvvcomplete100");
         }
         if (game.bestgamedeaths <= 50) {
-            NETWORK_unlockAchievement("vvvvvvcomplete50");
+            game.unlockAchievement("vvvvvvcomplete50");
         }
     }
 
-    if(game.bestrank[0]>=3) NETWORK_unlockAchievement("vvvvvvtimetrial_station1_fixed");
-    if(game.bestrank[1]>=3) NETWORK_unlockAchievement("vvvvvvtimetrial_lab_fixed");
-    if(game.bestrank[2]>=3) NETWORK_unlockAchievement("vvvvvvtimetrial_tower_fixed");
-    if(game.bestrank[3]>=3) NETWORK_unlockAchievement("vvvvvvtimetrial_station2_fixed");
-    if(game.bestrank[4]>=3) NETWORK_unlockAchievement("vvvvvvtimetrial_warp_fixed");
-    if(game.bestrank[5]>=3) NETWORK_unlockAchievement("vvvvvvtimetrial_final_fixed");
+    if(game.bestrank[0]>=3) game.unlockAchievement("vvvvvvtimetrial_station1_fixed");
+    if(game.bestrank[1]>=3) game.unlockAchievement("vvvvvvtimetrial_lab_fixed");
+    if(game.bestrank[2]>=3) game.unlockAchievement("vvvvvvtimetrial_tower_fixed");
+    if(game.bestrank[3]>=3) game.unlockAchievement("vvvvvvtimetrial_station2_fixed");
+    if(game.bestrank[4]>=3) game.unlockAchievement("vvvvvvtimetrial_warp_fixed");
+    if(game.bestrank[5]>=3) game.unlockAchievement("vvvvvvtimetrial_final_fixed");
 
     obj.init();
 
@@ -315,6 +342,7 @@ int main(int argc, char *argv[])
         game.levelpage = 0;
         game.playcustomlevel = 0;
         game.playassets = playassets;
+        game.menustart = true;
 
         ed.directoryList.clear();
         ed.directoryList.push_back(playtestname);
@@ -407,7 +435,7 @@ void inline deltaloop()
 
     while (accumulator >= timesteplimit)
     {
-        accumulator = fmodf(accumulator, timesteplimit);
+        accumulator = SDL_fmodf(accumulator, timesteplimit);
 
         fixedloop();
     }
@@ -461,22 +489,6 @@ void inline fixedloop()
     key.Poll();
     if(key.toggleFullscreen)
     {
-        if(!gameScreen.isWindowed)
-        {
-            SDL_ShowCursor(SDL_DISABLE);
-            SDL_ShowCursor(SDL_ENABLE);
-        }
-        else
-        {
-            SDL_ShowCursor(SDL_ENABLE);
-        }
-
-
-        if(game.gamestate == EDITORMODE)
-        {
-            SDL_ShowCursor(SDL_ENABLE);
-        }
-
         gameScreen.toggleFullScreen();
         game.fullscreen = !game.fullscreen;
         key.toggleFullscreen = false;
@@ -548,11 +560,11 @@ void inline fixedloop()
                 script.run();
             }
 
-            //Update old positions of entities - has to be done BEFORE gameinput!
+            //Update old lerp positions of entities - has to be done BEFORE gameinput!
             for (size_t i = 0; i < obj.entities.size(); i++)
             {
-                obj.entities[i].oldxp = obj.entities[i].xp;
-                obj.entities[i].oldyp = obj.entities[i].yp;
+                obj.entities[i].lerpoldxp = obj.entities[i].xp;
+                obj.entities[i].lerpoldyp = obj.entities[i].yp;
             }
 
             gameinput();
@@ -627,12 +639,7 @@ void inline fixedloop()
     }
 
     //Mute button
-#if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
-    bool inEditor = ed.textentry || ed.scripthelppage == 1;
-#else
-    bool inEditor = false;
-#endif
-    if (key.isDown(KEYBOARD_m) && game.mutebutton<=0 && !inEditor)
+    if (key.isDown(KEYBOARD_m) && game.mutebutton<=0 && !key.textentry())
     {
         game.mutebutton = 8;
         if (game.muted)
@@ -649,7 +656,7 @@ void inline fixedloop()
         game.mutebutton--;
     }
 
-    if (key.isDown(KEYBOARD_n) && game.musicmutebutton <= 0 && !inEditor)
+    if (key.isDown(KEYBOARD_n) && game.musicmutebutton <= 0 && !key.textentry())
     {
         game.musicmutebutton = 8;
         game.musicmuted = !game.musicmuted;
@@ -668,13 +675,13 @@ void inline fixedloop()
     {
         Mix_Volume(-1,MIX_MAX_VOLUME);
 
-        if (game.musicmuted || game.completestop)
+        if (game.musicmuted)
         {
             Mix_VolumeMusic(0);
         }
         else
         {
-            Mix_VolumeMusic(MIX_MAX_VOLUME);
+            Mix_VolumeMusic(music.musicVolume);
         }
     }
 

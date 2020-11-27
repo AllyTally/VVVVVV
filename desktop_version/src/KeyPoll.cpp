@@ -1,3 +1,4 @@
+#define KEY_DEFINITION
 #include "KeyPoll.h"
 
 #include <stdio.h>
@@ -38,7 +39,6 @@ KeyPoll::KeyPoll()
 	setSensitivity(2);
 
 	quitProgram = 0;
-	textentrymode=true;
 	keybuffer="";
 	leftbutton=0; rightbutton=0; middlebutton=0;
 	mx=0; my=0;
@@ -67,18 +67,22 @@ KeyPoll::KeyPoll()
 void KeyPoll::enabletextentry()
 {
 	keybuffer="";
-	textentrymode = true;
 	SDL_StartTextInput();
 }
 
 void KeyPoll::disabletextentry()
 {
-	textentrymode = false;
 	SDL_StopTextInput();
+}
+
+bool KeyPoll::textentry()
+{
+	return SDL_IsTextInputActive() == SDL_TRUE;
 }
 
 void KeyPoll::Poll()
 {
+	bool altpressed = false;
 	SDL_Event evt;
 	while (SDL_PollEvent(&evt))
 	{
@@ -95,9 +99,9 @@ void KeyPoll::Poll()
 			}
 
 #ifdef __APPLE__ /* OSX prefers the command keys over the alt keys. -flibit */
-			bool altpressed = keymap[SDLK_LGUI] || keymap[SDLK_RGUI];
+			altpressed = keymap[SDLK_LGUI] || keymap[SDLK_RGUI];
 #else
-			bool altpressed = keymap[SDLK_LALT] || keymap[SDLK_RALT];
+			altpressed = keymap[SDLK_LALT] || keymap[SDLK_RALT];
 #endif
 			bool returnpressed = evt.key.keysym.sym == SDLK_RETURN;
 			bool fpressed = evt.key.keysym.sym == SDLK_f;
@@ -107,7 +111,7 @@ void KeyPoll::Poll()
 				toggleFullscreen = true;
 			}
 
-			if (textentrymode)
+			if (textentry())
 			{
 				if (evt.key.keysym.sym == SDLK_BACKSPACE && !keybuffer.empty())
 				{
@@ -135,7 +139,10 @@ void KeyPoll::Poll()
 			}
 			break;
 		case SDL_TEXTINPUT:
-			keybuffer += evt.text.text;
+			if (!altpressed)
+			{
+				keybuffer += evt.text.text;
+			}
 			break;
 
 		/* Mouse Input */

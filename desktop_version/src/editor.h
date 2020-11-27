@@ -206,6 +206,7 @@ class editorclass{
   std::string note;
   std::string keybuffer;
   std::string filename;
+  std::string loaded_filepath;
 
   int drawmode;
   int tilex, tiley;
@@ -224,7 +225,7 @@ class editorclass{
     int desc; // Which description row we're changing
     int textent; // Entity ID for text prompt
   };
-  bool xmod, zmod, cmod, vmod, bmod, hmod, spacemod, warpmod, textentry;
+  bool xmod, zmod, cmod, vmod, bmod, hmod, spacemod, warpmod;
   bool titlemod, creatormod, desc1mod, desc2mod, desc3mod, websitemod;
 
   int roomnamehide;
@@ -254,10 +255,6 @@ class editorclass{
   std::string sbscript;
   int sbx, sby;
   int pagey;
-
-  std::string author;
-  std::string description;
-  std::string title;
 
   //Functions for interfacing with the script:
   void addhook(std::string t);
@@ -312,7 +309,9 @@ void editorlogic();
 void editorinput();
 #endif
 
+#ifndef ED_DEFINITION
 extern editorclass ed;
+#endif
 
 #endif /* EDITOR_H */
 

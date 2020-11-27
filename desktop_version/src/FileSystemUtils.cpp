@@ -47,15 +47,15 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 	PHYSFS_permitSymbolicLinks(1);
 
 	/* Determine the OS user directory */
-	if (baseDir && strlen(baseDir) > 0)
+	if (baseDir && baseDir[0] != '\0')
 	{
-		strcpy(output, baseDir);
-
 		/* We later append to this path and assume it ends in a slash */
-		if (strcmp(std::string(1, output[strlen(output) - 1]).c_str(), pathSep) != 0)
-		{
-			strcat(output, pathSep);
-		}
+		bool trailing_pathsep = SDL_strcmp(baseDir + SDL_strlen(baseDir) - SDL_strlen(pathSep), pathSep) == 0;
+
+		SDL_snprintf(output, sizeof(output), "%s%s",
+			baseDir,
+			!trailing_pathsep ? pathSep : ""
+		);
 	}
 	else
 	{
@@ -99,12 +99,14 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 	/* Mount the stock content last */
 	if (assetsPath)
 	{
-		strcpy(output, assetsPath);
+		SDL_strlcpy(output, assetsPath, sizeof(output));
 	}
 	else
 	{
-		strcpy(output, PHYSFS_getBaseDir());
-		strcat(output, "data.zip");
+		SDL_snprintf(output, sizeof(output), "%s%s",
+			PHYSFS_getBaseDir(),
+			"data.zip"
+		);
 	}
 	if (!PHYSFS_mount(output, NULL, 1))
 	{
@@ -441,9 +443,9 @@ void PLATFORM_getOSDirectory(char* output)
 	WCHAR utf16_path[MAX_PATH];
 	SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, utf16_path);
 	WideCharToMultiByte(CP_UTF8, 0, utf16_path, -1, output, MAX_PATH, NULL, NULL);
-	strcat(output, "\\VVVVVV\\");
+	SDL_strlcat(output, "\\VVVVVV\\", MAX_PATH);
 #else
-	strcpy(output, PHYSFS_getPrefDir("distractionware", "VVVVVV"));
+	SDL_strlcpy(output, PHYSFS_getPrefDir("distractionware", "VVVVVV"), MAX_PATH);
 #endif
 }
 

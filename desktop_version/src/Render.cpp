@@ -43,6 +43,12 @@ void menurender()
 #if defined(MAKEANDPLAY)
         graphics.Print(-1,temp+35,"     MAKE AND PLAY EDITION",tr, tg, tb, true);
 #endif
+#ifdef COMMIT_DATE
+        graphics.Print( 310 - (10*8), 210, COMMIT_DATE, tr/2, tg/2, tb/2);
+#endif
+#ifdef INTERIM_COMMIT
+        graphics.Print( 310 - SDL_strlen(INTERIM_COMMIT) * 8, 220, INTERIM_COMMIT, tr/2, tg/2, tb/2);
+#endif
         graphics.Print( 310 - (4*8), 230, "v2.3", tr/2, tg/2, tb/2);
 
         if(music.mmmmmm){
@@ -56,7 +62,7 @@ void menurender()
       graphics.Print( -1, 100, "ERROR: No levels found.", tr, tg, tb, true);
       }
       int tmp=game.currentmenuoption+(game.levelpage*8);
-      if(tmp>=0 && tmp < (int) ed.ListOfMetaData.size()){ // FIXME: size_t/int! -flibit
+      if(INBOUNDS_VEC(tmp, ed.ListOfMetaData)){
         //Don't show next/previous page or return to menu options here!
         if(game.menuoptions.size() - game.currentmenuoption<=3){
 
@@ -450,9 +456,11 @@ void menurender()
         case 1:
         case 2:
         case 3:
+        case 4:
             graphics.Print( -1, 85, "Flip is bound to: " + std::string(help.GCString(game.controllerButton_flip)) , tr, tg, tb, true);
             graphics.Print( -1, 95, "Enter is bound to: "  + std::string(help.GCString(game.controllerButton_map)), tr, tg, tb, true);
             graphics.Print( -1, 105, "Menu is bound to: " + std::string(help.GCString(game.controllerButton_esc)) , tr, tg, tb, true);
+            graphics.Print( -1, 115, "Restart is bound to: " + std::string(help.GCString(game.controllerButton_restart)) , tr, tg, tb, true);
             break;
         }
 
@@ -667,8 +675,9 @@ void menurender()
         switch (game.currentmenuoption)
         {
         case 0:
+        {
             //Show teleporter save info
-            graphics.drawpixeltextbox(25, 65-20, 270, 90, 34,12, 65, 185, 207,0,4);
+            graphics.drawpixeltextbox(17, 65-20, 286, 90, 36,12, 65, 185, 207,0,4);
 
             graphics.bigprint(-1, 20, "Tele Save", tr, tg, tb, true);
             graphics.Print(0, 80-20, game.tele_currentarea, 25, 255 - (help.glow / 2), 255 - (help.glow / 2), true);
@@ -676,15 +685,18 @@ void menurender()
             {
                 graphics.drawcrewman(169-(3*42)+(i*42), 95-20, i, game.tele_crewstats[i], true);
             }
-            graphics.Print(160 - 84, 132-20, game.tele_gametime, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
-            graphics.Print(160 + 40, 132-20, help.number(game.tele_trinkets), 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
+            graphics.Print(59, 132-20, game.tele_gametime, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
+            const std::string& trinketcount = help.number(game.tele_trinkets);
+            graphics.Print(262-graphics.len(trinketcount), 132-20, trinketcount, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
 
-            graphics.drawsprite(50, 126-20, 50, graphics.col_clock);
-            graphics.drawsprite(175, 126-20, 22, graphics.col_trinket);
+            graphics.drawsprite(34, 126-20, 50, graphics.col_clock);
+            graphics.drawsprite(270, 126-20, 22, graphics.col_trinket);
             break;
+        }
         case 1:
+        {
             //Show quick save info
-            graphics.drawpixeltextbox(25, 65-20, 270, 90, 34,12, 65, 185, 207,0,4);
+            graphics.drawpixeltextbox(17, 65-20, 286, 90, 36,12, 65, 185, 207,0,4);
 
             graphics.bigprint(-1, 20, "Quick Save", tr, tg, tb, true);
             graphics.Print(0, 80-20, game.quick_currentarea, 25, 255 - (help.glow / 2), 255 - (help.glow / 2), true);
@@ -692,12 +704,14 @@ void menurender()
             {
                 graphics.drawcrewman(169-(3*42)+(i*42), 95-20, i, game.quick_crewstats[i], true);
             }
-            graphics.Print(160 - 84, 132-20, game.quick_gametime, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
-            graphics.Print(160 + 40, 132-20, help.number(game.quick_trinkets), 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
+            graphics.Print(59, 132-20, game.quick_gametime, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
+            const std::string& trinketcount = help.number(game.quick_trinkets);
+            graphics.Print(262-graphics.len(trinketcount), 132-20, trinketcount, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
 
-            graphics.drawsprite(50, 126-20, 50, graphics.col_clock);
-            graphics.drawsprite(175, 126-20, 22, graphics.col_trinket);
+            graphics.drawsprite(34, 126-20, 50, graphics.col_clock);
+            graphics.drawsprite(270, 126-20, 22, graphics.col_trinket);
             break;
+        }
         }
         break;
     case Menu::gameover:
@@ -710,10 +724,10 @@ void menurender()
             graphics.drawcrewman(169-(3*42)+(i*42), 68, i, game.crewstats[i], true);
         }
         std::string tempstring;
-        tempstring = "You rescued " + help.number(game.crewrescued()) + " crewmates";
+        tempstring = "You rescued " + help.number(game.crewrescued()) + (game.crewrescued() == 1 ? " crewmate" : " crewmates");
         graphics.Print(0, 100, tempstring, tr, tg, tb, true);
 
-        tempstring = "and found " + help.number(game.trinkets()) + " trinkets.";
+        tempstring = "and found " + help.number(game.trinkets()) + (game.trinkets() == 1 ? " trinket." : " trinkets.");
         graphics.Print(0, 110, tempstring, tr, tg, tb, true);
 
         tempstring = "You managed to reach:";
@@ -1235,7 +1249,7 @@ void titlerender()
     }
     else
     {
-        if(!game.colourblindmode) graphics.drawtowerbackground();
+        if(!game.colourblindmode) graphics.drawtowerbackground(graphics.titlebg);
 
         tr = graphics.col_tr;
         tg = graphics.col_tg;
@@ -1265,7 +1279,7 @@ void gamecompleterender()
 {
     FillRect(graphics.backBuffer, 0x000000);
 
-    if(!game.colourblindmode) graphics.drawtowerbackground();
+    if(!game.colourblindmode) graphics.drawtowerbackground(graphics.titlebg);
 
     tr = graphics.col_tr;
     tg = graphics.col_tg;
@@ -1451,7 +1465,7 @@ void gamerender()
         {
             if (!game.colourblindmode)
             {
-                graphics.drawtowerbackground();
+                graphics.drawtowerbackground(graphics.towerbg);
             }
             else
             {
@@ -1539,7 +1553,7 @@ void gamerender()
         if (game.advancetext) graphics.bprint(5, 5, "- Press ACTION to advance text -", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true);
     }
 
-    if ((game.readytotele > 100 || game.oldreadytotele > 100) && !game.advancetext && game.hascontrol && !script.running && !game.intimetrial)
+    if (game.readytotele > 100 || game.oldreadytotele > 100)
     {
         int alpha = graphics.lerp(game.oldreadytotele, game.readytotele);
         if(graphics.flipmode)
@@ -1731,16 +1745,14 @@ void gamerender()
     }
 
     float act_alpha = graphics.lerp(game.prev_act_fade, game.act_fade) / 10.0f;
-    if (game.activeactivity > -1)
+    if (INBOUNDS_VEC(game.activeactivity, obj.entities))
     {
         game.activity_lastprompt = obj.blocks[game.activeactivity].prompt;
         game.activity_r = obj.blocks[game.activeactivity].r;
         game.activity_g = obj.blocks[game.activeactivity].g;
         game.activity_b = obj.blocks[game.activeactivity].b;
-        graphics.drawtextbox(16, 4, 36, 3, game.activity_r*act_alpha, game.activity_g*act_alpha, game.activity_b*act_alpha);
-        graphics.Print(5, 12, game.activity_lastprompt, game.activity_r*act_alpha, game.activity_g*act_alpha, game.activity_b*act_alpha, true);
     }
-    else if(game.act_fade>5 || game.prev_act_fade>5)
+    if(game.act_fade>5 || game.prev_act_fade>5)
     {
         graphics.drawtextbox(16, 4, 36, 3, game.activity_r*act_alpha, game.activity_g*act_alpha, game.activity_b*act_alpha);
         graphics.Print(5, 12, game.activity_lastprompt, game.activity_r*act_alpha, game.activity_g*act_alpha, game.activity_b*act_alpha, true);
@@ -2271,31 +2283,37 @@ void maprender()
         {
             graphics.Print(0, 115, "Cannot Save in Secret Lab", 146, 146, 180, true);
         }
+        else if (game.gamesavefailed)
+        {
+            graphics.Print(0, 115, "ERROR: Could not save game!", 146, 146, 180, true);
+        }
         else if (map.custommode)
         {
             if (game.gamesaved)
             {
                 graphics.Print(0, 36, "Game saved ok!", 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2), true);
 
-                graphics.drawpixeltextbox(25, 65, 270, 90, 34,12, 65, 185, 207,0,4);
+                graphics.drawpixeltextbox(17, 65, 286, 90, 36,12, 65, 185, 207,0,4);
 
                 if (graphics.flipmode)
                 {
                     graphics.Print(0, 122, game.customleveltitle, 25, 255 - (help.glow / 2), 255 - (help.glow / 2), true);
-                    graphics.Print(160 - 84, 78, game.savetime, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
-                    graphics.Print(160 + 40, 78, help.number(game.savetrinkets), 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
+                    graphics.Print(59, 78, game.savetime, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
+                    const std::string& trinketcount = help.number(game.savetrinkets);
+                    graphics.Print(262-graphics.len(trinketcount), 78, trinketcount, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
 
-                    graphics.drawsprite(50, 74, 50, graphics.col_clock);
-                    graphics.drawsprite(175, 74, 22, graphics.col_trinket);
+                    graphics.drawsprite(34, 74, 50, graphics.col_clock);
+                    graphics.drawsprite(270, 74, 22, graphics.col_trinket);
                 }
                 else
                 {
                     graphics.Print(0, 90, game.customleveltitle, 25, 255 - (help.glow / 2), 255 - (help.glow / 2), true);
-                    graphics.Print(160 - 84, 132, game.savetime, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
-                    graphics.Print(160 + 40, 132, help.number(game.savetrinkets), 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
+                    graphics.Print(59, 132, game.savetime, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
+                    const std::string& trinketcount = help.number(game.savetrinkets);
+                    graphics.Print(262-graphics.len(trinketcount), 132, trinketcount, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
 
-                    graphics.drawsprite(50, 126, 50, graphics.col_clock);
-                    graphics.drawsprite(175, 126, 22, graphics.col_trinket);
+                    graphics.drawsprite(34, 126, 50, graphics.col_clock);
+                    graphics.drawsprite(270, 126, 22, graphics.col_trinket);
                 }
             }
             else
@@ -2320,7 +2338,7 @@ void maprender()
             {
                 graphics.Print(0, 36, "Game saved ok!", 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2), true);
 
-                graphics.drawpixeltextbox(25, 65, 270, 90, 34,12, 65, 185, 207,0,4);
+                graphics.drawpixeltextbox(17, 65, 286, 90, 36,12, 65, 185, 207,0,4);
 
                 if (graphics.flipmode)
                 {
@@ -2329,11 +2347,12 @@ void maprender()
                     {
                         graphics.drawcrewman(169-(3*42)+(i*42), 98, i, game.crewstats[i], true);
                     }
-                    graphics.Print(160 - 84, 78, game.savetime, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
-                    graphics.Print(160 + 40, 78, help.number(game.savetrinkets), 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
+                    graphics.Print(59, 78, game.savetime, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
+                    const std::string& trinketcount = help.number(game.savetrinkets);
+                    graphics.Print(262-graphics.len(trinketcount), 78, trinketcount, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
 
-                    graphics.drawsprite(50, 74, 50, graphics.col_clock);
-                    graphics.drawsprite(175, 74, 22, graphics.col_trinket);
+                    graphics.drawsprite(34, 74, 50, graphics.col_clock);
+                    graphics.drawsprite(270, 74, 22, graphics.col_trinket);
                 }
                 else
                 {
@@ -2342,11 +2361,12 @@ void maprender()
                     {
                         graphics.drawcrewman(169-(3*42)+(i*42), 95, i, game.crewstats[i], true);
                     }
-                    graphics.Print(160 - 84, 132, game.savetime, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
-                    graphics.Print(160 + 40, 132, help.number(game.savetrinkets), 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
+                    graphics.Print(59, 132, game.savetime, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
+                    const std::string& trinketcount = help.number(game.savetrinkets);
+                    graphics.Print(262-graphics.len(trinketcount), 132, trinketcount, 255 - (help.glow / 2), 255 - (help.glow / 2), 255 - (help.glow / 2));
 
-                    graphics.drawsprite(50, 126, 50, graphics.col_clock);
-                    graphics.drawsprite(175, 126, 22, graphics.col_trinket);
+                    graphics.drawsprite(34, 126, 50, graphics.col_clock);
+                    graphics.drawsprite(270, 126, 22, graphics.col_trinket);
                 }
             }
             else
@@ -2551,10 +2571,10 @@ void teleporterrender()
         //Draw the chosen destination coordinate!
         //TODO
         //draw the coordinates //destination
-        int tempx = map.teleporters[game.teleport_to_teleporter].x;
-        int tempy = map.teleporters[game.teleport_to_teleporter].y;
-        graphics.drawrect(40 + (tempx * 12) + 1, 21 + (tempy * 9) + 1, 12 - 2, 9 - 2, 245 - (help.glow * 2), 16, 16);
-        graphics.drawrect(40 + (tempx * 12) + 3, 21 + (tempy * 9) + 3, 12 - 6, 9 - 6, 245 - (help.glow * 2), 16, 16);
+        int tempx_ = map.teleporters[game.teleport_to_teleporter].x;
+        int tempy_ = map.teleporters[game.teleport_to_teleporter].y;
+        graphics.drawrect(40 + (tempx_ * 12) + 1, 21 + (tempy_ * 9) + 1, 12 - 2, 9 - 2, 245 - (help.glow * 2), 16, 16);
+        graphics.drawrect(40 + (tempx_ * 12) + 3, 21 + (tempy_ * 9) + 3, 12 - 6, 9 - 6, 245 - (help.glow * 2), 16, 16);
     }
 
     //draw legend details

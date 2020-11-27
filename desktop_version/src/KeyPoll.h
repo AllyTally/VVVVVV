@@ -65,7 +65,7 @@ public:
 	int leftbutton, rightbutton, middlebutton;
 	int mx, my;
 
-	bool textentrymode;
+	bool textentry();
 	bool pressedbackspace;
 	std::string keybuffer;
 
@@ -81,6 +81,8 @@ private:
 	Uint32 wasFullscreen;
 };
 
+#ifndef KEY_DEFINITION
 extern KeyPoll key;
+#endif
 
 #endif /* KEYPOLL_H */

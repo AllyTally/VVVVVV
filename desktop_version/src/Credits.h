@@ -86,6 +86,7 @@ static const char* patrons[] = {
 static const char* githubfriends[] = {
     "Matt \"Fussmatte\" Aaldenberg", // TODO: Change to "Fußmatte" if/when UTF-8 support is added
     "AlexApps99",
+    "AllyTally",
     "Christoph B{hmwalder",
     "Charlie Bruce",
     "Brian Callahan",
@@ -93,14 +94,16 @@ static const char* githubfriends[] = {
     "Allison Fleischer",
     "Daniel Lee",
     "Fredrik Ljungdahl",
+    "MAO3J1m0Op",
+    "Nichole Mattera",
     "Matt Penny",
+    "Tynan Richards",
     "Elliott Saltar",
     "Marvin Scholz",
     "Keith Stellyes",
     "Elijah Stone",
     "Thomas S|nger",
     "Info Teddy",
-    "Alexandra Tildea",
     "leo60228",
     "Emmanuel Vadot",
     "Remi Verschelde", // TODO: Change to "Rémi" if/when UTF-8 support is added

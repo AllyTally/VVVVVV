@@ -5,6 +5,13 @@
 #include <string>
 #include <vector>
 
+// Forward decl without including all of <tinyxml2.h>
+namespace tinyxml2
+{
+    class XMLDocument;
+    class XMLElement;
+}
+
 struct MenuOption
 {
     char text[161]; // 40 chars (160 bytes) covers the entire screen, + 1 more for null terminator
@@ -98,8 +105,8 @@ public:
 
     void resetgameclock();
 
-    void customsavequick(std::string savfile);
-    void savequick();
+    bool customsavequick(std::string savfile);
+    bool savequick();
 
     void gameclock();
 
@@ -127,13 +134,23 @@ public:
 
     void loadstats(int *width, int *height, bool *vsync);
 
-    void  savestats();
+    void  savestats(const bool stats_only = false);
 
     void deletestats();
 
+    void deserializesettings(tinyxml2::XMLElement* dataNode, int* width, int* height, bool* vsync);
+
+    void serializesettings(tinyxml2::XMLElement* dataNode);
+
+    void loadsettings(int* width, int* height, bool* vsync);
+
+    void savesettings();
+
+    void deletesettings();
+
     void deletequick();
 
-    void savetele();
+    bool savetele();
 
     void loadtele();
 
@@ -155,6 +172,9 @@ public:
     void loadquick();
 
     void loadsummary();
+
+    void readmaingamesave(tinyxml2::XMLDocument& doc);
+    std::string writemaingamesave(tinyxml2::XMLDocument& doc);
 
     void initteleportermode();
 
@@ -202,6 +222,7 @@ public:
 
     int frames, seconds, minutes, hours;
     bool gamesaved;
+    bool gamesavefailed;
     std::string savetime;
     std::string savearea;
     int savetrinkets;
@@ -378,6 +399,7 @@ public:
     std::vector<SDL_GameControllerButton> controllerButton_map;
     std::vector<SDL_GameControllerButton> controllerButton_flip;
     std::vector<SDL_GameControllerButton> controllerButton_esc;
+    std::vector<SDL_GameControllerButton> controllerButton_restart;
 
     bool skipfakeload;
     bool ghostsenabled;
@@ -415,12 +437,14 @@ public:
 
     bool ingame_titlemode;
 
-    bool shouldreturntopausemenu;
     void returntopausemenu();
+    void unlockAchievement(const char *name);
 
     bool disablepause;
 };
 
+#ifndef GAME_DEFINITION
 extern Game game;
+#endif
 
 #endif /* GAME_H */
