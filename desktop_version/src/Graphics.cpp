@@ -119,7 +119,6 @@ void Graphics::init()
     warpbuffer_lerp = NULL;
     footerbuffer = NULL;
     coverbuffer = NULL;
-    tweakbuffer = NULL;
     ghostbuffer = NULL;
     towerbg = TowerBG();
     titlebg = TowerBG();
@@ -365,16 +364,7 @@ void Graphics::Print( int _x, int _y, std::string _s, int r, int g, int b, bool 
     return PrintAlpha(_x,_y,_s,r,g,b,255,cen);
 }
 
-void Graphics::PrintSurface( int _x, int _y, std::string _s, int r, int g, int b, SDL_Surface* surface, bool cen /*= false*/) {
-    return PrintAlphaSurface(_x,_y,_s,r,g,b,255,surface,cen);
-}
-
 void Graphics::PrintAlpha( int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen /*= false*/ ) {
-    return PrintAlphaSurface(_x,_y,_s,r,g,b,255,backBuffer,cen);
-}
-
-void Graphics::PrintAlphaSurface( int _x, int _y, std::string _s, int r, int g, int b, int a, SDL_Surface* surface, bool cen /*= false*/)
-{
     std::vector<SDL_Surface*>& font = flipmode ? flipbfont : bfont;
 
     r = clamp(r,0,255);
@@ -403,7 +393,7 @@ void Graphics::PrintAlphaSurface( int _x, int _y, std::string _s, int r, int g, 
         idx = font_idx(curr);
         if (INBOUNDS_VEC(idx, font))
         {
-            BlitSurfaceColoured( font[idx], NULL, surface, &fontRect , ct);
+            BlitSurfaceColoured( font[idx], NULL, backBuffer, &fontRect , ct);
         }
         bfontpos+=bfontlen(curr) ;
     }
@@ -470,10 +460,6 @@ void Graphics::PrintOff( int _x, int _y, std::string _s, int r, int g, int b, bo
 }
 
 void Graphics::PrintOffAlpha( int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen /*= false*/ ) {
-    PrintOffAlphaSurface(_x,_y,_s,r,g,b,a,backBuffer,cen);
-}
-void Graphics::PrintOffAlphaSurface( int _x, int _y, std::string _s, int r, int g, int b, int a, SDL_Surface* surface, bool cen /*= false*/ )
-{
     std::vector<SDL_Surface*>& font = flipmode ? flipbfont : bfont;
 
     r = clamp(r,0,255);
@@ -511,32 +497,24 @@ void Graphics::bprint( int x, int y, std::string t, int r, int g, int b, bool ce
     bprintalpha(x,y,t,r,g,b,255,cen);
 }
 
-void Graphics::bprintsurface( int x, int y, std::string t, int r, int g, int b, SDL_Surface* surface, bool cen /*= false*/ ) {
-    bprintalphasurface(x,y,t,r,g,b,255,surface,cen);
-}
-
 void Graphics::bprintalpha( int x, int y, std::string t, int r, int g, int b, int a, bool cen /*= false*/ ) {
-    bprintalphasurface(x,y,t,r,g,b,255,backBuffer,cen);
-}
-void Graphics::bprintalphasurface( int x, int y, std::string t, int r, int g, int b, int a, SDL_Surface* surface, bool cen /*= false*/ )
-{
     if (!notextoutline)
     {
-        PrintAlphaSurface(x, y - 1, t, 0, 0, 0, a, surface, cen);
+        PrintAlpha(x, y - 1, t, 0, 0, 0, a, cen);
         if (cen)
         {
-            PrintOffAlphaSurface(-1, y, t, 0, 0, 0, a, surface, cen);
-            PrintOffAlphaSurface(1, y, t, 0, 0, 0, a, surface, cen);
+            PrintOffAlpha(-1, y, t, 0, 0, 0, a, cen);
+            PrintOffAlpha(1, y, t, 0, 0, 0, a, cen);
         }
         else
         {
-            PrintAlphaSurface(x  -1, y, t, 0, 0, 0, a, surface, cen);
-            PrintAlphaSurface(x  +1, y, t, 0, 0, 0, a, surface, cen);
+            PrintAlpha(x  -1, y, t, 0, 0, 0, a, cen);
+            PrintAlpha(x  +1, y, t, 0, 0, 0, a, cen);
         }
-        PrintAlphaSurface(x, y+1, t, 0, 0, 0, a, surface, cen);
+        PrintAlpha(x, y+1, t, 0, 0, 0, a, cen);
     }
 
-    PrintAlphaSurface(x, y, t, r, g, b, a, surface, cen);
+    PrintAlpha(x, y, t, r, g, b, a, cen);
 }
 
 void Graphics::RPrint( int _x, int _y, std::string _s, int r, int g, int b, bool cen /*= false*/ )
@@ -1344,7 +1322,7 @@ void Graphics::processfade()
     }
 }
 
-void Graphics::drawmenu( int cr, int cg, int cb, bool levelmenu /*= false*/, bool tweakmenu /*= false*/ )
+void Graphics::drawmenu( int cr, int cg, int cb, bool levelmenu /*= false*/)
 {
     for (size_t i = 0; i < game.menuoptions.size(); i++)
     {
@@ -1410,11 +1388,7 @@ void Graphics::drawmenu( int cr, int cg, int cb, bool levelmenu /*= false*/, boo
             SDL_strlcpy(buffer, tempstring, sizeof(buffer));
         }
 
-        if (tweakmenu) {
-            PrintSurface(x, y, buffer, fr, fg, fb, tweakbuffer);
-        } else {
-            Print(x, y, buffer, fr, fg, fb);
-        }
+        Print(x, y, buffer, fr, fg, fb);
     }
 }
 
@@ -1975,6 +1949,7 @@ void Graphics::drawentity(const int i, const int yoff)
 
         break;
     }
+
     }
 }
 

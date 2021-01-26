@@ -266,6 +266,7 @@ void Game::init(void)
 
     // tweaks
     frameadvance = false;
+    inentityeditor = false;
 
     clearcustomlevelstats();
 
@@ -6858,6 +6859,7 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         break;
     case Menu::tweakmenu:
         option("frame advance");
+        option("modify entities");
         option("a");
         menuyoff = 0;
         break;

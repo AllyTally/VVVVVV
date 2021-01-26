@@ -1602,6 +1602,9 @@ void menuactionpress()
         if (game.currentmenuoption == 0) {
             music.playef(11);
             game.frameadvance = true;
+        } else if (game.currentmenuoption == 1) {
+            music.playef(11);
+            game.inentityeditor = !game.inentityeditor;
         }
         break;
     default:

@@ -2466,17 +2466,29 @@ void maprender()
 
 void tweakmenurender()
 {
-    SDL_FillRect(graphics.coverbuffer, NULL, SDL_MapRGBA(graphics.coverbuffer->format, 0, 0, 0, 255));
-    SDL_FillRect(graphics.tweakbuffer, NULL, SDL_MapRGBA(graphics.tweakbuffer->format, 0, 0, 0, 0));
-
-
-    graphics.bprintsurface(-1, 10, "[ PAUSED ]", 196, 196, 255 - help.glow, graphics.tweakbuffer, true);
-
-    graphics.drawmenu(196, 196, 255 - help.glow, false, true);
-
-
     SDL_BlitSurface(graphics.coverbuffer, NULL, graphics.backBuffer, &graphics.bg_rect);
-    SDL_BlitSurface(graphics.tweakbuffer, NULL, graphics.backBuffer, &graphics.bg_rect);
+
+    if (game.inentityeditor) {
+        graphics.drawentities();
+
+
+        for (int i = obj.entities.size() - 1; i >= 0; i--)
+        {
+            switch (obj.entities[i].size) {
+                case 0:
+                    fillboxabs(obj.entities[i].xp,obj.entities[i].yp,16,16, graphics.getRGB(32,200,200));
+                    break;
+            }
+            //drawentity(i, yoff);
+        }
+
+
+    }
+
+    graphics.bprint(-1, 10, "[ PAUSED ]", 196, 196, 255 - help.glow, true);
+
+    graphics.drawmenu(196, 196, 255 - help.glow, false);
+
     graphics.renderwithscreeneffects();
 }
 

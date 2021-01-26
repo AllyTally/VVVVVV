@@ -440,6 +440,7 @@ public:
     bool disablepause;
 
     bool frameadvance;
+    bool inentityeditor;
 };
 
 #ifndef GAME_DEFINITION
