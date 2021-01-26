@@ -13,9 +13,6 @@
 mapclass::mapclass()
 {
 	//Start here!
-	r = 196;
-	g = 196;
-	b = 196;
 	colstatedelay = 0;
 	colsuperstate = 0;
 	spikeleveltop = 0;
@@ -32,8 +29,6 @@ mapclass::mapclass()
 
 	finalmode = false;
 	finalstretch = false;
-	finalx = 50;
-	finaly = 50;
 
 	cursorstate = 0;
 	cursordelay = 0;
@@ -51,7 +46,6 @@ mapclass::mapclass()
 
 	custommode=false;
 	custommodeforreal=false;
-	customx=0; customy=0;
 	customwidth=20; customheight=20;
 	custommmxoff=0; custommmyoff=0; custommmxsize=0; custommmysize=0;
 	customzoom=0;
@@ -478,8 +472,7 @@ int mapclass::finalat(int x, int y)
 		//Special case: animated tiles
 		if (final_mapcol == 1)
 		{
-			// Windows hits fRandom() == 1 frequently! For fuck sake! -flibit
-			return 737 + (std::min(int(fRandom() * 12), 11) * 40);
+			return 737 + (int(fRandom() * 11) * 40);
 		}
 		else
 		{
@@ -566,11 +559,41 @@ void mapclass::changefinalcol(int t)
 	}
 }
 
-void mapclass::setcol(const int r1, const int g1, const int b1 , const int r2, const int g2, const int b2, const int c)
+void mapclass::setcol(TowerBG& bg_obj, const int r1, const int g1, const int b1 , const int r2, const int g2, const int b2, const int c)
 {
-	r = intpol(r1, r2, c / 5);
-	g = intpol(g1, g2, c / 5);
-	b = intpol(b1, b2, c / 5);
+	bg_obj.r = intpol(r1, r2, c / 5);
+	bg_obj.g = intpol(g1, g2, c / 5);
+	bg_obj.b = intpol(b1, b2, c / 5);
+}
+
+void mapclass::updatebgobj(TowerBG& bg_obj)
+{
+	const int check = bg_obj.colstate % 5; //current state of phase
+	const int cmode = (bg_obj.colstate - check) / 5; // current colour transition;
+
+	switch(cmode)
+	{
+	case 0:
+		setcol(bg_obj, 255, 93, 107, 255, 255, 93, check);
+		break;
+	case 1:
+		setcol(bg_obj, 255, 255, 93, 159, 255, 93, check);
+		break;
+	case 2:
+		setcol(bg_obj, 159, 255, 93, 93, 245, 255, check);
+		break;
+	case 3:
+		setcol(bg_obj, 93, 245, 255, 177, 93, 255, check);
+		break;
+	case 4:
+		setcol(bg_obj, 177, 93, 255, 255, 93, 255, check);
+		break;
+	case 5:
+		setcol(bg_obj, 255, 93, 255, 255, 93, 107, check);
+		break;
+	}
+
+	bg_obj.tdrawback = true;
 }
 
 void mapclass::updatetowerglow(TowerBG& bg_obj)
@@ -580,30 +603,9 @@ void mapclass::updatetowerglow(TowerBG& bg_obj)
 		if (colsuperstate > 0) bg_obj.colstate--;
 		bg_obj.colstate++;
 		if (bg_obj.colstate >= 30) bg_obj.colstate = 0;
-		int check = bg_obj.colstate % 5; //current state of phase
-		int cmode = (bg_obj.colstate - check) / 5; // current colour transition
 
-		switch(cmode)
-		{
-		case 0:
-			setcol(255, 93, 107, 255, 255, 93, check);
-			break;
-		case 1:
-			setcol(255, 255, 93, 159, 255, 93, check);
-			break;
-		case 2:
-			setcol(159, 255, 93, 93, 245, 255, check);
-			break;
-		case 3:
-			setcol(93, 245, 255, 177, 93, 255, check);
-			break;
-		case 4:
-			setcol(177, 93, 255, 255, 93, 255, check);
-			break;
-		case 5:
-			setcol(255, 93, 255, 255, 93, 107, check);
-			break;
-		}
+		const int check = bg_obj.colstate % 5;
+		updatebgobj(bg_obj);
 
 		if (check == 0)
 		{
@@ -614,8 +616,6 @@ void mapclass::updatetowerglow(TowerBG& bg_obj)
 			colstatedelay = 0;
 		}
 		if (colsuperstate > 0) colstatedelay = 0;
-
-		bg_obj.tdrawback = true;
 	}
 	else
 	{
@@ -627,64 +627,16 @@ void mapclass::nexttowercolour()
 {
 	graphics.titlebg.colstate+=5;
 	if (graphics.titlebg.colstate >= 30) graphics.titlebg.colstate = 0;
-	int check = graphics.titlebg.colstate % 5; //current state of phase
-	int cmode = (graphics.titlebg.colstate - check) / 5; // current colour transition
 
-	switch(cmode)
-	{
-	case 0:
-		setcol(255, 93, 107, 255, 255, 93, check);
-		break;
-	case 1:
-		setcol(255, 255, 93, 159, 255, 93, check);
-		break;
-	case 2:
-		setcol(159, 255, 93, 93, 245, 255, check);
-		break;
-	case 3:
-		setcol(93, 245, 255, 177, 93, 255, check);
-		break;
-	case 4:
-		setcol(177, 93, 255, 255, 93, 255, check);
-		break;
-	case 5:
-		setcol(255, 93, 255, 255, 93, 107, check);
-		break;
-	}
-
-	graphics.titlebg.tdrawback = true;
+	updatebgobj(graphics.titlebg);
 }
 
 void mapclass::settowercolour(int t)
 {
 	graphics.titlebg.colstate=t*5;
 	if (graphics.titlebg.colstate >= 30) graphics.titlebg.colstate = 0;
-	int check = graphics.titlebg.colstate % 5; //current state of phase
-	int cmode = (graphics.titlebg.colstate - check) / 5; // current colour transition
 
-	switch(cmode)
-	{
-	case 0:
-		setcol(255, 93, 107, 255, 255, 93, check);
-		break;
-	case 1:
-		setcol(255, 255, 93, 159, 255, 93, check);
-		break;
-	case 2:
-		setcol(159, 255, 93, 93, 245, 255, check);
-		break;
-	case 3:
-		setcol(93, 245, 255, 177, 93, 255, check);
-		break;
-	case 4:
-		setcol(177, 93, 255, 255, 93, 255, check);
-		break;
-	case 5:
-		setcol(255, 93, 255, 255, 93, 107, check);
-		break;
-	}
-
-	graphics.titlebg.tdrawback = true;
+	updatebgobj(graphics.titlebg);
 }
 
 bool mapclass::spikecollide(int x, int y)
@@ -760,7 +712,6 @@ int mapclass::area(int _rx, int _ry)
 	else
 	{
 		int lookup = (_rx - 100) + ((_ry - 100) * 20);
-		//lookup = std::max(0,lookup);
 		if(_rx-100>=0 && _rx-100<20 && _ry-100>=0 && _ry-100<20){
 			return areamap[lookup];
 		}
@@ -803,6 +754,11 @@ void mapclass::showship()
 
 void mapclass::resetplayer()
 {
+	resetplayer(false);
+}
+
+void mapclass::resetplayer(const bool player_died)
+{
 	bool was_in_tower = towermode;
 	if (game.roomx != game.saverx || game.roomy != game.savery)
 	{
@@ -821,8 +777,15 @@ void mapclass::resetplayer()
 		obj.entities[i].yp = game.savey;
 		obj.entities[i].dir = game.savedir;
 		obj.entities[i].colour = 0;
-		game.lifeseq = 10;
-		obj.entities[i].invis = true;
+		if (player_died)
+		{
+			game.lifeseq = 10;
+			obj.entities[i].invis = true;
+		}
+		else
+		{
+			obj.entities[i].invis = false;
+		}
 		if (!game.glitchrunnermode)
 		{
 			obj.entities[i].size = 0;
@@ -929,18 +892,13 @@ void mapclass::gotoroom(int rx, int ry)
 	if (finalmode)
 	{
 		//Ok, what way are we moving?
-		finalx = rx;
-		finaly = ry;
-		game.roomx = finalx;
-		game.roomy = finaly;
+		game.roomx = rx;
+		game.roomy = ry;
 		game.roomchange = true;
-		rx = finalx;
-		ry = finaly;
 
 		if (game.roomy < 10)
 		{
 			game.roomy = 11;
-			finaly = 11;
 		}
 
 		if(game.roomx>=41 && game.roomy>=48 && game.roomx<61 && game.roomy<68 )
@@ -1409,7 +1367,7 @@ void mapclass::loadlevel(int rx, int ry)
 	}
 	case 6: //final level
 	{
-		const short* tmap = finallevel.loadlevel(finalx, finaly);
+		const short* tmap = finallevel.loadlevel(rx, ry);
 		SDL_memcpy(contents, tmap, sizeof(contents));
 		roomname = finallevel.roomname;
 		tileset = 1;
@@ -1484,7 +1442,6 @@ void mapclass::loadlevel(int rx, int ry)
 			obj.entities[i].yp += (71 * 8);
 		}
 		game.roomy--;
-		finaly--;
 
 		ypos = (100-29) * 8;
 		oldypos = ypos;
@@ -1529,7 +1486,6 @@ void mapclass::loadlevel(int rx, int ry)
 			obj.entities[i].yp += (71 * 8);
 		}
 		game.roomy--;
-		finaly--;
 
 		ypos = (100-29) * 8;
 		oldypos = ypos;
@@ -2101,9 +2057,6 @@ void mapclass::twoframedelayfix()
 	game.state = 0;
 	game.statedelay = 0;
 	script.load(game.newscript);
-	if (script.running)
-	{
-		script.run();
-		script.dontrunnextframe = true;
-	}
+	script.run();
+	script.dontrunnextframe = true;
 }

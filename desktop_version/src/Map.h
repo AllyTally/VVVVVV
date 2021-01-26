@@ -46,7 +46,9 @@ public:
 
     void changefinalcol(int t);
 
-    void setcol(const int r1, const int g1, const int b1 , const int r2, const  int g2, const int b2, const int c);
+    void setcol(TowerBG& bg_obj, const int r1, const int g1, const int b1 , const int r2, const  int g2, const int b2, const int c);
+
+    void updatebgobj(TowerBG& bg_obj);
 
     void updatetowerglow(TowerBG& bg_obj);
 
@@ -69,6 +71,7 @@ public:
 
     void showship();
 
+    void resetplayer(const bool player_died);
     void resetplayer();
 
     void warpto(int rx, int ry , int t, int tx, int ty);
@@ -108,22 +111,17 @@ public:
     int resumedelay;
     bool minitowermode;
 
-    //This is the old colour cycle
-    int r, g,b;
     int colstatedelay;
     int colsuperstate;
     int spikeleveltop, spikelevelbottom;
     int oldspikeleveltop, oldspikelevelbottom;
     //final level navigation
-    int finalx;
-    int finaly;
     bool finalmode;
     bool finalstretch;
 
     //Variables for playing custom levels
     bool custommode;
     bool custommodeforreal;
-    int customx, customy;
     int customwidth, customheight;
     int custommmxoff, custommmyoff, custommmxsize, custommmysize;
     int customzoom;

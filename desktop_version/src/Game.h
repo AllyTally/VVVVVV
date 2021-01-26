@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "ScreenSettings.h"
+
 // Forward decl without including all of <tinyxml2.h>
 namespace tinyxml2
 {
@@ -30,6 +32,7 @@ namespace Menu
         quickloadlevel,
         youwannaquit,
         errornostart,
+        errorsavingsettings,
         graphicoptions,
         ed_settings,
         ed_desc,
@@ -129,19 +132,25 @@ public:
 
     void unlocknum(int t);
 
-    void loadstats(int *width, int *height, bool *vsync);
+    void loadstats(ScreenSettings* screen_settings);
 
-    void  savestats(const bool stats_only = false);
+    bool savestats(const ScreenSettings* screen_settings);
+    bool savestats();
 
     void deletestats();
 
-    void deserializesettings(tinyxml2::XMLElement* dataNode, int* width, int* height, bool* vsync);
+    void deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* screen_settings);
 
-    void serializesettings(tinyxml2::XMLElement* dataNode);
+    void serializesettings(tinyxml2::XMLElement* dataNode, const ScreenSettings* screen_settings);
 
-    void loadsettings(int* width, int* height, bool* vsync);
+    void loadsettings(ScreenSettings* screen_settings);
 
-    void savesettings();
+    bool savesettings(const ScreenSettings* screen_settings);
+    bool savesettings();
+
+    bool savestatsandsettings();
+
+    void savestatsandsettings_menu();
 
     void deletesettings();
 
@@ -197,9 +206,8 @@ public:
 
     bool glitchrunkludge;
 
-    int usingmmmmmm;
-
     int gamestate;
+    int prevgamestate; //only used sometimes
     bool hascontrol, jumpheld;
     int jumppressed;
     int gravitycontrol;
@@ -212,6 +220,7 @@ public:
     int tapleft, tapright;
 
     //Menu interaction stuff
+    void mapmenuchange(const int newgamestate);
     bool mapheld;
     int menupage;
     int lastsaved;
@@ -261,6 +270,8 @@ public:
     int creditposx, creditposy, creditposdelay;
     int oldcreditposx;
 
+    bool silence_settings_error;
+
 
     //Sine Wave Ninja Minigame
     bool swnmode;
@@ -276,16 +287,21 @@ public:
     bool  colourblindmode;
     bool noflashingmode;
     int slowdown;
-    Uint32 gameframerate;
 
     bool nodeathmode;
     int gameoverdelay;
     bool nocutscenes;
+    int ndmresultcrewrescued;
+    int ndmresulttrinkets;
+    std::string ndmresulthardestroom;
+    void copyndmresults();
 
     //Time Trials
     bool intimetrial, timetrialparlost;
     int timetrialcountdown, timetrialshinytarget, timetriallevel;
     int timetrialpar, timetrialresulttime, timetrialresultframes, timetrialrank;
+    int timetrialresultshinytarget, timetrialresulttrinkets, timetrialresultpar;
+    int timetrialresultdeaths;
 
     int creditposition;
     int oldcreditposition;
@@ -295,6 +311,7 @@ public:
 
     static const int numcrew = 6;
     bool crewstats[numcrew];
+    bool ndmresultcrewstats[numcrew];
 
     bool alarmon;
     int alarmdelay;
@@ -309,7 +326,6 @@ public:
     bool unlocknotify[numunlock];
     bool anything_unlocked();
     int stat_trinkets;
-    bool fullscreen;
     int bestgamedeaths;
 
 
@@ -366,13 +382,6 @@ public:
     std::string hardestroom;
     int hardestroomdeaths, currentroomdeaths;
 
-    bool savemystats;
-
-
-    bool fullScreenEffect_badSignal;
-    bool useLinearFilter;
-    int stretchMode;
-    int controllerSensitivity;
 
     bool quickrestartkludge;
 

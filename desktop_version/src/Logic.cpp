@@ -1,5 +1,4 @@
 #include "Credits.h"
-#include "editor.h"
 #include "Entity.h"
 #include "Enums.h"
 #include "FileSystemUtils.h"
@@ -11,19 +10,6 @@
 #include "Script.h"
 #include "UtilityClass.h"
 
-void titleupdatetextcol()
-{
-    graphics.col_tr = map.r - (help.glow / 4) - int(fRandom() * 4);
-    graphics.col_tg = map.g - (help.glow / 4) - int(fRandom() * 4);
-    graphics.col_tb = map.b - (help.glow / 4) - int(fRandom() * 4);
-    if (graphics.col_tr < 0) graphics.col_tr = 0;
-    if(graphics.col_tr>255) graphics.col_tr=255;
-    if (graphics.col_tg < 0) graphics.col_tg = 0;
-    if(graphics.col_tg>255) graphics.col_tg=255;
-    if (graphics.col_tb < 0) graphics.col_tb = 0;
-    if(graphics.col_tb>255) graphics.col_tb=255;
-}
-
 void titlelogic()
 {
     //Misc
@@ -32,31 +18,6 @@ void titlelogic()
 
     graphics.titlebg.bypos -= 2;
     graphics.titlebg.bscroll = -2;
-
-    if (!game.colourblindmode)
-    {
-        graphics.updatetowerbackground(graphics.titlebg);
-    }
-
-    if (!game.menustart)
-    {
-        graphics.col_tr = (int)(164 - (help.glow / 2) - int(fRandom() * 4));
-        graphics.col_tg = 164 - (help.glow / 2) - int(fRandom() * 4);
-        graphics.col_tb = 164 - (help.glow / 2) - int(fRandom() * 4);
-    }
-    else
-    {
-        titleupdatetextcol();
-
-        graphics.updatetitlecolours();
-    }
-
-    graphics.crewframedelay--;
-    if (graphics.crewframedelay <= 0)
-    {
-        graphics.crewframedelay = 8;
-        graphics.crewframe = (graphics.crewframe + 1) % 2;
-    }
 
     if (game.menucountdown > 0)
     {
@@ -84,55 +45,6 @@ void maplogic()
 {
     //Misc
     help.updateglow();
-    graphics.updatetextboxes();
-    graphics.updatetitlecolours();
-
-    graphics.crewframedelay--;
-    if (graphics.crewframedelay <= 0)
-    {
-        graphics.crewframedelay = 8;
-        graphics.crewframe = (graphics.crewframe + 1) % 2;
-    }
-
-    graphics.oldmenuoffset = graphics.menuoffset;
-    if (graphics.resumegamemode)
-    {
-        graphics.menuoffset += 25;
-        int threshold = map.extrarow ? 230 : 240;
-        if (graphics.menuoffset >= threshold)
-        {
-            graphics.menuoffset = threshold;
-            //go back to gamemode!
-            game.mapheld = true;
-            game.gamestate = GAMEMODE;
-        }
-    }
-    else if (graphics.menuoffset > 0)
-    {
-        graphics.menuoffset -= 25;
-        if (graphics.menuoffset < 0)
-        {
-            graphics.menuoffset = 0;
-        }
-    }
-
-    if (map.cursorstate == 0){
-        map.cursordelay++;
-        if (map.cursordelay > 10){
-            map.cursorstate = 1;
-            map.cursordelay = 0;
-        }
-    }else if (map.cursorstate == 1){
-        map.cursordelay++;
-        if (map.cursordelay > 30) map.cursorstate = 2;
-    }else if (map.cursorstate == 2){
-        map.cursordelay++;
-    }
-
-    if (map.finalmode)
-    {
-        map.glitchname = map.getglitchname(game.roomx, game.roomy);
-    }
 }
 
 
@@ -143,9 +55,6 @@ void gamecompletelogic()
     help.updateglow();
     graphics.crewframe = 0;
     graphics.titlebg.scrolldir = 1;
-    graphics.updatetitlecolours();
-
-    titleupdatetextcol();
 
     game.creditposition--;
     if (game.creditposition <= -Credits::creditmaxposition)
@@ -204,13 +113,9 @@ void gamecompletelogic2()
         game.savetele();
         music.currentsong=tmp;
         //Return to game
-        graphics.titlebg.colstate = 10;
-        game.gamestate = TITLEMODE;
-        graphics.fademode = 4;
-        FILESYSTEM_unmountassets(); // should be before music.playef(18)
-        music.playef(18);
-        game.returntomenu(Menu::play);
+        game.quittomenu();
         game.createmenu(Menu::gamecompletecontinue);
+        graphics.titlebg.colstate = 10;
         map.nexttowercolour();
     }
 }
@@ -218,34 +123,6 @@ void gamecompletelogic2()
 
 void gamelogic()
 {
-    if (!game.blackout && !game.completestop)
-    {
-        for (size_t i = 0; i < obj.entities.size(); i++)
-        {
-            //Is this entity on the ground? (needed for jumping)
-            if (obj.entitycollidefloor(i))
-            {
-                obj.entities[i].onground = 2;
-            }
-            else
-            {
-                obj.entities[i].onground--;
-            }
-
-            if (obj.entitycollideroof(i))
-            {
-                obj.entities[i].onroof = 2;
-            }
-            else
-            {
-                obj.entities[i].onroof--;
-            }
-
-            //Animate the entities
-            obj.animateentities(i);
-        }
-    }
-
     //Misc
     if (map.towermode)
     {
@@ -551,7 +428,7 @@ void gamelogic()
                     if (game.swnmessage == 0)
                     {
                         music.playef(25);
-                        game.savestats();
+                        game.savestatsandsettings();
                     }
                     game.swnmessage = 1;
                 }
@@ -568,7 +445,11 @@ void gamelogic()
                 game.gethardestroom();
                 //start depressing sequence here...
                 if (game.gameoverdelay <= -10 && graphics.fademode==0) graphics.fademode = 2;
-                if (graphics.fademode == 1) script.resetgametomenu();
+                if (graphics.fademode == 1)
+                {
+                    game.copyndmresults();
+                    script.resetgametomenu();
+                }
             }
             else
             {
@@ -589,7 +470,7 @@ void gamelogic()
 
                 game.gravitycontrol = game.savegc;
                 graphics.textboxremove();
-                map.resetplayer();
+                map.resetplayer(true);
             }
         }
     }
@@ -788,8 +669,7 @@ void gamelogic()
                     if (obj.entities[line].xp > 320)
                     {
                         obj.removeentity(line);
-                        game.swnmode = false;
-                        game.swngame = 6;
+                        game.swngame = 8;
                     }
                 }
             }
@@ -808,6 +688,22 @@ void gamelogic()
                     game.swntimer = 0;
                     game.swncolstate = 3;
                     game.swncoldelay = 30;
+                }
+            }
+            else if (game.swngame == 8)    //extra kludge if player dies after game a ends
+            {
+                bool square_onscreen = false;
+                for (size_t i = 0; i < obj.entities.size(); i++)
+                {
+                    if (obj.entities[i].type == 23)
+                    {
+                        square_onscreen = true;
+                        break;
+                    }
+                }
+                if (!square_onscreen)
+                {
+                    game.swnmode = false;
                 }
             }
         }
@@ -1672,109 +1568,6 @@ void gamelogic()
     if (game.shouldreturntoeditor)
     {
         game.returntoeditor();
-    }
-#endif
-
-    game.prev_act_fade = game.act_fade;
-    if (INBOUNDS_VEC(game.activeactivity, obj.blocks) && game.hascontrol && !script.running)
-    {
-        if (game.act_fade < 5)
-        {
-            game.act_fade = 5;
-        }
-        if (game.act_fade < 10)
-        {
-            game.act_fade++;
-        }
-    }
-    else if (game.act_fade > 5)
-    {
-        game.act_fade--;
-    }
-
-    if (obj.trophytext > 0)
-    {
-        obj.trophytext--;
-    }
-
-    graphics.updatetextboxes();
-
-    if (!game.colourblindmode)
-    {
-        if (map.towermode)
-        {
-            graphics.updatetowerbackground(graphics.towerbg);
-        }
-        else
-        {
-            graphics.updatebackground(map.background);
-        }
-    }
-
-    if (!game.blackout)
-    {
-        //Update line colours!
-        if (graphics.linedelay <= 0)
-        {
-            graphics.linestate++;
-            if (graphics.linestate >= 10) graphics.linestate = 0;
-            graphics.linedelay = 2;
-        }
-        else
-        {
-            graphics.linedelay--;
-        }
-    }
-
-    graphics.trinketcolset = false;
-    for (int i = obj.entities.size() - 1; i >= 0; i--)
-    {
-        if (obj.entities[i].invis)
-        {
-            continue;
-        }
-
-        obj.entities[i].updatecolour();
-    }
-
-    if (map.finalmode)
-    {
-        map.glitchname = map.getglitchname(game.roomx, game.roomy);
-    }
-
-#if !defined(NO_CUSTOM_LEVELS)
-    ed.oldreturneditoralpha = ed.returneditoralpha;
-    if (map.custommode && !map.custommodeforreal && ed.returneditoralpha > 0)
-    {
-        ed.returneditoralpha -= 15;
-    }
-
-    // Editor ghosts!
-    if (game.ghostsenabled)
-    {
-        if (map.custommode && !map.custommodeforreal)
-        {
-            if (game.gametimer % 3 == 0)
-            {
-                int i = obj.getplayer();
-                GhostInfo ghost;
-                ghost.rx = game.roomx-100;
-                ghost.ry = game.roomy-100;
-                if (INBOUNDS_VEC(i, obj.entities))
-                {
-                    ghost.x = obj.entities[i].xp;
-                    ghost.y = obj.entities[i].yp;
-                    ghost.col = obj.entities[i].colour;
-                    ghost.realcol = obj.entities[i].realcol;
-                    ghost.frame = obj.entities[i].drawframe;
-                }
-                ed.ghosts.push_back(ghost);
-            }
-            if (ed.ghosts.size() > 100)
-            {
-                ed.ghosts.erase(ed.ghosts.begin());
-            }
-        }
     }
 #endif
 }

@@ -1745,21 +1745,21 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
             if(game.bestrank[1]>=3)
             {
                 entity.tile = 186 + vx;
-                entity.colour = 35;
+                entity.colour = 33;
             }
             break;
         case 3:
             if(game.bestrank[2]>=3)
             {
                 entity.tile = 184 + vx;
-                entity.colour = 33;
+                entity.colour = 35;
             }
             break;
         case 4:
             if(game.bestrank[3]>=3)
             {
                 entity.tile = 184 + vx;
-                entity.colour = 32;
+                entity.colour = 30;
             }
             break;
         case 5:
@@ -1773,7 +1773,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
             if(game.bestrank[5]>=3)
             {
                 entity.tile = 184 + vx;
-                entity.colour = 30;
+                entity.colour = 32;
             }
             break;
 
@@ -4372,27 +4372,6 @@ bool entityclass::testwallsy( int t, float tx, float ty )
     return true;
 }
 
-void entityclass::fixfriction( int t, float xfix, float xrate, float yrate )
-{
-    if (!INBOUNDS_VEC(t, entities))
-    {
-        puts("fixfriction() out-of-bounds!");
-        return;
-    }
-
-    if (entities[t].vx > xfix) entities[t].vx -= xrate;
-    if (entities[t].vx < xfix) entities[t].vx += xrate;
-    if (entities[t].vy > 0) entities[t].vy -= yrate;
-    if (entities[t].vy < 0) entities[t].vy += yrate;
-    if (entities[t].vy > 10) entities[t].vy = 10;
-    if (entities[t].vy < -10) entities[t].vy = -10;
-    if (entities[t].vx > 6) entities[t].vx = 6.0f;
-    if (entities[t].vx < -6) entities[t].vx = -6.0f;
-
-    if (std::abs(entities[t].vx-xfix) <= xrate) entities[t].vx = xfix;
-    if (std::abs(entities[t].vy) < yrate) entities[t].vy = 0;
-}
-
 void entityclass::applyfriction( int t, float xrate, float yrate )
 {
     if (!INBOUNDS_VEC(t, entities))
@@ -4410,8 +4389,8 @@ void entityclass::applyfriction( int t, float xrate, float yrate )
     if (entities[t].vx > 6.00f) entities[t].vx = 6.0f;
     if (entities[t].vx < -6.00f) entities[t].vx = -6.0f;
 
-    if (std::abs(entities[t].vx) < xrate) entities[t].vx = 0.0f;
-    if (std::abs(entities[t].vy) < yrate) entities[t].vy = 0.0f;
+    if (SDL_fabsf(entities[t].vx) < xrate) entities[t].vx = 0.0f;
+    if (SDL_fabsf(entities[t].vy) < yrate) entities[t].vy = 0.0f;
 }
 
 void entityclass::updateentitylogic( int t )

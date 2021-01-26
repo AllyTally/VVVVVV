@@ -412,7 +412,7 @@ void Graphics::bigprint(  int _x, int _y, std::string _s, int r, int g, int b, b
 
     if (cen)
     {
-        _x = std::max(160 - (int((len(_s)/ 2.0)*sc)), 0 );
+        _x = VVV_max(160 - (int((len(_s)/ 2.0)*sc)), 0 );
     }
 
     int bfontpos = 0;
@@ -455,11 +455,13 @@ int Graphics::len(std::string t)
     return bfontpos;
 }
 
+<<<<<<< HEAD
 void Graphics::PrintOff( int _x, int _y, std::string _s, int r, int g, int b, bool cen /*= false*/ ) {
     PrintOffAlpha(_x,_y,_s,r,g,b,255,cen);
 }
 
-void Graphics::PrintOffAlpha( int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen /*= false*/ ) {
+void Graphics::PrintOffAlpha( int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen /*= false*/ )
+{
     std::vector<SDL_Surface*>& font = flipmode ? flipbfont : bfont;
 
     r = clamp(r,0,255);
@@ -515,40 +517,6 @@ void Graphics::bprintalpha( int x, int y, std::string t, int r, int g, int b, in
     }
 
     PrintAlpha(x, y, t, r, g, b, a, cen);
-}
-
-void Graphics::RPrint( int _x, int _y, std::string _s, int r, int g, int b, bool cen /*= false*/ )
-{
-    std::vector<SDL_Surface*>& font = flipmode ? flipbfont : bfont;
-
-    r = clamp(r,0,255);
-    g = clamp(g,0,255);
-    b = clamp(b,0,255);
-    ct.colour = getRGB(r, g, b);
-
-    if (cen)
-        _x = ((308) - (_s.length() / 2));
-    int bfontpos = 0;
-    int curr;
-    int idx;
-    std::string::iterator iter = _s.begin();
-    while (iter != _s.end()) {
-        curr = utf8::unchecked::next(iter);
-        point tpoint;
-        tpoint.x = _x + bfontpos;
-        tpoint.y = _y;
-
-        SDL_Rect fontRect = bfont_rect;
-        fontRect.x = tpoint.x ;
-        fontRect.y = tpoint.y ;
-
-        idx = font_idx(curr);
-        if (INBOUNDS_VEC(idx, font))
-        {
-            BlitSurfaceColoured( font[idx], NULL, backBuffer, &fontRect , ct);
-        }
-        bfontpos+=bfontlen(curr) ;
-    }
 }
 
 void Graphics::printcrewname( int x, int y, int t )
@@ -713,17 +681,6 @@ void Graphics::drawtile3( int x, int y, int t, int off, int height_subtract /*= 
     SDL_Rect src_rect = { 0, 0, tiles_rect.w, tiles_rect.h - height_subtract };
     SDL_Rect rect = { Sint16(x), Sint16(y), tiles_rect.w, tiles_rect.h };
     BlitSurfaceStandard(tiles3[t], &src_rect, backBuffer, &rect);
-}
-
-void Graphics::drawentcolours( int x, int y, int t)
-{
-    if (!INBOUNDS_VEC(t, entcolours))
-    {
-        WHINE_ONCE("drawentcolours() out-of-bounds!")
-        return;
-    }
-    SDL_Rect rect = { Sint16(x), Sint16(y), tiles_rect.w, tiles_rect.h };
-    BlitSurfaceStandard(entcolours[t], NULL, backBuffer, &rect);
 }
 
 void Graphics::drawtowertile( int x, int y, int t )
@@ -1025,13 +982,13 @@ void Graphics::cutscenebarstimer()
     if (showcutscenebars)
     {
         cutscenebarspos += 25;
-        cutscenebarspos = std::min(cutscenebarspos, 361);
+        cutscenebarspos = VVV_min(cutscenebarspos, 361);
     }
     else if (cutscenebarspos > 0)
     {
         //disappearing
         cutscenebarspos -= 25;
-        cutscenebarspos = std::max(cutscenebarspos, 0);
+        cutscenebarspos = VVV_max(cutscenebarspos, 0);
     }
 }
 
@@ -1428,10 +1385,10 @@ bool Graphics::Hitest(SDL_Surface* surface1, point p1, SDL_Surface* surface2, po
 
     if(intersection)
     {
-        int r3_left = SDL_max(r1_left, r2_left);
-        int r3_top = SDL_min(r1_top, r2_top);
-        int r3_right = SDL_min(r1_right, r2_right);
-        int r3_bottom= SDL_max(r1_bottom, r2_bottom);
+        int r3_left = VVV_max(r1_left, r2_left);
+        int r3_top = VVV_min(r1_top, r2_top);
+        int r3_right = VVV_min(r1_right, r2_right);
+        int r3_bottom= VVV_max(r1_bottom, r2_bottom);
 
         //for every pixel inside rectangle
         for(int x = r3_left; x < r3_right; x++)
@@ -1980,7 +1937,7 @@ void Graphics::drawbackground( int t )
         break;
     case 2:
     {
-        int bcol, bcol2;
+        int bcol = 0, bcol2 = 0;
 
             //Lab
             switch(rcol)
@@ -2666,7 +2623,7 @@ void Graphics::setcol( int t )
 		break;
 
 		//Trophies
-		//cyan
+		//Yellow
 	case 30:
 		ct.colour = RGBf(160, 200, 220);
 		break;
@@ -2674,11 +2631,11 @@ void Graphics::setcol( int t )
 	case 31:
 		ct.colour = RGBf(220, 120, 210);
 		break;
-		//Yellow
+		//cyan
 	case 32:
 		ct.colour = RGBf(220, 210, 120);
 		break;
-		//red
+		//Blue
 	case 33:
 		ct.colour = RGBf(255, 70, 70);
 		break;
@@ -2686,7 +2643,7 @@ void Graphics::setcol( int t )
 	case 34:
 		ct.colour = RGBf(120, 220, 120);
 		break;
-		//Blue
+		//red
 	case 35:
 		ct.colour = RGBf(75, 75, 255);
 		break;
@@ -2862,18 +2819,6 @@ void Graphics::setwarprect( int a, int b, int c, int d )
 	warprect.h = d;
 }
 
-void Graphics::textboxcenter()
-{
-	if (!INBOUNDS_VEC(m, textbox))
-	{
-		puts("textboxcenter() out-of-bounds!");
-		return;
-	}
-
-	textbox[m].centerx();
-	textbox[m].centery();
-}
-
 void Graphics::textboxcenterx()
 {
 	if (!INBOUNDS_VEC(m, textbox))
@@ -2894,18 +2839,6 @@ int Graphics::textboxwidth()
 	}
 
 	return textbox[m].w;
-}
-
-void Graphics::textboxmove(int xo, int yo)
-{
-	if (!INBOUNDS_VEC(m, textbox))
-	{
-		puts("textboxmove() out-of-bounds!");
-		return;
-	}
-
-	textbox[m].xp += xo;
-	textbox[m].yp += yo;
 }
 
 void Graphics::textboxmoveto(int xo)
@@ -3043,7 +2976,7 @@ void Graphics::bigrprint(int x, int y, std::string& t, int r, int g, int b, bool
 
 	if (cen)
 	{
-		x = std::max(160 - (int((len(t)/ 2.0)*sc)), 0 );
+		x = VVV_max(160 - (int((len(t)/ 2.0)*sc)), 0 );
 	}
 	else
 	{

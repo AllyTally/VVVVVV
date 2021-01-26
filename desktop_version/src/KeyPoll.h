@@ -42,7 +42,7 @@ public:
 
 	int sensitivity;
 
-	void setSensitivity(int _value);
+	int inline getThreshold();
 
 	KeyPoll();
 
@@ -53,8 +53,6 @@ public:
 	void Poll();
 
 	bool isDown(SDL_Keycode key);
-
-	bool isUp(SDL_Keycode key);
 
 	bool isDown(std::vector<SDL_GameControllerButton> buttons);
 	bool isDown(SDL_GameControllerButton button);

@@ -49,13 +49,9 @@ public:
 
 	void createtextbox(std::string t, int xp, int yp, int r= 255, int g= 255, int b = 255);
 
-	void textboxcenter();
-
 	void textboxcenterx();
 
 	int textboxwidth();
-
-	void textboxmove(int xo, int yo);
 
 	void textboxmoveto(int xo);
 
@@ -111,10 +107,6 @@ public:
 
 	void PrintAlpha(int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen = false);
 
-	void RPrint(int _x, int _y, std::string _s, int r, int g, int b, bool cen = false);
-
-	void PrintOff(int _x, int _y, std::string _s, int r, int g, int b, bool cen = false);
-
 	void PrintOffAlpha(int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen = false);
 
 	void bprint(int x, int y, std::string t, int r, int g, int b, bool cen = false);
@@ -167,7 +159,6 @@ public:
 	void drawbackground(int t);
 	void updatebackground(int t);
 	void drawtile3( int x, int y, int t, int off, int height_subtract = 0 );
-	void drawentcolours( int x, int y, int t);
 	void drawtile2( int x, int y, int t );
 	void drawtile( int x, int y, int t );
 	void drawtowertile( int x, int y, int t );

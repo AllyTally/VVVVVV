@@ -42,7 +42,7 @@ SDL_Surface* GetSubSurface( SDL_Surface* metaSurface, int x, int y, int width, i
     return preSurface;
 }
 
-void DrawPixel( SDL_Surface *_surface, int x, int y, Uint32 pixel )
+static void DrawPixel( SDL_Surface *_surface, int x, int y, Uint32 pixel )
 {
     int bpp = _surface->format->BytesPerPixel;
     /* Here p is the address to the pixel we want to set */
@@ -134,28 +134,6 @@ SDL_Surface * ScaleSurface( SDL_Surface *_surface, int Width, int Height, SDL_Su
                        //static_cast<Sint32>(_stretch_factor_y * y) + o_y, ReadPixel(_surface, x, y));
 
     return _ret;
-}
-
-SDL_Surface *  FlipSurfaceHorizontal(SDL_Surface* _src)
-{
-    SDL_Surface * ret = SDL_CreateRGBSurface(_src->flags, _src->w, _src->h, _src->format->BitsPerPixel,
-        _src->format->Rmask, _src->format->Gmask, _src->format->Bmask, _src->format->Amask);
-    if(ret == NULL)
-    {
-        return NULL;
-    }
-
-    for(Sint32 y = 0; y < _src->h; y++)
-    {
-        for(Sint32 x = 0; x < _src->w; x++)
-        {
-            DrawPixel(ret,(_src->w -1) -x,y,ReadPixel(_src, x, y));
-        }
-
-
-    }
-
-    return ret;
 }
 
 SDL_Surface *  FlipSurfaceVerticle(SDL_Surface* _src)
@@ -316,9 +294,9 @@ void BlitSurfaceTinted(
 }
 
 
-int oldscrollamount = 0;
-int scrollamount = 0;
-bool isscrolling = 0;
+static int oldscrollamount = 0;
+static int scrollamount = 0;
+static bool isscrolling = 0;
 
 void UpdateFilter()
 {
@@ -358,20 +336,20 @@ SDL_Surface* ApplyFilter( SDL_Surface* _src )
             Uint8 green = (pixel & _src->format->Gmask) >> 8;
             Uint8 blue = (pixel & _src->format->Bmask) >> 0;
 
-            Uint32 pixelOffset = ReadPixel(_src, std::min(x+redOffset, 319), sampley) ;
+            Uint32 pixelOffset = ReadPixel(_src, VVV_min(x+redOffset, 319), sampley) ;
             Uint8 red = (pixelOffset & _src->format->Rmask) >> 16 ;
 
             if(isscrolling && sampley > 220 && ((rand() %10) < 4))
             {
-                red = std::min(int(red+(fRandom() * 0.6)  * 254) , 255);
-                green = std::min(int(green+(fRandom() * 0.6)  * 254) , 255);
-                blue = std::min(int(blue+(fRandom() * 0.6)  * 254) , 255);
+                red = VVV_min(int(red+(fRandom() * 0.6)  * 254) , 255);
+                green = VVV_min(int(green+(fRandom() * 0.6)  * 254) , 255);
+                blue = VVV_min(int(blue+(fRandom() * 0.6)  * 254) , 255);
             }
             else
             {
-                red = std::min(int(red+(fRandom() * 0.2)  * 254) , 255);
-                green = std::min(int(green+(fRandom() * 0.2)  * 254) , 255);
-                blue = std::min(int(blue+(fRandom() * 0.2)  * 254) , 255);
+                red = VVV_min(int(red+(fRandom() * 0.2)  * 254) , 255);
+                green = VVV_min(int(green+(fRandom() * 0.2)  * 254) , 255);
+                blue = VVV_min(int(blue+(fRandom() * 0.2)  * 254) , 255);
             }
 
 
@@ -385,9 +363,9 @@ SDL_Surface* ApplyFilter( SDL_Surface* _src )
             int distX =  static_cast<int>((SDL_abs (160.0f -x ) / 160.0f) *16);
             int distY =  static_cast<int>((SDL_abs (120.0f -y ) / 120.0f)*32);
 
-            red = std::max(red - ( distX +distY), 0);
-            green = std::max(green - ( distX +distY), 0);
-            blue = std::max(blue - ( distX +distY), 0);
+            red = VVV_max(red - ( distX +distY), 0);
+            green = VVV_max(green - ( distX +distY), 0);
+            blue = VVV_max(blue - ( distX +distY), 0);
 
             Uint32 finalPixel = ((red<<16) + (green<<8) + (blue<<0)) | (pixel &_src->format->Amask);
             DrawPixel(_ret,x,y,  finalPixel);

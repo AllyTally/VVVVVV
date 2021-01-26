@@ -12,6 +12,7 @@
 #include "Enums.h"
 #include "FileSystemUtils.h"
 #include "Graphics.h"
+#include "KeyPoll.h"
 #include "MakeAndPlay.h"
 #include "Map.h"
 #include "Music.h"
@@ -20,12 +21,7 @@
 #include "UtilityClass.h"
 #include "XMLUtils.h"
 
-// lol, Win32 -flibit
-#ifdef _WIN32
-#define strcasecmp stricmp
-#endif
-
-bool GetButtonFromString(const char *pText, SDL_GameControllerButton *button)
+static bool GetButtonFromString(const char *pText, SDL_GameControllerButton *button)
 {
     if (*pText == '0' ||
         *pText == 'a' ||
@@ -34,7 +30,7 @@ bool GetButtonFromString(const char *pText, SDL_GameControllerButton *button)
         *button = SDL_CONTROLLER_BUTTON_A;
         return true;
     }
-    if (strcmp(pText, "1") == 0 ||
+    if (SDL_strcmp(pText, "1") == 0 ||
         *pText == 'b' ||
         *pText == 'B')
     {
@@ -56,43 +52,43 @@ bool GetButtonFromString(const char *pText, SDL_GameControllerButton *button)
         return true;
     }
     if (*pText == '4' ||
-        strcasecmp(pText, "BACK") == 0)
+        SDL_strcasecmp(pText, "BACK") == 0)
     {
         *button = SDL_CONTROLLER_BUTTON_BACK;
         return true;
     }
     if (*pText == '5' ||
-        strcasecmp(pText, "GUIDE") == 0)
+        SDL_strcasecmp(pText, "GUIDE") == 0)
     {
         *button = SDL_CONTROLLER_BUTTON_GUIDE;
         return true;
     }
     if (*pText == '6' ||
-        strcasecmp(pText, "START") == 0)
+        SDL_strcasecmp(pText, "START") == 0)
     {
         *button = SDL_CONTROLLER_BUTTON_START;
         return true;
     }
     if (*pText == '7' ||
-        strcasecmp(pText, "LS") == 0)
+        SDL_strcasecmp(pText, "LS") == 0)
     {
         *button = SDL_CONTROLLER_BUTTON_LEFTSTICK;
         return true;
     }
     if (*pText == '8' ||
-        strcasecmp(pText, "RS") == 0)
+        SDL_strcasecmp(pText, "RS") == 0)
     {
         *button = SDL_CONTROLLER_BUTTON_RIGHTSTICK;
         return true;
     }
     if (*pText == '9' ||
-        strcasecmp(pText, "LB") == 0)
+        SDL_strcasecmp(pText, "LB") == 0)
     {
         *button = SDL_CONTROLLER_BUTTON_LEFTSHOULDER;
         return true;
     }
-    if (strcmp(pText, "10") == 0 ||
-        strcasecmp(pText, "RB") == 0)
+    if (SDL_strcmp(pText, "10") == 0 ||
+        SDL_strcasecmp(pText, "RB") == 0)
     {
         *button = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER;
         return true;
@@ -116,6 +112,8 @@ void Game::init(void)
     musicmutebutton = 0;
 
     glitchrunkludge = false;
+    gamestate = TITLEMODE;
+    prevgamestate = TITLEMODE;
     hascontrol = true;
     jumpheld = false;
     advancetext = false;
@@ -127,7 +125,6 @@ void Game::init(void)
     roomchange = false;
 
 
-    savemystats = false;
     quickrestartkludge = false;
 
     tapleft = 0;
@@ -167,26 +164,20 @@ void Game::init(void)
     oldcreditposition = 0;
     bestgamedeaths = -1;
 
-    fullScreenEffect_badSignal = false;
-
     //Accessibility Options
     colourblindmode = false;
     noflashingmode = false;
     slowdown = 30;
-    gameframerate=34;
-
-    fullscreen = false;// true; //Assumed true at first unless overwritten at some point!
-    stretchMode = 0;
-    useLinearFilter = false;
-    // 0..5
-    controllerSensitivity = 2;
 
     nodeathmode = false;
     nocutscenes = false;
+    ndmresultcrewrescued = 0;
+    ndmresulttrinkets = 0;
 
     customcol=0;
 
     SDL_memset(crewstats, false, sizeof(crewstats));
+    SDL_memset(ndmresultcrewstats, false, sizeof(ndmresultcrewstats));
     SDL_memset(tele_crewstats, false, sizeof(tele_crewstats));
     SDL_memset(quick_crewstats, false, sizeof(quick_crewstats));
     SDL_memset(besttimes, -1, sizeof(besttimes));
@@ -218,6 +209,8 @@ void Game::init(void)
     playcustomlevel=0;
     createmenu(Menu::mainmenu);
 
+    silence_settings_error = false;
+
     deathcounts = 0;
     gameoverdelay = 0;
     frames = 0;
@@ -237,6 +230,10 @@ void Game::init(void)
     timetrialpar = 0;
     timetrialresulttime = 0;
     timetrialresultframes = 0;
+    timetrialresultshinytarget = 0;
+    timetrialresulttrinkets = 0;
+    timetrialresultpar = 0;
+    timetrialresultdeaths = 0;
 
     totalflips = 0;
     hardestroom = "Welcome Aboard";
@@ -559,7 +556,7 @@ void Game::loadcustomlevelstats()
     }
 
     // If the two arrays happen to differ in length, just go with the smallest one
-    for (size_t i = 0; i < std::min(customlevelnames.size(), customlevelscores.size()); i++)
+    for (int i = 0; i < VVV_min(customlevelnames.size(), customlevelscores.size()); i++)
     {
         CustomLevelStat stat = {customlevelnames[i], customlevelscores[i]};
         customlevelstats.push_back(stat);
@@ -1302,6 +1299,7 @@ void Game::updatestate()
             break;
         case 81:
             quittomenu();
+            music.play(6); //should be after quittomenu()
             state = 0;
             break;
 
@@ -1309,8 +1307,14 @@ void Game::updatestate()
             //Time Trial Complete!
             obj.removetrigger(82);
             hascontrol = false;
+
             timetrialresulttime = seconds + (minutes * 60) + (hours * 60 * 60);
             timetrialresultframes = frames;
+            timetrialresulttrinkets = trinkets();
+            timetrialresultshinytarget = timetrialshinytarget;
+            timetrialresultpar = timetrialpar;
+            timetrialresultdeaths = deathcounts;
+
             timetrialrank = 0;
             if (timetrialresulttime <= timetrialpar) timetrialrank++;
             if (trinkets() >= timetrialshinytarget) timetrialrank++;
@@ -1323,7 +1327,7 @@ void Game::updatestate()
                 besttimes[timetriallevel] = timetrialresulttime;
                 bestframes[timetriallevel] = timetrialresultframes;
             }
-            if (trinkets() > besttrinkets[timetriallevel] || besttrinkets[timetriallevel]==-1)
+            if (timetrialresulttrinkets > besttrinkets[timetriallevel] || besttrinkets[timetriallevel]==-1)
             {
                 besttrinkets[timetriallevel] = trinkets();
             }
@@ -1344,7 +1348,7 @@ void Game::updatestate()
                 }
             }
 
-            savestats();
+            savestatsandsettings();
 
             graphics.fademode = 2;
             music.fadeout();
@@ -1355,11 +1359,7 @@ void Game::updatestate()
             if(graphics.fademode == 1)	state++;
             break;
         case 84:
-            graphics.flipmode = false;
-            gamestate = TITLEMODE;
-            graphics.fademode = 4;
-            graphics.backgrounddrawn = true;
-            graphics.titlebg.tdrawback = true;
+            quittomenu();
             createmenu(Menu::timetrialcomplete);
             state = 0;
             break;
@@ -1885,7 +1885,6 @@ void Game::updatestate()
                 if(!muted && ed.levmusic>0) music.fadeMusicVolumeIn(3000);
             }
             graphics.showcutscenebars = false;
-            returntomenu(Menu::levellist);
             break;
 #endif
         case 1014:
@@ -1910,6 +1909,7 @@ void Game::updatestate()
             }
 #endif
             quittomenu();
+            music.play(6); //should be after quittomenu()
             state = 0;
             break;
 
@@ -2866,7 +2866,6 @@ void Game::updatestate()
             {
                 graphics.fademode = 2;
                 companion = 0;
-                returnmenu();
                 state=3100;
             }
             else
@@ -2897,7 +2896,6 @@ void Game::updatestate()
                 state++;
                 graphics.fademode = 2;
                 music.fadeout();
-                returnmenu();
                 state=3100;
             }
             else
@@ -2923,44 +2921,15 @@ void Game::updatestate()
             if(graphics.fademode == 1)	state++;
             break;
         case 3101:
-            graphics.flipmode = false;
-            gamestate = TITLEMODE;
-            graphics.fademode = 4;
-            graphics.backgrounddrawn = true;
-            graphics.titlebg.tdrawback = true;
-            music.play(6);
+            quittomenu();
+            music.play(6); //should be after quittomenu();
             state = 0;
             break;
-
-            //startscript = true;	newscript="returntohub";
-            //state = 0;
-
-            /*case 3025:
-            if (recording == 1) {
-            //if recording the input, output it to debug here
-            trace(recordstring);
-            help.toclipboard(recordstring);
-            }
-            test = true; teststring = recordstring;
-            graphics.createtextbox("   Congratulations!    ", 50, 80, 164, 164, 255);
-            graphics.addline("");
-            graphics.addline("Your play of this level has");
-            graphics.addline("been copied to the clipboard.");
-            graphics.addline("");
-            graphics.addline("Please consider pasting and");
-            graphics.addline("sending it to me! Even if you");
-            graphics.addline("made a lot of mistakes - knowing");
-            graphics.addline("exactly where people are having");
-            graphics.addline("trouble is extremely useful!");
-            graphics.textboxcenter();
-            state = 0;
-            break;*/
 
         case 3500:
             music.fadeout();
             state++;
             statedelay = 120;
-            //state = 3511; //testing
             break;
         case 3501:
             //Game complete!
@@ -3143,7 +3112,7 @@ void Game::updatestate()
         }
 
 
-            savestats();
+            savestatsandsettings();
             if (nodeathmode)
             {
                 unlockAchievement("vvvvvvmaster"); //bloody hell
@@ -3237,8 +3206,6 @@ void Game::updatestate()
             map.final_mapcol = 0;
             map.final_colorframe = 0;
             map.finalstretch = false;
-            map.finalx = 100;
-            map.finaly = 100;
 
             graphics.cutscenebarspos = 320;
             graphics.oldcutscenebarspos = 320;
@@ -3259,11 +3226,8 @@ void Game::updatestate()
             if(graphics.fademode == 1)	state++;
             break;
         case 3522:
-            graphics.flipmode = false;
-            gamestate = TITLEMODE;
-            graphics.fademode = 4;
-            graphics.backgrounddrawn = true;
-            graphics.titlebg.tdrawback = true;
+            copyndmresults();
+            quittomenu();
             createmenu(Menu::nodeathmodecomplete);
             state = 0;
             break;
@@ -4457,7 +4421,7 @@ void Game::unlocknum( int t )
     }
 
     unlock[t] = true;
-    savestats();
+    savestatsandsettings();
 #endif
 }
 
@@ -4468,7 +4432,7 @@ void Game::unlocknum( int t )
         if (TextString.length()) \
         { \
             std::vector<std::string> values = split(TextString, ','); \
-            for (size_t i = 0; i < SDL_min(SDL_arraysize(DEST), values.size()); i++) \
+            for (int i = 0; i < VVV_min(SDL_arraysize(DEST), values.size()); i++) \
             { \
                 DEST[i] = help.Int(values[i].c_str()); \
             } \
@@ -4477,14 +4441,14 @@ void Game::unlocknum( int t )
 
 #define LOAD_ARRAY(ARRAY_NAME) LOAD_ARRAY_RENAME(ARRAY_NAME, ARRAY_NAME)
 
-void Game::loadstats(int *width, int *height, bool *vsync)
+void Game::loadstats(ScreenSettings* screen_settings)
 {
     tinyxml2::XMLDocument doc;
     if (!FILESYSTEM_loadTiXml2Document("saves/unlock.vvv", doc))
     {
         // Save unlock.vvv only. Maybe we have a settings.vvv laying around too,
         // and we don't want to overwrite that!
-        savestats(true);
+        savestats(screen_settings);
 
         printf("No Stats found. Assuming a new player\n");
     }
@@ -4553,10 +4517,10 @@ void Game::loadstats(int *width, int *height, bool *vsync)
         }
     }
 
-    deserializesettings(dataNode, width, height, vsync);
+    deserializesettings(dataNode, screen_settings);
 }
 
-void Game::deserializesettings(tinyxml2::XMLElement* dataNode, int* width, int* height, bool* vsync)
+void Game::deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* screen_settings)
 {
     // Don't duplicate controller buttons!
     controllerButton_flip.clear();
@@ -4573,26 +4537,26 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, int* width, int* 
 
         if (pKey == "fullscreen")
         {
-            fullscreen = help.Int(pText);
+            screen_settings->fullscreen = help.Int(pText);
         }
 
         if (pKey == "stretch")
         {
-            stretchMode = help.Int(pText);
+            screen_settings->stretch = help.Int(pText);
         }
 
         if (pKey == "useLinearFilter")
         {
-            useLinearFilter = help.Int(pText);
+            screen_settings->linearFilter = help.Int(pText);
         }
 
         if (pKey == "window_width")
         {
-            *width = help.Int(pText);
+            screen_settings->windowWidth = help.Int(pText);
         }
         if (pKey == "window_height")
         {
-            *height = help.Int(pText);
+            screen_settings->windowHeight = help.Int(pText);
         }
 
 
@@ -4619,39 +4583,16 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, int* width, int* 
         if (pKey == "slowdown")
         {
             slowdown = help.Int(pText);
-            switch(slowdown)
-            {
-            case 30:
-                gameframerate=34;
-                break;
-            case 24:
-                gameframerate=41;
-                break;
-            case 18:
-                gameframerate=55;
-                break;
-            case 12:
-                gameframerate=83;
-                break;
-            default:
-                gameframerate=34;
-                break;
-            }
-
         }
 
         if (pKey == "advanced_smoothing")
         {
-            fullScreenEffect_badSignal = help.Int(pText);
+            screen_settings->badSignal = help.Int(pText);
         }
 
         if (pKey == "usingmmmmmm")
         {
-            if(help.Int(pText)>0){
-                usingmmmmmm = 1;
-            }else{
-                usingmmmmmm = 0;
-            }
+            music.usingmmmmmm = (bool) help.Int(pText);
         }
 
         if (pKey == "ghostsenabled")
@@ -4681,7 +4622,7 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, int* width, int* 
 
         if (pKey == "vsync")
         {
-            *vsync = help.Int(pText);
+            screen_settings->useVsync = help.Int(pText);
         }
 
         if (pKey == "notextoutline")
@@ -4737,7 +4678,7 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, int* width, int* 
 
         if (pKey == "controllerSensitivity")
         {
-            controllerSensitivity = help.Int(pText);
+            key.sensitivity = help.Int(pText);
         }
 
     }
@@ -4769,7 +4710,15 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, int* width, int* 
     }
 }
 
-void Game::savestats(const bool stats_only /*= true*/)
+bool Game::savestats()
+{
+    ScreenSettings screen_settings;
+    graphics.screenbuffer->GetSettings(&screen_settings);
+
+    return savestats(&screen_settings);
+}
+
+bool Game::savestats(const ScreenSettings* screen_settings)
 {
     tinyxml2::XMLDocument doc;
     bool already_exists = FILESYSTEM_loadTiXml2Document("saves/unlock.vvv", doc);
@@ -4843,39 +4792,43 @@ void Game::savestats(const bool stats_only /*= true*/)
 
     xml::update_tag(dataNode, "swnrecord", swnrecord);
 
-    serializesettings(dataNode);
+    serializesettings(dataNode, screen_settings);
 
-    FILESYSTEM_saveTiXml2Document("saves/unlock.vvv", doc);
+    return FILESYSTEM_saveTiXml2Document("saves/unlock.vvv", doc);
+}
 
-    if (!stats_only)
+bool Game::savestatsandsettings()
+{
+    const bool stats_saved = savestats();
+
+    const bool settings_saved = savesettings();
+
+    return stats_saved && settings_saved; // Not the same as `savestats() && savesettings()`!
+}
+
+void Game::savestatsandsettings_menu()
+{
+    // Call Game::savestatsandsettings(), but upon failure, go to the save error screen
+    if (!savestatsandsettings() && !silence_settings_error)
     {
-        savesettings();
+        createmenu(Menu::errorsavingsettings);
+        map.nexttowercolour();
     }
 }
 
-void Game::serializesettings(tinyxml2::XMLElement* dataNode)
+void Game::serializesettings(tinyxml2::XMLElement* dataNode, const ScreenSettings* screen_settings)
 {
     tinyxml2::XMLDocument& doc = xml::get_document(dataNode);
 
-    xml::update_tag(dataNode, "fullscreen", fullscreen);
+    xml::update_tag(dataNode, "fullscreen", (int) screen_settings->fullscreen);
 
-    xml::update_tag(dataNode, "stretch", stretchMode);
+    xml::update_tag(dataNode, "stretch", screen_settings->stretch);
 
-    xml::update_tag(dataNode, "useLinearFilter", useLinearFilter);
+    xml::update_tag(dataNode, "useLinearFilter", (int) screen_settings->linearFilter);
 
-    int width, height;
-    if (graphics.screenbuffer != NULL)
-    {
-        graphics.screenbuffer->GetWindowSize(&width, &height);
-    }
-    else
-    {
-        width = 320;
-        height = 240;
-    }
-    xml::update_tag(dataNode, "window_width", width);
+    xml::update_tag(dataNode, "window_width", screen_settings->windowWidth);
 
-    xml::update_tag(dataNode, "window_height", height);
+    xml::update_tag(dataNode, "window_height", screen_settings->windowHeight);
 
     xml::update_tag(dataNode, "noflashingmode", noflashingmode);
 
@@ -4888,10 +4841,10 @@ void Game::serializesettings(tinyxml2::XMLElement* dataNode)
     xml::update_tag(dataNode, "slowdown", slowdown);
 
 
-    xml::update_tag(dataNode, "advanced_smoothing", fullScreenEffect_badSignal);
+    xml::update_tag(dataNode, "advanced_smoothing", (int) screen_settings->badSignal);
 
 
-    xml::update_tag(dataNode, "usingmmmmmm", usingmmmmmm);
+    xml::update_tag(dataNode, "usingmmmmmm", music.usingmmmmmm);
 
     xml::update_tag(dataNode, "ghostsenabled", (int) ghostsenabled);
 
@@ -4909,16 +4862,7 @@ void Game::serializesettings(tinyxml2::XMLElement* dataNode)
 
     xml::update_tag(dataNode, "glitchrunnermode", (int) glitchrunnermode);
 
-    int vsyncOption;
-    if (graphics.screenbuffer != NULL)
-    {
-        vsyncOption = (int) graphics.screenbuffer->vsync;
-    }
-    else
-    {
-        vsyncOption = 0;
-    }
-    xml::update_tag(dataNode, "vsync", vsyncOption);
+    xml::update_tag(dataNode, "vsync", (int) screen_settings->useVsync);
 
     // Delete all controller buttons we had previously.
     // dataNode->FirstChildElement() shouldn't be NULL at this point...
@@ -4975,15 +4919,15 @@ void Game::serializesettings(tinyxml2::XMLElement* dataNode)
         dataNode->LinkEndChild(msg);
     }
 
-    xml::update_tag(dataNode, "controllerSensitivity", controllerSensitivity);
+    xml::update_tag(dataNode, "controllerSensitivity", key.sensitivity);
 }
 
-void Game::loadsettings(int* width, int* height, bool* vsync)
+void Game::loadsettings(ScreenSettings* screen_settings)
 {
     tinyxml2::XMLDocument doc;
     if (!FILESYSTEM_loadTiXml2Document("saves/settings.vvv", doc))
     {
-        savesettings();
+        savesettings(screen_settings);
         puts("No settings.vvv found");
     }
 
@@ -5005,10 +4949,18 @@ void Game::loadsettings(int* width, int* height, bool* vsync)
 
     tinyxml2::XMLElement* dataNode = hRoot.FirstChildElement("Data").FirstChild().ToElement();
 
-    deserializesettings(dataNode, width, height, vsync);
+    deserializesettings(dataNode, screen_settings);
 }
 
-void Game::savesettings()
+bool Game::savesettings()
+{
+    ScreenSettings screen_settings;
+    graphics.screenbuffer->GetSettings(&screen_settings);
+
+    return savesettings(&screen_settings);
+}
+
+bool Game::savesettings(const ScreenSettings* screen_settings)
 {
     tinyxml2::XMLDocument doc;
     bool already_exists = FILESYSTEM_loadTiXml2Document("saves/settings.vvv", doc);
@@ -5025,9 +4977,9 @@ void Game::savesettings()
 
     tinyxml2::XMLElement* dataNode = xml::update_element(root, "Data");
 
-    serializesettings(dataNode);
+    serializesettings(dataNode, screen_settings);
 
-    FILESYSTEM_saveTiXml2Document("saves/settings.vvv", doc);
+    return FILESYSTEM_saveTiXml2Document("saves/settings.vvv", doc);
 }
 
 void Game::customstart()
@@ -5309,15 +5261,7 @@ void Game::readmaingamesave(tinyxml2::XMLDocument& doc)
             map.finalstretch = help.Int(pText);
         }
 
-        if (pKey == "finalx")
-        {
-            map.finalx = help.Int(pText);
-        }
-        else if (pKey == "finaly")
-        {
-            map.finaly = help.Int(pText);
-        }
-        else if (pKey == "savex")
+        if (pKey == "savex")
         {
             savex = help.Int(pText);
         }
@@ -5512,15 +5456,7 @@ void Game::customloadquick(std::string savfile)
         }
 
 
-        if (pKey == "finalx")
-        {
-            map.finalx = help.Int(pText);
-        }
-        else if (pKey == "finaly")
-        {
-            map.finaly = help.Int(pText);
-        }
-        else if (pKey == "savex")
+        if (pKey == "savex")
         {
             savex = help.Int(pText);
         }
@@ -5905,10 +5841,6 @@ std::string Game::writemaingamesave(tinyxml2::XMLDocument& doc)
 
     //Position
 
-    xml::update_tag(msgs, "finalx", map.finalx);
-
-    xml::update_tag(msgs, "finaly", map.finaly);
-
     xml::update_tag(msgs, "savex", savex);
 
     xml::update_tag(msgs, "savey", savey);
@@ -6035,10 +5967,6 @@ bool Game::customsavequick(std::string savfile)
     xml::update_tag(msgs, "customcollect", customcollect.c_str());
 
     //Position
-
-    xml::update_tag(msgs, "finalx", map.finalx);
-
-    xml::update_tag(msgs, "finaly", map.finaly);
 
     xml::update_tag(msgs, "savex", savex);
 
@@ -6669,12 +6597,12 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
             if (temp == 1)
             {
                 createmenu(Menu::unlocktimetrial, true);
-                savemystats = true;
+                savestatsandsettings();
             }
             else if (temp > 1)
             {
                 createmenu(Menu::unlocktimetrials, true);
-                savemystats = true;
+                savestatsandsettings();
             }
         }
         else
@@ -6693,7 +6621,7 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
                 unlocknotify[17] = true;
                 unlock[17] = true;
                 createmenu(Menu::unlocknodeathmode, true);
-                savemystats = true;
+                savestatsandsettings();
             }
             //Alright then! Flip mode?
             else if (unlock[5] && !unlocknotify[18])
@@ -6701,7 +6629,7 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
                 unlock[18] = true;
                 unlocknotify[18] = true;
                 createmenu(Menu::unlockflipmode, true);
-                savemystats = true;
+                savestatsandsettings();
             }
             //What about the intermission levels?
             else if (unlock[7] && !unlocknotify[16])
@@ -6709,7 +6637,7 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
                 unlock[16] = true;
                 unlocknotify[16] = true;
                 createmenu(Menu::unlockintermission, true);
-                savemystats = true;
+                savestatsandsettings();
             }
             else
             {
@@ -6857,11 +6785,18 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("return to play menu");
         menuyoff = 70;
         break;
+<<<<<<< HEAD
     case Menu::tweakmenu:
         option("frame advance");
         option("modify entities");
         option("a");
         menuyoff = 0;
+=======
+    case Menu::errorsavingsettings:
+        option("ok");
+        option("silence");
+        menuyoff = 10;
+>>>>>>> upstream/master
         break;
     }
 
@@ -7050,9 +6985,7 @@ void Game::quittomenu()
 {
     gamestate = TITLEMODE;
     graphics.fademode = 4;
-    FILESYSTEM_unmountassets(); // should be before music.play(6)
-    music.play(6);
-    graphics.backgrounddrawn = false;
+    FILESYSTEM_unmountassets();
     graphics.titlebg.tdrawback = true;
     graphics.flipmode = false;
     //Don't be stuck on the summary screen,
@@ -7073,7 +7006,15 @@ void Game::quittomenu()
     }
     else if (map.custommode)
     {
-        returntomenu(Menu::levellist);
+        if (map.custommodeforreal)
+        {
+            returntomenu(Menu::levellist);
+        }
+        else
+        {
+            //Returning from editor
+            returntomenu(Menu::playerworlds);
+        }
     }
     else if (save_exists() || anything_unlocked())
     {
@@ -7168,4 +7109,34 @@ void Game::unlockAchievement(const char *name) {
 #if !defined(MAKEANDPLAY)
     if (!map.custommode) NETWORK_unlockAchievement(name);
 #endif
+}
+
+void Game::mapmenuchange(const int newgamestate)
+{
+    prevgamestate = gamestate;
+    gamestate = newgamestate;
+    graphics.resumegamemode = false;
+    mapheld = true;
+
+    if (prevgamestate == GAMEMODE)
+    {
+        graphics.menuoffset = 240;
+        if (map.extrarow)
+        {
+            graphics.menuoffset -= 10;
+        }
+    }
+    else
+    {
+        graphics.menuoffset = 0;
+    }
+    graphics.oldmenuoffset = graphics.menuoffset;
+}
+
+void Game::copyndmresults()
+{
+    ndmresultcrewrescued = crewrescued();
+    ndmresulttrinkets = trinkets();
+    ndmresulthardestroom = hardestroom;
+    SDL_memcpy(ndmresultcrewstats, crewstats, sizeof(ndmresultcrewstats));
 }

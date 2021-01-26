@@ -8,7 +8,7 @@
 #include "Map.h"
 #include "UtilityClass.h"
 
-void songend();
+static void songend();
 
 musicclass::musicclass()
 {
@@ -33,11 +33,18 @@ musicclass::musicclass()
 
 void musicclass::init()
 {
-	for (size_t i = 0; i < soundTracks.size(); ++i) {
+	for (size_t i = 0; i < soundTracks.size(); ++i)
+	{
 		Mix_FreeChunk(soundTracks[i].sound);
 	}
 	soundTracks.clear();
-	for (size_t i = 0; i < musicTracks.size(); ++i) {
+
+	// Before we free all the music: stop playing music, else SDL2_mixer
+	// will call SDL_Delay() if we are fading, resulting in no-draw frames
+	Mix_HaltMusic();
+
+	for (size_t i = 0; i < musicTracks.size(); ++i)
+	{
 		Mix_FreeMusic(musicTracks[i].m_music);
 	}
 	musicTracks.clear();
@@ -151,7 +158,7 @@ void musicclass::init()
 	}
 }
 
-void songend()
+static void songend()
 {
 	extern musicclass music;
 	music.songEnd = SDL_GetPerformanceCounter();
@@ -173,61 +180,66 @@ void musicclass::play(int t, const double position_sec /*= 0.0*/, const int fade
 		t %= num_pppppp_tracks;
 	}
 
-	if(mmmmmm && !usingmmmmmm)
+	if (mmmmmm && !usingmmmmmm)
 	{
 		t += num_mmmmmm_tracks;
 	}
+
 	safeToProcessMusic = true;
 	musicVolume = MIX_MAX_VOLUME;
-	if (currentsong !=t)
+
+	if (currentsong == t && Mix_FadingMusic() != MIX_FADING_OUT)
 	{
-		if (t != -1)
+		return;
+	}
+
+	currentsong = t;
+
+	if (t == -1)
+	{
+		return;
+	}
+
+	if (!INBOUNDS_VEC(t, musicTracks))
+	{
+		puts("play() out-of-bounds!");
+		currentsong = -1;
+		return;
+	}
+
+	if (currentsong == 0 || currentsong == 7 || (!map.custommode && (currentsong == 0+num_mmmmmm_tracks || currentsong == 7+num_mmmmmm_tracks)))
+	{
+		// Level Complete theme, no fade in or repeat
+		if (Mix_FadeInMusicPos(musicTracks[t].m_music, 0, 0, position_sec) == -1)
 		{
-			currentsong = t;
-			if (!INBOUNDS_VEC(t, musicTracks))
+			printf("Mix_FadeInMusicPos: %s\n", Mix_GetError());
+		}
+	}
+	else
+	{
+		if (Mix_FadingMusic() == MIX_FADING_OUT)
+		{
+			// We're already fading out
+			nicechange = t;
+			nicefade = true;
+			currentsong = -1;
+
+			if (quick_fade)
 			{
-				puts("play() out-of-bounds!");
-				currentsong = -1;
-				return;
-			}
-			if (currentsong == 0 || currentsong == 7 || (!map.custommode && (currentsong == 0+num_mmmmmm_tracks || currentsong == 7+num_mmmmmm_tracks)))
-			{
-				// Level Complete theme, no fade in or repeat
-				if(Mix_FadeInMusicPos(musicTracks[t].m_music, 0, 0, position_sec)==-1)
-				{
-					printf("Mix_FadeInMusicPos: %s\n", Mix_GetError());
-				}
+				Mix_FadeOutMusic(500); // fade out quicker
 			}
 			else
 			{
-				if (Mix_FadingMusic() == MIX_FADING_OUT)
-				{
-					// We're already fading out
-					nicechange = t;
-					nicefade = true;
-					currentsong = -1;
-					if (quick_fade)
-					{
-						Mix_FadeOutMusic(500); // fade out quicker
-					}
-					else
-					{
-						quick_fade = true;
-					}
-				}
-				else if(Mix_FadeInMusicPos(musicTracks[t].m_music, -1, fadein_ms, position_sec)==-1)
-				{
-					printf("Mix_FadeInMusicPos: %s\n", Mix_GetError());
-				}
+				quick_fade = true;
 			}
-
-			songStart = SDL_GetPerformanceCounter();
 		}
-		else
+		else if (Mix_FadeInMusicPos(musicTracks[t].m_music, -1, fadein_ms, position_sec) == -1)
 		{
-			currentsong = -1;
+			printf("Mix_FadeInMusicPos: %s\n", Mix_GetError());
 		}
 	}
+
+	songStart = SDL_GetPerformanceCounter();
 }
 
 void musicclass::resume(const int fadein_ms /*= 0*/)
