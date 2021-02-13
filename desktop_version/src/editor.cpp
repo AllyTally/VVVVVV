@@ -146,8 +146,19 @@ std::string find_tag(const std::string& buf, const std::string& start, const std
     size_t start_pos = 0;
     while ((start_pos = value.find("&#", start_pos)) != std::string::npos)
     {
+        if (start_pos + 2 >= value.length())
+        {
+            return "";
+        }
+
         bool hex = value[start_pos + 2] == 'x';
         size_t end = value.find(';', start_pos);
+
+        if (end == std::string::npos)
+        {
+            return "";
+        }
+
         size_t real_start = start_pos + 2 + ((int) hex);
         std::string number(value.substr(real_start, end - real_start));
 
@@ -1767,23 +1778,6 @@ bool editorclass::load(std::string& _path)
             }
         }
 
-        /*else if(version==1){
-          if (pKey == "contents")
-          {
-            std::string TextString = (pText);
-            if(TextString.length())
-            {
-              std::vector<std::string> values = split(TextString,',');
-              contents.clear();
-              for(int i = 0; i < values.size(); i++)
-              {
-                contents.push_back(help.Int(values[i].c_str()));
-              }
-            }
-          }
-        //}
-        */
-
 
         if (pKey == "edEntities")
         {
@@ -1895,14 +1889,7 @@ bool editorclass::load(std::string& _path)
                 {
                     std::string& line = values[i];
 
-                    //Comparing line[line.length()-1] directly to a string literal is UB
-                    //Workaround: assign line[line.length()-1] to a string first
-                    std::string temp;
-                    if(line.length())
-                    {
-                        temp = line[line.length()-1];
-                    }
-                    if(temp == ":")
+                    if(line.length() && line[line.length() - 1] == ':')
                     {
                         if(headerfound)
                         {

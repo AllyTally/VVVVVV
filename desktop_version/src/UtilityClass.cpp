@@ -1,67 +1,74 @@
 #define HELP_DEFINITION
 #include "UtilityClass.h"
 
-#include <cctype>
 #include <SDL.h>
 #include <sstream>
 
-/* Used by UtilityClass::GCString to generate a button list */
-static const char *GCChar(SDL_GameControllerButton button)
+static const char* GCChar(const SDL_GameControllerButton button)
 {
-	if (button == SDL_CONTROLLER_BUTTON_A)
+	switch (button)
 	{
+	case SDL_CONTROLLER_BUTTON_A:
 		return "A";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_B)
-	{
+	case SDL_CONTROLLER_BUTTON_B:
 		return "B";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_X)
-	{
+	case SDL_CONTROLLER_BUTTON_X:
 		return "X";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_Y)
-	{
+	case SDL_CONTROLLER_BUTTON_Y:
 		return "Y";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_BACK)
-	{
+	case SDL_CONTROLLER_BUTTON_BACK:
 		return "BACK";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_GUIDE)
-	{
+	case SDL_CONTROLLER_BUTTON_GUIDE:
 		return "GUIDE";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_START)
-	{
+	case SDL_CONTROLLER_BUTTON_START:
 		return "START";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_LEFTSTICK)
-	{
+	case SDL_CONTROLLER_BUTTON_LEFTSTICK:
 		return "L3";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_RIGHTSTICK)
-	{
+	case SDL_CONTROLLER_BUTTON_RIGHTSTICK:
 		return "R3";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_LEFTSHOULDER)
-	{
+	case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
 		return "LB";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_RIGHTSHOULDER)
-	{
+	case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
 		return "RB";
+	default:
+		SDL_assert(0 && "Unhandled button!");
+		return NULL;
 	}
-	SDL_assert(0 && "Unhandled button!");
-	return NULL;
 }
 
-int ss_toi( std::string _s )
+int ss_toi(const std::string& str)
 {
-	std::istringstream i(_s);
-	int x = 0;
-	i >> x;
-	return x;
+	int retval = 0;
+	bool negative = false;
+	static const int radix = 10;
+
+	for (size_t i = 0; i < str.size(); ++i)
+	{
+		const char chr = str[i];
+
+		if (i == 0 && chr == '-')
+		{
+			negative = true;
+			continue;
+		}
+
+		if (SDL_isdigit(chr))
+		{
+			retval *= radix;
+			retval += chr - '0';
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	if (negative)
+	{
+		return -retval;
+	}
+
+	return retval;
 }
 
 std::vector<std::string> split( const std::string &s, char delim, std::vector<std::string> &elems )
@@ -110,7 +117,7 @@ int UtilityClass::Int(const char* str, int fallback /*= 0*/)
 	return (int) SDL_strtol(str, NULL, 0);
 }
 
-std::string UtilityClass::GCString(std::vector<SDL_GameControllerButton> buttons)
+std::string UtilityClass::GCString(const std::vector<SDL_GameControllerButton>& buttons)
 {
 	std::string retval = "";
 	for (size_t i = 0; i < buttons.size(); i += 1)
