@@ -2486,7 +2486,7 @@ void tweakmenurender()
         {
             switch (obj.entities[i].size) {
                 case 0:
-                    fillboxabs(obj.entities[i].xp,obj.entities[i].yp,16,16, graphics.getRGB(32,200,200));
+                    //ed.fillboxabs(obj.entities[i].xp,obj.entities[i].yp,16,16, graphics.getRGB(32,200,200));
                     break;
             }
             //drawentity(i, yoff);

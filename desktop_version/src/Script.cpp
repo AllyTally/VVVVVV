@@ -100,7 +100,18 @@ void scriptclass::run()
 			game.press_map = false;
 
 			//Ok, now we run a command based on that string
-			if (words[0] == "moveplayer")
+            
+            // Added commands
+			if (words[0] == "gotoline")
+			{
+				position = ss_toi(words[1]);
+			}
+			else if (words[0] == "setmusicpos")
+			{
+                Mix_SetMusicPosition(ss_toi(words[1]));
+			}
+            // Vanilla commands
+			else if (words[0] == "moveplayer")
 			{
 				//USAGE: moveplayer(x offset, y offset)
 				int player = obj.getplayer();

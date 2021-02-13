@@ -6785,18 +6785,16 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("return to play menu");
         menuyoff = 70;
         break;
-<<<<<<< HEAD
     case Menu::tweakmenu:
         option("frame advance");
         option("modify entities");
         option("a");
         menuyoff = 0;
-=======
+        break;
     case Menu::errorsavingsettings:
         option("ok");
         option("silence");
         menuyoff = 10;
->>>>>>> upstream/master
         break;
     }
 
