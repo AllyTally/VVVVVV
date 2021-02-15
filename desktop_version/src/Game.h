@@ -77,6 +77,7 @@ namespace Menu
         timetrialcomplete3,
         gamecompletecontinue,
         tweakmenu,
+        tweakmodifying,
     };
 };
 
@@ -450,6 +451,13 @@ public:
 
     bool frameadvance;
     bool inentityeditor;
+    bool intweakmenu;
+
+    int held_entity;
+    int grabber_offset_x;
+    int grabber_offset_y;
+    bool first_click;
+    bool holding_entity;
 };
 
 #ifndef GAME_DEFINITION

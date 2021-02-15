@@ -2474,25 +2474,50 @@ void maprender()
     }
 }
 
+static void fillboxabs( int x, int y, int x2, int y2, int c )
+{
+    FillRect(graphics.backBuffer, x, y, x2, 1, c);
+    FillRect(graphics.backBuffer, x, y+y2-1, x2, 1, c);
+    FillRect(graphics.backBuffer, x, y, 1, y2, c);
+    FillRect(graphics.backBuffer, x+x2-1, y, 1, y2, c);
+}
+
 void tweakmenurender()
 {
     SDL_BlitSurface(graphics.coverbuffer, NULL, graphics.backBuffer, &graphics.bg_rect);
 
     if (game.inentityeditor) {
         graphics.drawentities();
-
-
-        for (int i = obj.entities.size() - 1; i >= 0; i--)
+        for (int i = 0; i < obj.entities.size(); i++)
         {
-            switch (obj.entities[i].size) {
-                case 0:
-                    //ed.fillboxabs(obj.entities[i].xp,obj.entities[i].yp,16,16, graphics.getRGB(32,200,200));
-                    break;
+            fillboxabs(obj.entities[i].xp + obj.entities[i].cx,obj.entities[i].yp + obj.entities[i].cy,obj.entities[i].w,obj.entities[i].h, graphics.getRGB(90,90,15));
+            int bounding_box_x = obj.entities[i].xp + obj.entities[i].cx;
+            int bounding_box_y = obj.entities[i].yp + obj.entities[i].cy;
+            int bounding_box_x2 = bounding_box_x + obj.entities[i].w;
+            int bounding_box_y2 = bounding_box_y + obj.entities[i].h;
+
+
+            if (key.mx >= bounding_box_x && key.mx <= bounding_box_x2 && key.my >= bounding_box_y && key.my <= bounding_box_y2) {
+                fillboxabs(obj.entities[i].xp + obj.entities[i].cx,obj.entities[i].yp + obj.entities[i].cy,obj.entities[i].w,obj.entities[i].h, graphics.getRGB(200,200,32));
+
+                if (key.leftbutton && game.first_click) {
+                    game.first_click = false;
+                    game.holding_entity = true;
+                    game.held_entity = i;
+                    game.grabber_offset_x = key.mx - obj.entities[i].xp;
+                    game.grabber_offset_y = key.my - obj.entities[i].yp;
+                }
             }
             //drawentity(i, yoff);
         }
-
-
+        if (game.holding_entity) {
+            obj.entities[game.held_entity].xp = key.mx - game.grabber_offset_x;
+            obj.entities[game.held_entity].yp = key.my - game.grabber_offset_y;
+            if (!key.leftbutton) {
+                game.first_click = true;
+                game.holding_entity = false;
+            }
+        }
     }
 
     graphics.bprint(-1, 10, "[ PAUSED ]", 196, 196, 255 - help.glow, true);

@@ -262,8 +262,14 @@ void Game::init(void)
     swnmessage = 0;
 
     // tweaks
+    intweakmenu = false;
     frameadvance = false;
     inentityeditor = false;
+    holding_entity = false;
+    held_entity = 0;
+    grabber_offset_x = 0;
+    grabber_offset_y = 0;
+    first_click = true;
 
     clearcustomlevelstats();
 
@@ -6784,6 +6790,10 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("modify entities");
         option("a");
         menuyoff = 0;
+        break;
+    case Menu::tweakmodifying:
+        option("return to tweak menu");
+        menuyoff = 70;
         break;
     case Menu::errorsavingsettings:
         option("ok");

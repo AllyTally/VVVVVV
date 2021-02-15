@@ -1599,8 +1599,14 @@ static void menuactionpress()
             game.frameadvance = true;
         } else if (game.currentmenuoption == 1) {
             music.playef(11);
-            game.inentityeditor = !game.inentityeditor;
+            game.inentityeditor = true;
+            game.createmenu(Menu::tweakmodifying);
         }
+        break;
+    case Menu::tweakmodifying:
+        game.inentityeditor = false;
+        music.playef(11);
+        game.returnmenu();
         break;
     case Menu::errorsavingsettings:
         if (game.currentmenuoption == 1)
@@ -1663,6 +1669,10 @@ void titleinput()
             if (game.ingame_titlemode)
             {
                 game.returntopausemenu();
+            }
+            else if (game.intweakmenu) {
+                game.gamestate = GAMEMODE;
+                game.mapheld = true;
             }
             else
             {
@@ -2070,7 +2080,9 @@ void gameinput()
     if (key.isDown(SDLK_F8) && !key.tweakkeyheld) {
         game.gamestate = TWEAKMENUMODE;
         game.createmenu(Menu::tweakmenu);
+        game.intweakmenu = true;
         key.tweakkeyheld = true;
+        game.inentityeditor = false;
     }
 
     if (!key.isDown(SDLK_F8)) {
@@ -2402,6 +2414,8 @@ static void mapmenuactionpress()
 void tweakinput() {
     if (key.isDown(SDLK_F8) && !key.tweakkeyheld) {
         game.gamestate = GAMEMODE;
+        game.inentityeditor = false;
+        game.intweakmenu = true;
         key.tweakkeyheld = true;
     }
     if (!key.isDown(SDLK_F8)) {
