@@ -3,15 +3,15 @@
 #include <physfs.h> /* FIXME: Abstract to FileSystemUtils! */
 #include <SDL.h>
 #include <stdio.h>
-#include <stdlib.h>
 
+#include "Exit.h"
 #include "UtilityClass.h"
 
 binaryBlob::binaryBlob()
 {
 	numberofHeaders = 0;
-	SDL_memset(m_headers, 0, sizeof(m_headers));
-	SDL_memset(m_memblocks, 0, sizeof(m_memblocks));
+	SDL_zeroa(m_headers);
+	SDL_zeroa(m_memblocks);
 }
 
 #ifdef VVV_COMPILEMUSIC
@@ -28,6 +28,10 @@ void binaryBlob::AddFileToBinaryBlob(const char* _path)
 		fseek(file, 0, SEEK_SET);
 
 		memblock = (char*) SDL_malloc(size);
+		if (memblock == NULL)
+		{
+			VVV_exit(1);
+		}
 		fread(memblock, 1, size, file);
 
 		fclose(file);
@@ -113,7 +117,7 @@ bool binaryBlob::unPackBinary(const char* name)
 		m_memblocks[i] = (char*) SDL_malloc(m_headers[i].size);
 		if (m_memblocks[i] == NULL)
 		{
-			exit(1); /* Oh god we're out of memory, just bail */
+			VVV_exit(1); /* Oh god we're out of memory, just bail */
 		}
 		PHYSFS_readBytes(handle, m_memblocks[i], m_headers[i].size);
 		offset += m_headers[i].size;
@@ -139,12 +143,10 @@ void binaryBlob::clear()
 {
 	for (size_t i = 0; i < SDL_arraysize(m_headers); i += 1)
 	{
-		if (m_headers[i].valid)
-		{
-			SDL_free(m_memblocks[i]);
-			m_headers[i].valid = false;
-		}
+		SDL_free(m_memblocks[i]);
 	}
+	SDL_zeroa(m_memblocks);
+	SDL_zeroa(m_headers);
 }
 
 int binaryBlob::getIndex(const char* _name)
@@ -185,8 +187,8 @@ std::vector<int> binaryBlob::getExtra()
 	for (size_t i = 0; i < SDL_arraysize(m_headers); i += 1)
 	{
 		if (m_headers[i].valid
-#define FOREACH_TRACK(track_name) && SDL_strcmp(m_headers[i].name, track_name) != 0
-		TRACK_NAMES
+#define FOREACH_TRACK(_, track_name) && SDL_strcmp(m_headers[i].name, track_name) != 0
+		TRACK_NAMES(_)
 #undef FOREACH_TRACK
 		) {
 			result.push_back(i);

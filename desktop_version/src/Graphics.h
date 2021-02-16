@@ -17,6 +17,10 @@ class Graphics
 {
 public:
 	void init();
+	void destroy();
+
+	void create_buffers(const SDL_PixelFormat* fmt);
+	void destroy_buffers();
 
 	GraphicsResources grphx;
 

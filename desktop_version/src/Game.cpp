@@ -452,6 +452,29 @@ void Game::updatecustomlevelstats(std::string clevel, int cscore)
     savecustomlevelstats();
 }
 
+#define LOAD_ARRAY_RENAME(ARRAY_NAME, DEST) \
+    if (pKey == #ARRAY_NAME && pText[0] != '\0') \
+    { \
+        /* We're loading in 32-bit integers. If we need more than 16 chars,
+         * something is seriously wrong */ \
+        char buffer[16]; \
+        size_t start = 0; \
+        size_t i = 0; \
+        \
+        while (next_split_s(buffer, sizeof(buffer), &start, pText, ',')) \
+        { \
+            if (i >= SDL_arraysize(DEST)) \
+            { \
+                break; \
+            } \
+            \
+            DEST[i] = help.Int(buffer); \
+            ++i; \
+        } \
+    }
+
+#define LOAD_ARRAY(ARRAY_NAME) LOAD_ARRAY_RENAME(ARRAY_NAME, ARRAY_NAME)
+
 void Game::loadcustomlevelstats()
 {
     //testing
@@ -534,29 +557,19 @@ void Game::loadcustomlevelstats()
             pText = "";
         }
 
-        if (pKey == "customlevelscore")
-        {
-            std::string TextString = (pText);
-            if(TextString.length())
-            {
-                std::vector<std::string> values = split(TextString,',');
-                for(size_t i = 0; i < values.size(); i++)
-                {
-                    customlevelscores.push_back(help.Int(values[i].c_str()));
-                }
-            }
-        }
+        LOAD_ARRAY_RENAME(customlevelscore, customlevelscores)
 
-        if (pKey == "customlevelstats")
+        if (pKey == "customlevelstats" && pText[0] != '\0')
         {
-            std::string TextString = (pText);
-            if(TextString.length())
+            size_t start = 0;
+            size_t len = 0;
+            size_t prev_start = 0;
+
+            while (next_split(&start, &len, &pText[start], '|'))
             {
-                std::vector<std::string> values = split(TextString,'|');
-                for(size_t i = 0; i < values.size(); i++)
-                {
-                    customlevelnames.push_back(values[i]);
-                }
+                customlevelnames.push_back(std::string(&pText[prev_start], len));
+
+                prev_start = start;
             }
         }
     }
@@ -4431,22 +4444,6 @@ void Game::unlocknum( int t )
 #endif
 }
 
-#define LOAD_ARRAY_RENAME(ARRAY_NAME, DEST) \
-    if (pKey == #ARRAY_NAME) \
-    { \
-        std::string TextString = pText; \
-        if (TextString.length()) \
-        { \
-            std::vector<std::string> values = split(TextString, ','); \
-            for (int i = 0; i < VVV_min(SDL_arraysize(DEST), values.size()); i++) \
-            { \
-                DEST[i] = help.Int(values[i].c_str()); \
-            } \
-        } \
-    }
-
-#define LOAD_ARRAY(ARRAY_NAME) LOAD_ARRAY_RENAME(ARRAY_NAME, ARRAY_NAME)
-
 void Game::loadstats(ScreenSettings* screen_settings)
 {
     tinyxml2::XMLDocument doc;
@@ -4718,6 +4715,11 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* s
 
 bool Game::savestats()
 {
+    if (graphics.screenbuffer == NULL)
+    {
+        return false;
+    }
+
     ScreenSettings screen_settings;
     graphics.screenbuffer->GetSettings(&screen_settings);
 
@@ -4960,6 +4962,11 @@ void Game::loadsettings(ScreenSettings* screen_settings)
 
 bool Game::savesettings()
 {
+    if (graphics.screenbuffer == NULL)
+    {
+        return false;
+    }
+
     ScreenSettings screen_settings;
     graphics.screenbuffer->GetSettings(&screen_settings);
 
@@ -6338,7 +6345,7 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
                     }
                     char text[menutextbytes];
                     SDL_snprintf(text, sizeof(text), "%s%s", prefix, ed.ListOfMetaData[i].title.c_str());
-                    for (size_t ii = 0; ii < SDL_arraysize(text); ii++)
+                    for (size_t ii = 0; text[ii] != '\0'; ++ii)
                     {
                         text[ii] = SDL_tolower(text[ii]);
                     }

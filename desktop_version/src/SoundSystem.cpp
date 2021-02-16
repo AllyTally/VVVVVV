@@ -17,7 +17,7 @@ MusicTrack::MusicTrack(const char* fileName)
 
 MusicTrack::MusicTrack(SDL_RWops *rw)
 {
-	m_music = Mix_LoadMUS_RW(rw, 0);
+	m_music = Mix_LoadMUS_RW(rw, 1);
 	m_isValid = true;
 	if(m_music == NULL)
 	{
@@ -33,12 +33,14 @@ SoundTrack::SoundTrack(const char* fileName)
 	unsigned char *mem;
 	size_t length = 0;
 	FILESYSTEM_loadFileToMemory(fileName, &mem, &length);
+	if (mem == NULL)
+	{
+		fprintf(stderr, "Unable to load WAV file %s\n", fileName);
+		return;
+	}
 	SDL_RWops *fileIn = SDL_RWFromMem(mem, length);
 	sound = Mix_LoadWAV_RW(fileIn, 1);
-	if (length)
-	{
-		FILESYSTEM_freeMemory(&mem);
-	}
+	FILESYSTEM_freeMemory(&mem);
 
 	if (sound == NULL)
 	{

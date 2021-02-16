@@ -4,11 +4,11 @@
 #include <physfs.h>
 #include <SDL.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string>
 #include <tinyxml2.h>
 #include <vector>
 
+#include "Exit.h"
 #include "Graphics.h"
 #include "UtilityClass.h"
 
@@ -134,7 +134,10 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 
 void FILESYSTEM_deinit()
 {
-	PHYSFS_deinit();
+	if (PHYSFS_isInit())
+	{
+		PHYSFS_deinit();
+	}
 }
 
 char *FILESYSTEM_getUserSaveDirectory()
@@ -256,6 +259,10 @@ void FILESYSTEM_loadFileToMemory(
 
 		++length;
 		*mem = static_cast<unsigned char*>(SDL_malloc(length)); // STDIN_BUFFER.data() causes double-free
+		if (*mem == NULL)
+		{
+			VVV_exit(1);
+		}
 		std::copy(STDIN_BUFFER.begin(), STDIN_BUFFER.end(), reinterpret_cast<char*>(*mem));
 		return;
 	}
@@ -273,11 +280,19 @@ void FILESYSTEM_loadFileToMemory(
 	if (addnull)
 	{
 		*mem = (unsigned char *) SDL_malloc(length + 1);
+		if (*mem == NULL)
+		{
+			VVV_exit(1);
+		}
 		(*mem)[length] = 0;
 	}
 	else
 	{
 		*mem = (unsigned char*) SDL_malloc(length);
+		if (*mem == NULL)
+		{
+			VVV_exit(1);
+		}
 	}
 	int success = PHYSFS_readBytes(handle, *mem, length);
 	if (success == -1)
@@ -492,6 +507,10 @@ static void PLATFORM_copyFile(const char *oldLocation, const char *newLocation)
 	length = ftell(file);
 	fseek(file, 0, SEEK_SET);
 	data = (char*) SDL_malloc(length);
+	if (data == NULL)
+	{
+		VVV_exit(1);
+	}
 	bytes_read = fread(data, 1, length, file);
 	fclose(file);
 	if (bytes_read != length)

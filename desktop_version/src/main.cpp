@@ -1,10 +1,10 @@
 #include <SDL.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "editor.h"
 #include "Enums.h"
 #include "Entity.h"
+#include "Exit.h"
 #include "FileSystemUtils.h"
 #include "Game.h"
 #include "Graphics.h"
@@ -76,6 +76,8 @@ static inline Uint32 get_framerate(const int slowdown)
 static void inline deltaloop();
 static void inline fixedloop();
 
+static void cleanup();
+
 int main(int argc, char *argv[])
 {
     char* baseDir = NULL;
@@ -92,7 +94,7 @@ int main(int argc, char *argv[])
     else \
     { \
         printf("%s option requires one argument.\n", argv[i]); \
-        return 1; \
+        VVV_exit(1); \
     }
 
         if (ARG("-renderer"))
@@ -155,14 +157,14 @@ int main(int argc, char *argv[])
         else
         {
             printf("Error: invalid option: %s\n", argv[i]);
-            return 1;
+            VVV_exit(1);
         }
     }
 
     if(!FILESYSTEM_init(argv[0], baseDir, assetsPath))
     {
         puts("Unable to initialize filesystem!");
-        return 1;
+        VVV_exit(1);
     }
 
     SDL_Init(
@@ -245,61 +247,7 @@ int main(int argc, char *argv[])
     }
     graphics.screenbuffer = &gameScreen;
 
-    const SDL_PixelFormat* fmt = gameScreen.GetFormat();
-    #define CREATE_SURFACE(w, h) \
-        SDL_CreateRGBSurface( \
-            SDL_SWSURFACE, \
-            w, h, \
-            fmt->BitsPerPixel, \
-            fmt->Rmask, fmt->Gmask, fmt->Bmask, fmt->Amask \
-        )
-    graphics.backBuffer = CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.backBuffer, SDL_BLENDMODE_NONE);
-
-    graphics.footerbuffer = CREATE_SURFACE(320, 10);
-    SDL_SetSurfaceBlendMode(graphics.footerbuffer, SDL_BLENDMODE_BLEND);
-    SDL_SetSurfaceAlphaMod(graphics.footerbuffer, 127);
-    FillRect(graphics.footerbuffer, SDL_MapRGB(fmt, 0, 0, 0));
-
-    graphics.ghostbuffer = CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.ghostbuffer, SDL_BLENDMODE_BLEND);
-    SDL_SetSurfaceAlphaMod(graphics.ghostbuffer, 127);
-
-    graphics.coverbuffer = CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.coverbuffer, SDL_BLENDMODE_BLEND);
-    SDL_SetSurfaceAlphaMod(graphics.coverbuffer, 127);
-    SDL_FillRect(graphics.coverbuffer, NULL, SDL_MapRGBA(graphics.coverbuffer->format, 0, 0, 0, 255));
-
-    graphics.Makebfont();
-
-    graphics.foregroundBuffer =  CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.foregroundBuffer, SDL_BLENDMODE_BLEND);
-
-    graphics.menubuffer = CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.menubuffer, SDL_BLENDMODE_NONE);
-
-    graphics.warpbuffer = CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.warpbuffer, SDL_BLENDMODE_NONE);
-
-    graphics.warpbuffer_lerp = CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.warpbuffer_lerp, SDL_BLENDMODE_NONE);
-
-    graphics.towerbg.buffer =  CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.towerbg.buffer, SDL_BLENDMODE_NONE);
-
-    graphics.towerbg.buffer_lerp = CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.towerbg.buffer_lerp, SDL_BLENDMODE_NONE);
-
-    graphics.titlebg.buffer = CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.titlebg.buffer, SDL_BLENDMODE_NONE);
-
-    graphics.titlebg.buffer_lerp = CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.titlebg.buffer_lerp, SDL_BLENDMODE_NONE);
-
-    graphics.tempBuffer = CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.tempBuffer, SDL_BLENDMODE_NONE);
-
-    #undef CREATE_SURFACE
+    graphics.create_buffers(gameScreen.GetFormat());
 
     if (game.skipfakeload)
         game.gamestate = TITLEMODE;
@@ -364,7 +312,7 @@ int main(int argc, char *argv[])
                 ed.ListOfMetaData.push_back(meta);
             } else {
                 printf("Level not found\n");
-                return 1;
+                VVV_exit(1);
             }
         }
 
@@ -411,12 +359,28 @@ int main(int argc, char *argv[])
         deltaloop();
     }
 
+    cleanup();
+    return 0;
+}
+
+static void cleanup()
+{
+    /* Order matters! */
     game.savestatsandsettings();
+    gameScreen.destroy();
+    graphics.grphx.destroy();
+    graphics.destroy_buffers();
+    graphics.destroy();
+    music.destroy();
     NETWORK_shutdown();
     SDL_Quit();
     FILESYSTEM_deinit();
+}
 
-    return 0;
+void VVV_exit(const int exit_code)
+{
+    cleanup();
+    exit(exit_code);
 }
 
 static void inline deltaloop()

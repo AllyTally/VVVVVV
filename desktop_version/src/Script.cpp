@@ -1,22 +1,20 @@
 #define SCRIPT_DEFINITION
 #include "Script.h"
 
+#include <limits.h>
+
 #include "editor.h"
 #include "Entity.h"
 #include "Enums.h"
+#include "Exit.h"
 #include "Graphics.h"
 #include "KeyPoll.h"
 #include "Map.h"
 #include "Music.h"
 #include "UtilityClass.h"
 
-#include <limits.h>
-
 scriptclass::scriptclass()
 {
-	//Start SDL
-
-	//Init
 	position = 0;
 	scriptdelay = 0;
 	running = false;
@@ -34,7 +32,8 @@ scriptclass::scriptclass()
 	texty = 0;
 }
 
-void scriptclass::clearcustom(){
+void scriptclass::clearcustom()
+{
 	customscripts.clear();
 }
 
@@ -3407,10 +3406,7 @@ void scriptclass::startgamemode( int t )
 	}
 #endif
 	case 100:
-		game.savestatsandsettings();
-
-		SDL_Quit();
-		exit(0);
+		VVV_exit(0);
 		break;
 	}
 }

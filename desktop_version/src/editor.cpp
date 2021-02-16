@@ -162,7 +162,7 @@ std::string find_tag(const std::string& buf, const std::string& start, const std
         size_t real_start = start_pos + 2 + ((int) hex);
         std::string number(value.substr(real_start, end - real_start));
 
-        if (!is_positive_num(number, hex))
+        if (!is_positive_num(number.c_str(), hex))
         {
             return "";
         }
@@ -246,6 +246,8 @@ bool editorclass::getLevelMetaData(std::string& _path, LevelMetaData& _data )
     }
 
     std::string buf((char*) uMem);
+
+    FILESYSTEM_freeMemory(&uMem);
 
     if (find_metadata(buf) == "")
     {
@@ -362,13 +364,7 @@ void editorclass::reset()
         }
     }
 
-    for (int j = 0; j < 30 * maxheight; j++)
-    {
-        for (int i = 0; i < 40 * maxwidth; i++)
-        {
-            contents[i+(j*40*maxwidth)]=0;
-        }
-    }
+    SDL_zeroa(contents);
 
     hooklist.clear();
 
@@ -385,7 +381,7 @@ void editorclass::reset()
 
     hookmenupage=0;
     hookmenu=0;
-    script.customscripts.clear();
+    script.clearcustom();
 
     returneditoralpha = 0;
     oldreturneditoralpha = 0;
@@ -1750,25 +1746,29 @@ bool editorclass::load(std::string& _path)
         }
 
 
-        if (pKey == "contents")
+        if (pKey == "contents" && pText[0] != '\0')
         {
-            std::string TextString = (pText);
-            if(TextString.length())
-            {
-                std::vector<std::string> values = split(TextString,',');
-                SDL_memset(contents, 0, sizeof(contents));
-                int x =0;
-                int y =0;
-                for(size_t i = 0; i < values.size(); i++)
-                {
-                    contents[x + (maxwidth*40*y)] = help.Int(values[i].c_str());
-                    x++;
-                    if(x == mapwidth*40)
-                    {
-                        x=0;
-                        y++;
-                    }
+            int x = 0;
+            int y = 0;
 
+            char buffer[16];
+            size_t start = 0;
+
+            while (next_split_s(buffer, sizeof(buffer), &start, pText, ','))
+            {
+                const int idx = x + maxwidth*40*y;
+
+                if (INBOUNDS_ARR(idx, contents))
+                {
+                    contents[idx] = help.Int(buffer);
+                }
+
+                ++x;
+
+                if (x == mapwidth*40)
+                {
+                    x = 0;
+                    ++y;
                 }
             }
         }
@@ -1871,47 +1871,46 @@ bool editorclass::load(std::string& _path)
             }
         }
 
-        if (pKey == "script")
+        if (pKey == "script" && pText[0] != '\0')
         {
-            std::string TextString = (pText);
-            if(TextString.length())
+            Script script_;
+            bool headerfound = false;
+
+            size_t start = 0;
+            size_t len = 0;
+            size_t prev_start = 0;
+
+            while (next_split(&start, &len, &pText[start], '|'))
             {
-                std::vector<std::string> values = split(TextString,'|');
-                script.clearcustom();
-                Script script_;
-                bool headerfound = false;
-                for(size_t i = 0; i < values.size(); i++)
+                if (len > 0 && pText[prev_start + len - 1] == ':')
                 {
-                    std::string& line = values[i];
-
-                    if(line.length() && line[line.length() - 1] == ':')
+                    if (headerfound)
                     {
-                        if(headerfound)
-                        {
-                            //Add the script if we have a preceding header
-                            script.customscripts.push_back(script_);
-                        }
-                        script_.name = line.substr(0, line.length()-1);
-                        script_.contents.clear();
-                        headerfound = true;
-                        continue;
+                        script.customscripts.push_back(script_);
                     }
 
-                    if(headerfound)
-                    {
-                        script_.contents.push_back(line);
-                    }
-                }
-                //Add the last script
-                if(headerfound)
-                {
-                    //Add the script if we have a preceding header
-                    script.customscripts.push_back(script_);
+                    script_.name = std::string(&pText[prev_start], len - 1);
+                    script_.contents.clear();
+                    headerfound = true;
+
+                    goto next;
                 }
 
+                if (headerfound)
+                {
+                    script_.contents.push_back(std::string(&pText[prev_start], len));
+                }
+
+next:
+                prev_start = start;
+            }
+
+            /* Add the last script */
+            if (headerfound)
+            {
+                script.customscripts.push_back(script_);
             }
         }
-
     }
 
     gethooks();
@@ -2047,7 +2046,7 @@ bool editorclass::save(std::string& _path)
         Script& script_ = script.customscripts[i];
 
         scriptString += script_.name + ":|";
-        for (size_t ii = 0; ii < script_.contents.size(); i++)
+        for (size_t ii = 0; ii < script_.contents.size(); ++ii)
         {
             scriptString += script_.contents[ii];
 
@@ -4112,15 +4111,34 @@ void editorinput()
             {
             case TEXT_GOTOROOM:
             {
-                std::vector<std::string> coords = split(key.keybuffer, ',');
-                if (coords.size() != 2)
+                char coord_x[16];
+                char coord_y[16];
+
+                const char* comma = SDL_strchr(key.keybuffer.c_str(), ',');
+
+                bool valid_input = comma != NULL;
+
+                if (valid_input)
+                {
+                    SDL_strlcpy(
+                        coord_x,
+                        key.keybuffer.c_str(),
+                        VVV_min(comma - key.keybuffer.c_str() + 1, sizeof(coord_x))
+                    );
+                    SDL_strlcpy(coord_y, &comma[1], sizeof(coord_y));
+
+                    valid_input = is_number(coord_x) && is_number(coord_y);
+                }
+
+                if (!valid_input)
                 {
                     ed.note = "[ ERROR: Invalid format ]";
                     ed.notedelay = 45;
                     break;
                 }
-                ed.levx = clamp(help.Int(coords[0].c_str()) - 1, 0, ed.mapwidth - 1);
-                ed.levy = clamp(help.Int(coords[1].c_str()) - 1, 0, ed.mapheight - 1);
+
+                ed.levx = clamp(help.Int(coord_x) - 1, 0, ed.mapwidth - 1);
+                ed.levy = clamp(help.Int(coord_y) - 1, 0, ed.mapheight - 1);
                 graphics.backgrounddrawn = false;
                 break;
             }
