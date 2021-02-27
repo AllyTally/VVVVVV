@@ -122,7 +122,7 @@ bool next_split_s(
 		/* Using SDL_strlcpy() here results in calling SDL_strlen() */
 		/* on the whole string, which results in a visible freeze */
 		/* if it's a very large string */
-		const size_t length = VVV_min(buffer_size, len);
+		const size_t length = VVV_min(buffer_size - 1, len);
 		SDL_memcpy(buffer, &str[prev_start], length);
 		buffer[length] = '\0';
 	}
@@ -130,7 +130,7 @@ bool next_split_s(
 	return retval;
 }
 
-UtilityClass::UtilityClass() :
+UtilityClass::UtilityClass(void) :
 glow(0),
 	glowdir(0)
 {
@@ -251,7 +251,7 @@ bool UtilityClass::intersects( SDL_Rect A, SDL_Rect B )
 	return (SDL_HasIntersection(&A, &B) == SDL_TRUE);
 }
 
-void UtilityClass::updateglow()
+void UtilityClass::updateglow(void)
 {
 	slowsine++;
 	if (slowsine >= 64) slowsine = 0;
@@ -323,15 +323,15 @@ bool is_positive_num(const char* str, const bool hex)
 	return true;
 }
 
-bool endsWith(const std::string& str, const std::string& suffix)
+bool endsWith(const char* str, const char* suffix)
 {
-	if (str.size() < suffix.size())
+	const size_t str_size = SDL_strlen(str);
+	const size_t suffix_size = SDL_strlen(suffix);
+
+	if (str_size < suffix_size)
 	{
 		return false;
 	}
-	return str.compare(
-		str.size() - suffix.size(),
-		suffix.size(),
-		suffix
-	) == 0;
+
+	return SDL_strcmp(&str[str_size - suffix_size], suffix) == 0;
 }

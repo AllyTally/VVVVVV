@@ -26,7 +26,7 @@ bool is_number(const char* str);
 
 bool is_positive_num(const char* str, const bool hex);
 
-bool endsWith(const std::string& str, const std::string& suffix);
+bool endsWith(const char* str, const char* suffix);
 
 #define INBOUNDS_VEC(index, vector) ((int) index >= 0 && (int) index < (int) vector.size())
 #define INBOUNDS_ARR(index, array) ((int) index >= 0 && (int) index < (int) SDL_arraysize(array))
@@ -44,7 +44,7 @@ bool endsWith(const std::string& str, const std::string& suffix);
 class UtilityClass
 {
 public:
-    UtilityClass();
+    UtilityClass(void);
 
     static std::string String(int _v);
 
@@ -61,7 +61,7 @@ public:
 
     static bool intersects( SDL_Rect A, SDL_Rect B );
 
-    void updateglow();
+    void updateglow(void);
 
     int glow;
     int slowsine;

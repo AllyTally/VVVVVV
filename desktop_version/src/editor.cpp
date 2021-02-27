@@ -3,6 +3,7 @@
 #define ED_DEFINITION
 #include "editor.h"
 
+#include <algorithm>
 #include <physfs.h>
 #include <stdio.h>
 #include <string>
@@ -28,7 +29,7 @@
 #endif
 #include <inttypes.h>
 
-edlevelclass::edlevelclass()
+edlevelclass::edlevelclass(void)
 {
     tileset=0;
     tilecol=0;
@@ -46,7 +47,7 @@ edlevelclass::edlevelclass()
     directmode=0;
 }
 
-editorclass::editorclass()
+editorclass::editorclass(void)
 {
     //We create a blank map
     SDL_memset(contents, 0, sizeof(contents));
@@ -77,27 +78,29 @@ static bool compare_nocase (std::string first, std::string second)
         return false;
 }
 
-void editorclass::loadZips()
+static void levelZipCallback(const char* filename)
 {
-    directoryList = FILESYSTEM_getLevelDirFileNames();
-    bool needsReload = false;
-
-    for(size_t i = 0; i < directoryList.size(); i++)
+    if (endsWith(filename, ".zip"))
     {
-        if (endsWith(directoryList[i], ".zip")) {
-            PHYSFS_File* zip = PHYSFS_openRead(directoryList[i].c_str());
-            if (!PHYSFS_mountHandle(zip, directoryList[i].c_str(), "levels", 1)) {
-                printf("%s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-            } else {
-                needsReload = true;
-            }
+        PHYSFS_File* zip = PHYSFS_openRead(filename);
+
+        if (!PHYSFS_mountHandle(zip, filename, "levels", 1))
+        {
+            printf(
+                "Could not mount %s: %s\n",
+                filename,
+                PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+            );
         }
     }
-
-    if (needsReload) directoryList = FILESYSTEM_getLevelDirFileNames();
 }
 
-void replace_all(std::string& str, const std::string& from, const std::string& to)
+void editorclass::loadZips(void)
+{
+    FILESYSTEM_enumerateLevelDirFileNames(levelZipCallback);
+}
+
+static void replace_all(std::string& str, const std::string& from, const std::string& to)
 {
     if (from.empty())
     {
@@ -113,7 +116,7 @@ void replace_all(std::string& str, const std::string& from, const std::string& t
     }
 }
 
-std::string find_tag(const std::string& buf, const std::string& start, const std::string& end)
+static std::string find_tag(const std::string& buf, const std::string& start, const std::string& end)
 {
     size_t tag = buf.find(start);
 
@@ -186,7 +189,7 @@ std::string find_tag(const std::string& buf, const std::string& start, const std
 }
 
 #define TAG_FINDER(NAME, TAG) \
-std::string NAME(const std::string& buf) \
+static std::string NAME(const std::string& buf) \
 { \
     return find_tag(buf, "<" TAG ">", "</" TAG ">"); \
 }
@@ -202,24 +205,26 @@ TAG_FINDER(find_website, "website");
 
 #undef TAG_FINDER
 
-void editorclass::getDirectoryData()
+static void levelMetaDataCallback(const char* filename)
+{
+    extern editorclass ed;
+    LevelMetaData temp;
+    std::string filename_ = filename;
+
+    if (ed.getLevelMetaData(filename_, temp))
+    {
+        ed.ListOfMetaData.push_back(temp);
+    }
+}
+
+void editorclass::getDirectoryData(void)
 {
 
     ListOfMetaData.clear();
-    directoryList.clear();
 
     loadZips();
 
-    directoryList = FILESYSTEM_getLevelDirFileNames();
-
-    for(size_t i = 0; i < directoryList.size(); i++)
-    {
-        LevelMetaData temp;
-        if (getLevelMetaData( directoryList[i], temp))
-        {
-            ListOfMetaData.push_back(temp);
-        }
-    }
+    FILESYSTEM_enumerateLevelDirFileNames(levelMetaDataCallback);
 
     for(size_t i = 0; i < ListOfMetaData.size(); i++)
     {
@@ -228,7 +233,6 @@ void editorclass::getDirectoryData()
             if(compare_nocase(ListOfMetaData[i].title, ListOfMetaData[k].title ))
             {
                 std::swap(ListOfMetaData[i] , ListOfMetaData[k]);
-                std::swap(directoryList[i], directoryList[k]);
             }
         }
     }
@@ -266,7 +270,7 @@ bool editorclass::getLevelMetaData(std::string& _path, LevelMetaData& _data )
     return true;
 }
 
-void editorclass::reset()
+void editorclass::reset(void)
 {
     version=2; //New smaller format change is 2
 
@@ -394,7 +398,7 @@ void editorclass::reset()
     loaded_filepath = "";
 }
 
-void editorclass::gethooks()
+void editorclass::gethooks(void)
 {
     //Scan through the script and create a hooks list based on it
     hooklist.clear();
@@ -480,7 +484,7 @@ bool editorclass::checkhook(std::string t)
 }
 
 
-void editorclass::clearscriptbuffer()
+void editorclass::clearscriptbuffer(void)
 {
     sb.clear();
 }
@@ -1417,7 +1421,7 @@ int editorclass::spikedir( int x, int y )
     return 8;
 }
 
-void editorclass::findstartpoint()
+void editorclass::findstartpoint(void)
 {
     //Ok! Scan the room for the closest checkpoint
     int testeditor=-1;
@@ -1779,11 +1783,11 @@ bool editorclass::load(std::string& _path)
             for( tinyxml2::XMLElement* edEntityEl = pElem->FirstChildElement(); edEntityEl; edEntityEl=edEntityEl->NextSiblingElement())
             {
                 edentities entity;
+                const char* text = edEntityEl->GetText();
 
-                std::string pKey(edEntityEl->Value());
-                if (edEntityEl->GetText() != NULL)
+                if (text != NULL)
                 {
-                    std::string text(edEntityEl->GetText());
+                    size_t len = SDL_strlen(text);
 
                     // And now we come to the part where we have to deal with
                     // the terrible decisions of the past.
@@ -1819,10 +1823,10 @@ bool editorclass::load(std::string& _path)
                     if (endsWith(text, "\n            ")) // linefeed + exactly 12 spaces
                     {
                         // 12 spaces + 1 linefeed = 13 chars
-                        text = text.substr(0, text.length()-13);
+                        len -= 13;
                     }
 
-                    entity.scriptname = text;
+                    entity.scriptname = std::string(text, len);
                 }
                 edEntityEl->QueryIntAttribute("x", &entity.x);
                 edEntityEl->QueryIntAttribute("y", &entity.y);
@@ -1844,7 +1848,6 @@ bool editorclass::load(std::string& _path)
             int i = 0;
             for( tinyxml2::XMLElement* edLevelClassElement = pElem->FirstChildElement(); edLevelClassElement; edLevelClassElement=edLevelClassElement->NextSiblingElement())
             {
-                std::string pKey(edLevelClassElement->Value());
                 if(edLevelClassElement->GetText() != NULL)
                 {
                     level[i].roomname = std::string(edLevelClassElement->GetText()) ;
@@ -2114,7 +2117,7 @@ static void fillboxabs( int x, int y, int x2, int y2, int c )
 }
 
 
-void editorclass::generatecustomminimap()
+void editorclass::generatecustomminimap(void)
 {
     map.customwidth=mapwidth;
     map.customheight=mapheight;
@@ -2149,7 +2152,7 @@ void editorclass::generatecustomminimap()
         map.custommmysize=180-(map.custommmyoff*2);
     }
 
-    FillRect(graphics.images[12], graphics.getRGB(0,0,0));
+    ClearSurface(graphics.images[12]);
 
     int tm=0;
     int temp=0;
@@ -2413,7 +2416,7 @@ static void editormenurender(int tr, int tg, int tb)
     }
 }
 
-void editorrender()
+void editorrender(void)
 {
     extern editorclass ed;
     if (game.shouldreturntoeditor)
@@ -2423,7 +2426,7 @@ void editorrender()
 
     //Draw grid
 
-    FillRect(graphics.backBuffer, 0, 0, 320,240, graphics.getRGB(0,0,0));
+    ClearSurface(graphics.backBuffer);
     for(int j=0; j<30; j++)
     {
         for(int i=0; i<40; i++)
@@ -2887,7 +2890,7 @@ void editorrender()
 
     //Draw ghosts (spooky!)
     if (game.ghostsenabled) {
-        SDL_FillRect(graphics.ghostbuffer, NULL, SDL_MapRGBA(graphics.ghostbuffer->format, 0, 0, 0, 0));
+        ClearSurface(graphics.ghostbuffer);
         for (int i = 0; i < (int)ed.ghosts.size(); i++) {
             if (i <= ed.currentghosts) { // We don't want all of them to show up at once :)
                 if (ed.ghosts[i].rx != ed.levx || ed.ghosts[i].ry != ed.levy
@@ -3179,7 +3182,7 @@ void editorrender()
         }
         else
         {
-            FillRect(graphics.backBuffer, 0, 0, 320, 240, 0x00000000);
+            ClearSurface(graphics.backBuffer);
         }
 
         int tr = graphics.titlebg.r - (help.glow / 4) - int(fRandom() * 4);
@@ -3525,7 +3528,7 @@ void editorrender()
     graphics.render();
 }
 
-void editorrenderfixed()
+void editorrenderfixed(void)
 {
     extern editorclass ed;
     graphics.updatetitlecolours();
@@ -3585,7 +3588,7 @@ void editorrenderfixed()
     }
 }
 
-void editorlogic()
+void editorlogic(void)
 {
     extern editorclass ed;
     //Misc
@@ -3777,7 +3780,7 @@ static void editormenuactionpress()
     }
 }
 
-void editorinput()
+void editorinput(void)
 {
     extern editorclass ed;
     game.mx = (float) key.mx;
@@ -5608,7 +5611,7 @@ Uint32 editorclass::getonewaycol(const int rx, const int ry)
 }
 
 // This version detects the room automatically
-Uint32 editorclass::getonewaycol()
+Uint32 editorclass::getonewaycol(void)
 {
     if (game.gamestate == EDITORMODE)
         return getonewaycol(levx, levy);
@@ -5619,7 +5622,7 @@ Uint32 editorclass::getonewaycol()
     return graphics.getRGB(255, 255, 255);
 }
 
-int editorclass::numtrinkets()
+int editorclass::numtrinkets(void)
 {
     int temp = 0;
     for (size_t i = 0; i < edentity.size(); i++)
@@ -5632,7 +5635,7 @@ int editorclass::numtrinkets()
     return temp;
 }
 
-int editorclass::numcrewmates()
+int editorclass::numcrewmates(void)
 {
     int temp = 0;
     for (size_t i = 0; i < edentity.size(); i++)

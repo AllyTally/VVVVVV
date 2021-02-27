@@ -8,9 +8,9 @@
 #include "Map.h"
 #include "UtilityClass.h"
 
-static void songend();
+static void songend(void);
 
-musicclass::musicclass()
+musicclass::musicclass(void)
 {
 	safeToProcessMusic= false;
 	m_doFadeInVol = false;
@@ -31,7 +31,7 @@ musicclass::musicclass()
 	usingmmmmmm = false;
 }
 
-void musicclass::init()
+void musicclass::init(void)
 {
 	soundTracks.push_back(SoundTrack( "sounds/jump.wav" ));
 	soundTracks.push_back(SoundTrack( "sounds/jump2.wav" ));
@@ -92,7 +92,7 @@ void musicclass::init()
 	index = blob.getIndex(track_name); \
 	if (index >= 0 && index < blob.max_headers) \
 	{ \
-		rw = SDL_RWFromMem(blob.getAddress(index), blob.getSize(index)); \
+		rw = SDL_RWFromConstMem(blob.getAddress(index), blob.getSize(index)); \
 		if (rw == NULL) \
 		{ \
 			printf("Unable to read music file header: %s\n", SDL_GetError()); \
@@ -107,14 +107,14 @@ void musicclass::init()
 
 		num_mmmmmm_tracks += musicTracks.size();
 
-		const std::vector<int> extra = mmmmmm_blob.getExtra();
-		for (size_t i = 0; i < extra.size(); i++)
+		size_t index_ = 0;
+		while (mmmmmm_blob.nextExtra(&index_))
 		{
-			const int& index_ = extra[i];
-			rw = SDL_RWFromMem(mmmmmm_blob.getAddress(index_), mmmmmm_blob.getSize(index_));
+			rw = SDL_RWFromConstMem(mmmmmm_blob.getAddress(index_), mmmmmm_blob.getSize(index_));
 			musicTracks.push_back(MusicTrack( rw ));
 
 			num_mmmmmm_tracks++;
+			index_++;
 		}
 
 		bool ohCrap = pppppp_blob.unPackBinary("vvvvvvmusic.vvv");
@@ -130,25 +130,25 @@ void musicclass::init()
 
 	num_pppppp_tracks += musicTracks.size() - num_mmmmmm_tracks;
 
-	const std::vector<int> extra = pppppp_blob.getExtra();
-	for (size_t i = 0; i < extra.size(); i++)
+	size_t index_ = 0;
+	while (pppppp_blob.nextExtra(&index_))
 	{
-		const int& index_ = extra[i];
-		rw = SDL_RWFromMem(pppppp_blob.getAddress(index_), pppppp_blob.getSize(index_));
+		rw = SDL_RWFromConstMem(pppppp_blob.getAddress(index_), pppppp_blob.getSize(index_));
 		musicTracks.push_back(MusicTrack( rw ));
 
 		num_pppppp_tracks++;
+		index_++;
 	}
 }
 
-static void songend()
+static void songend(void)
 {
 	extern musicclass music;
 	music.songEnd = SDL_GetPerformanceCounter();
 	music.currentsong = -1;
 }
 
-void musicclass::destroy()
+void musicclass::destroy(void)
 {
 	for (size_t i = 0; i < soundTracks.size(); ++i)
 	{
@@ -257,18 +257,18 @@ void musicclass::resume(const int fadein_ms /*= 0*/)
 	play(resumesong, position_sec, fadein_ms);
 }
 
-void musicclass::fadein()
+void musicclass::fadein(void)
 {
 	resume(3000); // 3000 ms fadein
 }
 
-void musicclass::haltdasmusik()
+void musicclass::haltdasmusik(void)
 {
 	Mix_HaltMusic();
 	resumesong = currentsong;
 }
 
-void musicclass::silencedasmusik()
+void musicclass::silencedasmusik(void)
 {
 	musicVolume = 0;
 }
@@ -286,7 +286,7 @@ void musicclass::fadeout(const bool quick_fade_ /*= true*/)
 	quick_fade = quick_fade_;
 }
 
-void musicclass::processmusicfadein()
+void musicclass::processmusicfadein(void)
 {
 	musicVolume += FadeVolAmountPerFrame;
 	if (musicVolume >= MIX_MAX_VOLUME)
@@ -295,7 +295,7 @@ void musicclass::processmusicfadein()
 	}
 }
 
-void musicclass::processmusic()
+void musicclass::processmusic(void)
 {
 	if(!safeToProcessMusic)
 	{

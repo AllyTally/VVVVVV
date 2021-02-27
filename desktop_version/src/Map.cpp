@@ -10,7 +10,7 @@
 #include "Script.h"
 #include "UtilityClass.h"
 
-mapclass::mapclass()
+mapclass::mapclass(void)
 {
 	//Start here!
 	colstatedelay = 0;
@@ -128,13 +128,13 @@ void mapclass::settrinket(int x, int y)
 	shinytrinkets.push_back(temp);
 }
 
-void mapclass::resetmap()
+void mapclass::resetmap(void)
 {
 	//clear the explored area of the map
 	SDL_memset(explored, 0, sizeof(explored));
 }
 
-void mapclass::resetnames()
+void mapclass::resetnames(void)
 {
 	//Reset all the special names
 	specialnames[0] = "Rear Window";
@@ -393,7 +393,7 @@ std::string mapclass::getglitchname(int x, int y)
 	return roomname;
 }
 
-void mapclass::initmapdata()
+void mapclass::initmapdata(void)
 {
 	if (custommode)
 	{
@@ -443,7 +443,7 @@ void mapclass::initmapdata()
 	settrinket(10, 8);
 }
 
-void mapclass::initcustommapdata()
+void mapclass::initcustommapdata(void)
 {
 	shinytrinkets.clear();
 
@@ -622,7 +622,7 @@ void mapclass::updatetowerglow(TowerBG& bg_obj)
 	}
 }
 
-void mapclass::nexttowercolour()
+void mapclass::nexttowercolour(void)
 {
 	graphics.titlebg.colstate+=5;
 	if (graphics.titlebg.colstate >= 30) graphics.titlebg.colstate = 0;
@@ -721,7 +721,7 @@ int mapclass::area(int _rx, int _ry)
 	}
 }
 
-void mapclass::exploretower()
+void mapclass::exploretower(void)
 {
 	for (int i = 0; i < 20; i++)
 	{
@@ -729,7 +729,7 @@ void mapclass::exploretower()
 	}
 }
 
-void mapclass::hideship()
+void mapclass::hideship(void)
 {
 	//remove the ship from the explored areas
 	explored[2 + (10 * 20)] = 0;
@@ -740,7 +740,7 @@ void mapclass::hideship()
 	explored[4 + (11 * 20)] = 0;
 }
 
-void mapclass::showship()
+void mapclass::showship(void)
 {
 	//remove the ship from the explored areas
 	explored[2 + (10 * 20)] = 1;
@@ -751,7 +751,7 @@ void mapclass::showship()
 	explored[4 + (11 * 20)] = 1;
 }
 
-void mapclass::resetplayer()
+void mapclass::resetplayer(void)
 {
 	resetplayer(false);
 }
@@ -871,11 +871,25 @@ void mapclass::gotoroom(int rx, int ry)
 		}
 	}
 
-	for (size_t i = 0; i < obj.entities.size(); i++)
+	/* Disable all entities in the room, and deallocate any unnecessary entity slots. */
+	/* However don't disable player entities, but do preserve holes between them (if any). */
+	bool player_found = false;
+	for (int i = obj.entities.size() - 1; i >= 0; --i)
 	{
-		if (obj.entities[i].rule != 0)
+		/* Iterate in reverse order to prevent unnecessary indice shifting */
+		if (obj.entities[i].rule == 0)
 		{
-			removeentity_iter(i);
+			player_found = true;
+			continue;
+		}
+
+		if (!player_found)
+		{
+			obj.entities.erase(obj.entities.begin() + i);
+		}
+		else
+		{
+			obj.disableentity(i);
 		}
 	}
 
@@ -2034,7 +2048,7 @@ void mapclass::loadlevel(int rx, int ry)
 	}
 }
 
-void mapclass::twoframedelayfix()
+void mapclass::twoframedelayfix(void)
 {
 	// Fixes the two-frame delay in custom levels that use scripts to spawn an entity upon room load.
 	// Because when the room loads and newscript is set to run, newscript has already ran for that frame,

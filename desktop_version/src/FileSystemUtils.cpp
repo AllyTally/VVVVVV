@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <iostream>
 #include <iterator>
 #include <physfs.h>
@@ -16,15 +15,11 @@
 #if defined(_WIN32)
 #include <windows.h>
 #include <shlobj.h>
-#include <shellapi.h>
 #elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__HAIKU__) || defined(__DragonFly__)
 #include <unistd.h>
 #include <dirent.h>
 #include <limits.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <spawn.h>
 #define MAX_PATH PATH_MAX
 #endif
 
@@ -35,12 +30,31 @@ static void PLATFORM_getOSDirectory(char* output);
 static void PLATFORM_migrateSaveData(char* output);
 static void PLATFORM_copyFile(const char *oldLocation, const char *newLocation);
 
+static void* bridged_malloc(PHYSFS_uint64 size)
+{
+	return SDL_malloc(size);
+}
+
+static void* bridged_realloc(void* ptr, PHYSFS_uint64 size)
+{
+	return SDL_realloc(ptr, size);
+}
+
+static const PHYSFS_Allocator allocator = {
+	NULL,
+	NULL,
+	bridged_malloc,
+	bridged_realloc,
+	SDL_free
+};
+
 int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 {
 	char output[MAX_PATH];
 	int mkdirResult;
 	const char* pathSep = PHYSFS_getDirSeparator();
 
+	PHYSFS_setAllocator(&allocator);
 	PHYSFS_init(argvZero);
 	PHYSFS_permitSymbolicLinks(1);
 
@@ -132,7 +146,7 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 	return 1;
 }
 
-void FILESYSTEM_deinit()
+void FILESYSTEM_deinit(void)
 {
 	if (PHYSFS_isInit())
 	{
@@ -140,33 +154,47 @@ void FILESYSTEM_deinit()
 	}
 }
 
-char *FILESYSTEM_getUserSaveDirectory()
+char *FILESYSTEM_getUserSaveDirectory(void)
 {
 	return saveDir;
 }
 
-char *FILESYSTEM_getUserLevelDirectory()
+char *FILESYSTEM_getUserLevelDirectory(void)
 {
 	return levelDir;
 }
 
-bool FILESYSTEM_directoryExists(const char *fname)
+static bool FILESYSTEM_exists(const char *fname)
 {
 	return PHYSFS_exists(fname);
 }
 
 void FILESYSTEM_mount(const char *fname)
 {
-	std::string path(PHYSFS_getRealDir(fname));
-	path += PHYSFS_getDirSeparator();
-	path += fname;
-	if (!PHYSFS_mount(path.c_str(), NULL, 0))
+	const char* real_dir = PHYSFS_getRealDir(fname);
+	const char* dir_separator;
+	char path[MAX_PATH];
+
+	if (real_dir == NULL)
+	{
+		printf(
+			"Could not mount %s: real directory doesn't exist\n",
+			fname
+		);
+		return;
+	}
+
+	dir_separator = PHYSFS_getDirSeparator();
+
+	SDL_snprintf(path, sizeof(path), "%s%s%s", real_dir, dir_separator, fname);
+
+	if (!PHYSFS_mount(path, NULL, 0))
 	{
 		printf("Error mounting: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
 	}
 	else
 	{
-		graphics.assetdir = path.c_str();
+		graphics.assetdir = std::string(path);
 	}
 }
 
@@ -174,47 +202,107 @@ bool FILESYSTEM_assetsmounted = false;
 
 void FILESYSTEM_mountassets(const char* path)
 {
-	const std::string _path(path);
+	const size_t path_size = SDL_strlen(path);
+	char filename[MAX_PATH];
+	char zip_data[MAX_PATH];
+	const char* zip_normal;
+	char dir[MAX_PATH];
 
-	std::string zippath = "levels/" + _path.substr(7,_path.size()-14) + ".data.zip";
-	std::string dirpath = "levels/" + _path.substr(7,_path.size()-14) + "/";
-	std::string zip_path;
-	const char* cstr = PHYSFS_getRealDir(_path.c_str());
+	/* path is going to look like "levels/LEVELNAME.vvvvvv".
+	 * We want LEVELNAME, which entails starting from index 7
+	 * (which is how long "levels/" is)
+	 * and then grabbing path_size-14 characters
+	 * (14 chars because "levels/" and ".vvvvvv" are both 7 chars).
+	 * We also add 1 when calculating the amount of bytes to grab
+	 * to account for the null terminator.
+	 */
+	SDL_strlcpy(
+		filename,
+		&path[7],
+		VVV_min((path_size - 14) + 1, sizeof(filename))
+	);
 
-	if (cstr) {
-		zip_path = cstr;
+	SDL_snprintf(
+		zip_data,
+		sizeof(zip_data),
+		"levels/%s.data.zip",
+		filename
+	);
+
+	zip_normal = PHYSFS_getRealDir(path);
+
+	SDL_snprintf(
+		dir,
+		sizeof(dir),
+		"levels/%s/",
+		filename
+	);
+
+	if (FILESYSTEM_exists(zip_data))
+	{
+		printf("Custom asset directory is .data.zip at %s\n", zip_data);
+
+		FILESYSTEM_mount(zip_data);
+
+		graphics.reloadresources();
+
+		FILESYSTEM_assetsmounted = true;
 	}
+	else if (zip_normal != NULL && endsWith(zip_normal, ".zip"))
+	{
+		PHYSFS_File* zip = PHYSFS_openRead(zip_normal);
 
-	if (cstr && FILESYSTEM_directoryExists(zippath.c_str())) {
-		printf("Custom asset directory exists at %s\n", zippath.c_str());
-		FILESYSTEM_mount(zippath.c_str());
-		graphics.reloadresources();
-		FILESYSTEM_assetsmounted = true;
-	} else if (zip_path != "data.zip" && !endsWith(zip_path, "/data.zip") && endsWith(zip_path, ".zip")) {
-		printf("Custom asset directory is .zip at %s\n", zip_path.c_str());
-		PHYSFS_File* zip = PHYSFS_openRead(zip_path.c_str());
-		zip_path += ".data.zip";
-		if (zip == NULL) {
-			printf("error loading .zip: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-		} else if (PHYSFS_mountHandle(zip, zip_path.c_str(), "/", 0) == 0) {
-			printf("error mounting .zip: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-		} else {
-			graphics.assetdir = zip_path;
+		printf("Custom asset directory is .zip at %s\n", zip_normal);
+
+		SDL_snprintf(
+			zip_data,
+			sizeof(zip_data),
+			"%s.data.zip",
+			zip_normal
+		);
+
+		if (zip == NULL)
+		{
+			printf(
+				"Error loading .zip: %s\n",
+				PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+			);
 		}
+		else if (PHYSFS_mountHandle(zip, zip_data, "/", 0) == 0)
+		{
+			printf(
+				"Error mounting .zip: %s\n",
+				PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+			);
+		}
+		else
+		{
+			graphics.assetdir = std::string(zip_data);
+		}
+
 		FILESYSTEM_assetsmounted = true;
+
 		graphics.reloadresources();
-	} else if (FILESYSTEM_directoryExists(dirpath.c_str())) {
-		printf("Custom asset directory exists at %s\n",dirpath.c_str());
-		FILESYSTEM_mount(dirpath.c_str());
+	}
+	else if (FILESYSTEM_exists(dir))
+	{
+		printf("Custom asset directory exists at %s\n", dir);
+
+		FILESYSTEM_mount(dir);
+
 		graphics.reloadresources();
+
 		FILESYSTEM_assetsmounted = true;
-	} else {
-		printf("Custom asset directory does not exist\n");
+	}
+	else
+	{
+		puts("Custom asset directory does not exist");
+
 		FILESYSTEM_assetsmounted = false;
 	}
 }
 
-void FILESYSTEM_unmountassets()
+void FILESYSTEM_unmountassets(void)
 {
 	if (graphics.assetdir != "")
 	{
@@ -337,27 +425,39 @@ bool FILESYSTEM_loadTiXml2Document(const char *name, tinyxml2::XMLDocument& doc)
 	return true;
 }
 
-std::vector<std::string> FILESYSTEM_getLevelDirFileNames()
-{
-	std::vector<std::string> list;
-	char **fileList = PHYSFS_enumerateFiles("/levels");
-	char **i;
-	std::string builtLocation;
+static PHYSFS_EnumerateCallbackResult enumerateCallback(
+	void* data,
+	const char* origdir,
+	const char* filename
+) {
+	void (*callback)(const char*) = (void (*)(const char*)) data;
+	char builtLocation[MAX_PATH];
 
-	for (i = fileList; *i != NULL; i++)
+	SDL_snprintf(
+		builtLocation,
+		sizeof(builtLocation),
+		"%s/%s",
+		origdir,
+		filename
+	);
+
+	callback(builtLocation);
+
+	return PHYSFS_ENUM_OK;
+}
+
+void FILESYSTEM_enumerateLevelDirFileNames(
+	void (*callback)(const char* filename)
+) {
+	int success = PHYSFS_enumerate("levels", enumerateCallback, (void*) callback);
+
+	if (success == 0)
 	{
-		if (SDL_strcmp(*i, "data") == 0)
-		{
-			continue; /* FIXME: lolwut -flibit */
-		}
-		builtLocation = "levels/";
-		builtLocation += *i;
-		list.push_back(builtLocation);
+		printf(
+			"Could not get list of levels: %s\n",
+			PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+		);
 	}
-
-	PHYSFS_freeList(fileList);
-
-	return list;
 }
 
 static void PLATFORM_getOSDirectory(char* output)
@@ -540,7 +640,7 @@ static void PLATFORM_copyFile(const char *oldLocation, const char *newLocation)
 	}
 }
 
-bool FILESYSTEM_openDirectoryEnabled()
+bool FILESYSTEM_openDirectoryEnabled(void)
 {
 	/* This is just a check to see if we're on a desktop or tenfoot setup.
 	 * If you're working on a tenfoot-only build, add a def that always
@@ -549,42 +649,17 @@ bool FILESYSTEM_openDirectoryEnabled()
 	return !SDL_GetHintBoolean("SteamTenfoot", SDL_FALSE);
 }
 
-#ifdef _WIN32
 bool FILESYSTEM_openDirectory(const char *dname)
 {
-	ShellExecute(NULL, "open", dname, NULL, NULL, SW_SHOWMINIMIZED);
+	char url[MAX_PATH];
+	SDL_snprintf(url, sizeof(url), "file://%s", dname);
+	if (SDL_OpenURL(url) == -1)
+	{
+		printf("Error opening directory: %s\n", SDL_GetError());
+		return false;
+	}
 	return true;
 }
-#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__HAIKU__) || defined(__DragonFly__)
- #if defined(__APPLE__) || defined(__HAIKU__)
-const char* open_cmd = "open";
- #else
-const char* open_cmd = "xdg-open";
- #endif
-
-extern "C" char** environ;
-
-bool FILESYSTEM_openDirectory(const char *dname)
-{
-	pid_t child;
-	// This const_cast is legal (ctrl-f "The statement" at https://pubs.opengroup.org/onlinepubs/9699919799/functions/exec.html
-	char* argv[3] =
-	{
-		const_cast<char*>(open_cmd),
-		const_cast<char*>(dname),
-		NULL
-	};
-	posix_spawnp(&child, open_cmd, NULL, NULL, argv, environ);
-	int status = 0;
-	waitpid(child, &status, 0);
-	return WIFEXITED(status) && WEXITSTATUS(status) == 0;
-}
-#else
-bool FILESYSTEM_openDirectory(const char *dname)
-{
-	return false;
-}
-#endif
 
 bool FILESYSTEM_delete(const char *name)
 {

@@ -31,9 +31,6 @@ SDL_Surface* GetSubSurface( SDL_Surface* metaSurface, int x, int y, int width, i
         metaSurface->format->Bmask,
         metaSurface->format->Amask
     );
-    //SDL_Surface* subSurface = SDL_DisplayFormatAlpha(preSurface);
-
-    //SDL_FreeSurface(preSurface);
 
     // Lastly, apply the area from the meta _surface onto the whole of the sub _surface.
     SDL_BlitSurface(metaSurface, &area, preSurface, 0);
@@ -130,9 +127,6 @@ SDL_Surface * ScaleSurface( SDL_Surface *_surface, int Width, int Height, SDL_Su
             SDL_FillRect(_ret, &gigantoPixel, ReadPixel(_surface, x, y));
         }
 
-            // DrawPixel(_ret, static_cast<Sint32>(_stretch_factor_x * x) + o_x,
-                       //static_cast<Sint32>(_stretch_factor_y * y) + o_y, ReadPixel(_surface, x, y));
-
     return _ret;
 }
 
@@ -160,25 +154,7 @@ SDL_Surface *  FlipSurfaceVerticle(SDL_Surface* _src)
 
 void BlitSurfaceStandard( SDL_Surface* _src, SDL_Rect* _srcRect, SDL_Surface* _dest, SDL_Rect* _destRect )
 {
-    //SDL_Rect tempRect = *_destRect;
-    //tempRect.w  ;
-    //tempRect.h  ;
-    //tempRect.x *=globalScale;
-    //tempRect.y *=globalScale;
-
-
-    //if(globalScale != 1)
-    //{
-    //	SDL_Surface* tempScaled = ScaleSurface(_src, tempRect.w, tempRect.h);
-
-    //	SDL_BlitSurface( tempScaled, _srcRect, _dest, &tempRect );
-
-    //	SDL_FreeSurface(tempScaled);
-    //}
-    //else
-    //{
     SDL_BlitSurface( _src, _srcRect, _dest, _destRect );
-    //}
 }
 
 void BlitSurfaceColoured(
@@ -191,7 +167,6 @@ void BlitSurfaceColoured(
     SDL_Rect *tempRect = _destRect;
 
     const SDL_PixelFormat& fmt = *(_src->format);
-    // const SDL_PixelFormat& destfmt = *(_dest->format);
 
     SDL_Surface* tempsurface =  SDL_CreateRGBSurface(
         SDL_SWSURFACE,
@@ -298,7 +273,7 @@ static int oldscrollamount = 0;
 static int scrollamount = 0;
 static bool isscrolling = 0;
 
-void UpdateFilter()
+void UpdateFilter(void)
 {
     if (rand() % 4000 < 8)
     {
@@ -378,23 +353,19 @@ SDL_Surface* ApplyFilter( SDL_Surface* _src )
 void FillRect( SDL_Surface* _surface, const int _x, const int _y, const int _w, const int _h, const int r, int g, int b )
 {
     SDL_Rect rect = {Sint16(_x),Sint16(_y),Sint16(_w),Sint16(_h)};
-    Uint32 color;
-    color = SDL_MapRGB(_surface->format, r, g, b);
+    Uint32 color = SDL_MapRGB(_surface->format, r, g, b);
     SDL_FillRect(_surface, &rect, color);
 }
 
 void FillRect( SDL_Surface* _surface, const int r, int g, int b )
 {
-    SDL_Rect rect = {0,0,Uint16(_surface->w) ,Uint16(_surface->h) };
-    Uint32 color;
-    color = SDL_MapRGB(_surface->format, r, g, b);
-    SDL_FillRect(_surface, &rect, color);
+    Uint32 color = SDL_MapRGB(_surface->format, r, g, b);
+    SDL_FillRect(_surface, NULL, color);
 }
 
 void FillRect( SDL_Surface* _surface, const int color )
 {
-    SDL_Rect rect = {0,0,Uint16(_surface->w) ,Uint16(_surface->h) };
-    SDL_FillRect(_surface, &rect, color);
+    SDL_FillRect(_surface, NULL, color);
 }
 
 void FillRect( SDL_Surface* _surface, const int x, const int y, const int w, const int h, int rgba )
@@ -405,14 +376,18 @@ void FillRect( SDL_Surface* _surface, const int x, const int y, const int w, con
 
 void FillRect( SDL_Surface* _surface, SDL_Rect& _rect, const int r, int g, int b )
 {
-    Uint32 color;
-    color = SDL_MapRGB(_surface->format, r, g, b);
+    Uint32 color = SDL_MapRGB(_surface->format, r, g, b);
     SDL_FillRect(_surface, &_rect, color);
 }
 
 void FillRect( SDL_Surface* _surface, SDL_Rect rect, int rgba )
 {
     SDL_FillRect(_surface, &rect, rgba);
+}
+
+void ClearSurface(SDL_Surface* surface)
+{
+    SDL_FillRect(surface, NULL, 0x00000000);
 }
 
 void ScrollSurface( SDL_Surface* _src, int _pX, int _pY )

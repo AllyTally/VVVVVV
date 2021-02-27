@@ -1,7 +1,7 @@
 #ifndef BINARYBLOB_H
 #define BINARYBLOB_H
 
-#include <vector>
+#include <stddef.h>
 
 /* Laaaazyyyyyyy -flibit */
 // #define VVV_COMPILEMUSIC
@@ -35,7 +35,7 @@ struct resourceheader
 class binaryBlob
 {
 public:
-	binaryBlob();
+	binaryBlob(void);
 
 #ifdef VVV_COMPILEMUSIC
 	void AddFileToBinaryBlob(const char* _path);
@@ -49,11 +49,11 @@ public:
 
 	int getSize(int _index);
 
-	std::vector<int> getExtra();
+	bool nextExtra(size_t* start);
 
 	char* getAddress(int _index);
 
-	void clear();
+	void clear(void);
 
 	static const int max_headers = 128;
 

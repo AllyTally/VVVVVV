@@ -7,7 +7,7 @@
 #include "Exit.h"
 #include "UtilityClass.h"
 
-binaryBlob::binaryBlob()
+binaryBlob::binaryBlob(void)
 {
 	numberofHeaders = 0;
 	SDL_zeroa(m_headers);
@@ -139,7 +139,7 @@ bool binaryBlob::unPackBinary(const char* name)
 	return true;
 }
 
-void binaryBlob::clear()
+void binaryBlob::clear(void)
 {
 	for (size_t i = 0; i < SDL_arraysize(m_headers); i += 1)
 	{
@@ -181,18 +181,24 @@ char* binaryBlob::getAddress(int _index)
 	return m_memblocks[_index];
 }
 
-std::vector<int> binaryBlob::getExtra()
+bool binaryBlob::nextExtra(size_t* start)
 {
-	std::vector<int> result;
-	for (size_t i = 0; i < SDL_arraysize(m_headers); i += 1)
+	size_t* idx;
+
+	if (start == NULL)
 	{
-		if (m_headers[i].valid
-#define FOREACH_TRACK(_, track_name) && SDL_strcmp(m_headers[i].name, track_name) != 0
+		return false;
+	}
+
+	for (idx = start; *idx < SDL_arraysize(m_headers); *idx += 1)
+	{
+		if (m_headers[*idx].valid
+#define FOREACH_TRACK(_, track_name) && SDL_strcmp(m_headers[*idx].name, track_name) != 0
 		TRACK_NAMES(_)
 #undef FOREACH_TRACK
 		) {
-			result.push_back(i);
+			return true;
 		}
 	}
-	return result;
+	return false;
 }

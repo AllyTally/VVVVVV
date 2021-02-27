@@ -28,7 +28,7 @@ static int inline FLIP(int ypos)
     return ypos;
 }
 
-static inline void drawslowdowntext()
+static inline void drawslowdowntext(void)
 {
     switch (game.slowdown)
     {
@@ -47,7 +47,7 @@ static inline void drawslowdowntext()
     }
 }
 
-static void menurender()
+static void menurender(void)
 {
     int temp = 50;
 
@@ -1174,7 +1174,7 @@ static void menurender()
 void titlerender()
 {
 
-    FillRect(graphics.backBuffer, 0,0,graphics.backBuffer->w, graphics.backBuffer->h, 0x00000000 );
+    ClearSurface(graphics.backBuffer);
 
     if (!game.menustart)
     {
@@ -1226,9 +1226,9 @@ void titlerender()
     graphics.renderwithscreeneffects();
 }
 
-void gamecompleterender()
+void gamecompleterender(void)
 {
-    FillRect(graphics.backBuffer, 0x000000);
+    ClearSurface(graphics.backBuffer);
 
     if(!game.colourblindmode) graphics.drawtowerbackground(graphics.titlebg);
 
@@ -1372,9 +1372,9 @@ void gamecompleterender()
     graphics.render();
 }
 
-void gamecompleterender2()
+void gamecompleterender2(void)
 {
-    FillRect(graphics.backBuffer, 0x000000);
+    ClearSurface(graphics.backBuffer);
 
     graphics.drawimage(10, 0, 0);
 
@@ -1404,7 +1404,7 @@ void gamecompleterender2()
     graphics.render();
 }
 
-void gamerender()
+void gamerender(void)
 {
 
 
@@ -1420,7 +1420,7 @@ void gamerender()
             }
             else
             {
-                FillRect(graphics.backBuffer,0x00000);
+                ClearSurface(graphics.backBuffer);
             }
             graphics.drawtowermap();
         }
@@ -1432,7 +1432,7 @@ void gamerender()
             }
             else
             {
-                FillRect(graphics.backBuffer,0x00000);
+                ClearSurface(graphics.backBuffer);
             }
             if (map.final_colormode)
             {
@@ -1717,9 +1717,9 @@ void gamerender()
     if (game.gamestate != TWEAKMENUMODE) graphics.renderwithscreeneffects();
 }
 
-void maprender()
+void maprender(void)
 {
-    FillRect(graphics.backBuffer, 0x000000);
+    ClearSurface(graphics.backBuffer);
 
     //draw screen alliteration
     //Roomname:
@@ -2482,7 +2482,7 @@ static void fillboxabs( int x, int y, int x2, int y2, int c )
     FillRect(graphics.backBuffer, x+x2-1, y, 1, y2, c);
 }
 
-void tweakmenurender()
+void tweakmenurender(void)
 {
     SDL_BlitSurface(graphics.coverbuffer, NULL, graphics.backBuffer, &graphics.bg_rect);
 
@@ -2527,9 +2527,9 @@ void tweakmenurender()
     graphics.renderwithscreeneffects();
 }
 
-void teleporterrender()
+void teleporterrender(void)
 {
-    FillRect(graphics.backBuffer, 0x000000);
+    ClearSurface(graphics.backBuffer);
     int tempx;
     int tempy;
     //draw screen alliteration

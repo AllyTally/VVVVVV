@@ -73,10 +73,10 @@ static inline Uint32 get_framerate(const int slowdown)
     return 34;
 }
 
-static void inline deltaloop();
-static void inline fixedloop();
+static void inline deltaloop(void);
+static void inline fixedloop(void);
 
-static void cleanup();
+static void cleanup(void);
 
 int main(int argc, char *argv[])
 {
@@ -298,9 +298,6 @@ int main(int argc, char *argv[])
         game.playassets = playassets;
         game.menustart = true;
 
-        ed.directoryList.clear();
-        ed.directoryList.push_back(playtestname);
-
         LevelMetaData meta;
         if (ed.getLevelMetaData(playtestname, meta)) {
             ed.ListOfMetaData.clear();
@@ -363,7 +360,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-static void cleanup()
+static void cleanup(void)
 {
     /* Order matters! */
     game.savestatsandsettings();
@@ -383,7 +380,7 @@ void VVV_exit(const int exit_code)
     exit(exit_code);
 }
 
-static void inline deltaloop()
+static void inline deltaloop(void)
 {
     //timestep limit to 30
     const float rawdeltatime = static_cast<float>(time_ - timePrev);
@@ -455,7 +452,7 @@ static void inline deltaloop()
     }
 }
 
-static void inline fixedloop()
+static void inline fixedloop(void)
 {
     // Update network per frame.
     NETWORK_update();
@@ -483,7 +480,7 @@ static void inline fixedloop()
 
         if (!game.blackout)
         {
-            FillRect(graphics.backBuffer, 0x00000000);
+            ClearSurface(graphics.backBuffer);
             graphics.bprint(5, 110, "Game paused", 196 - help.glow, 255 - help.glow, 196 - help.glow, true);
             graphics.bprint(5, 120, "[click to resume]", 196 - help.glow, 255 - help.glow, 196 - help.glow, true);
             graphics.bprint(5, 220, "Press M to mute in game", 164 - help.glow, 196 - help.glow, 164 - help.glow, true);
