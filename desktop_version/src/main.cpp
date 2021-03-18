@@ -554,11 +554,6 @@ static void inline fixedloop(void)
             maprenderfixed();
             break;
         case TWEAKMENUMODE:
-            if (game.frameadvance) {
-                game.frameadvance = false;
-                gameinput();
-                gamelogic();
-            }
             tweakinput();
             //tweaklogic();
             break;

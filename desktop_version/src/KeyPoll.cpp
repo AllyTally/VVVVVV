@@ -60,7 +60,6 @@ KeyPoll::KeyPoll(void)
 	pauseStart = 0;
 
 	tweakkeyheld = false;
-	frameadvanceheld = false;
 
 	isActive = true;
 }

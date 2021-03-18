@@ -2488,6 +2488,61 @@ void tweakmenurender(void)
 
     if (game.inentityeditor) {
         graphics.drawentities();
+
+        for (int i = 0; i < obj.entities.size(); i++)
+        {
+            int bounding_box_x = obj.entities[i].xp + obj.entities[i].cx;
+            int bounding_box_y = obj.entities[i].yp + obj.entities[i].cy;
+            int bounding_box_x2 = bounding_box_x + obj.entities[i].w;
+            int bounding_box_y2 = bounding_box_y + obj.entities[i].h;
+
+            if (key.mx >= bounding_box_x && key.mx <= bounding_box_x2 && key.my >= bounding_box_y && key.my <= bounding_box_y2) {
+                if (key.leftbutton && game.first_click) {
+                    game.first_click = false;
+                    game.holding_entity = true;
+                    game.is_block = false;
+                    game.held_entity = i;
+                    game.holding_both = false;
+
+                    if (!key.keymap[SDLK_LSHIFT] && !key.keymap[SDLK_RSHIFT]) {
+                        for (int j = 0; j < obj.blocks.size(); j++) {
+                            if (obj.entities[i].xp == obj.blocks[j].rect.x && obj.entities[i].yp == obj.blocks[j].rect.y) {
+                                game.holding_both = true;
+                                game.additional_block = j;
+                            }
+                        }
+                    }
+
+                    game.grabber_offset_x = key.mx - obj.entities[i].xp;
+                    game.grabber_offset_y = key.my - obj.entities[i].yp;
+                }
+            }
+            //drawentity(i, yoff);
+        }
+
+        for (int i = 0; i < obj.blocks.size(); i++)
+        {
+            int bounding_box_x = obj.blocks[i].rect.x;
+            int bounding_box_y = obj.blocks[i].rect.y;
+
+            fillboxabs(bounding_box_x,bounding_box_y,obj.blocks[i].wp,obj.blocks[i].hp, graphics.getRGB(15,15,90));
+            int bounding_box_x2 = bounding_box_x + obj.blocks[i].wp;
+            int bounding_box_y2 = bounding_box_y + obj.blocks[i].hp;
+
+            if (key.mx >= bounding_box_x && key.mx <= bounding_box_x2 && key.my >= bounding_box_y && key.my <= bounding_box_y2) {
+                fillboxabs(bounding_box_x,bounding_box_y,obj.blocks[i].wp,obj.blocks[i].hp, graphics.getRGB(32,32,200));
+
+                if (key.leftbutton && game.first_click) {
+                    game.first_click = false;
+                    game.holding_entity = true;
+                    game.is_block = true;
+                    game.held_entity = i;
+                    game.grabber_offset_x = key.mx - bounding_box_x;
+                    game.grabber_offset_y = key.my - bounding_box_y;
+                }
+            }
+        }
+
         for (int i = 0; i < obj.entities.size(); i++)
         {
             fillboxabs(obj.entities[i].xp + obj.entities[i].cx,obj.entities[i].yp + obj.entities[i].cy,obj.entities[i].w,obj.entities[i].h, graphics.getRGB(90,90,15));
@@ -2495,24 +2550,29 @@ void tweakmenurender(void)
             int bounding_box_y = obj.entities[i].yp + obj.entities[i].cy;
             int bounding_box_x2 = bounding_box_x + obj.entities[i].w;
             int bounding_box_y2 = bounding_box_y + obj.entities[i].h;
-
-
             if (key.mx >= bounding_box_x && key.mx <= bounding_box_x2 && key.my >= bounding_box_y && key.my <= bounding_box_y2) {
                 fillboxabs(obj.entities[i].xp + obj.entities[i].cx,obj.entities[i].yp + obj.entities[i].cy,obj.entities[i].w,obj.entities[i].h, graphics.getRGB(200,200,32));
-
-                if (key.leftbutton && game.first_click) {
-                    game.first_click = false;
-                    game.holding_entity = true;
-                    game.held_entity = i;
-                    game.grabber_offset_x = key.mx - obj.entities[i].xp;
-                    game.grabber_offset_y = key.my - obj.entities[i].yp;
+            }
+        }
+        
+        if (game.holding_entity) {
+            if (game.is_block) {
+                if (obj.blocks[game.held_entity].type == BLOCK || obj.blocks[game.held_entity].type == SAFE) {
+                    obj.blocks[game.held_entity].xp = key.mx - game.grabber_offset_x;
+                    obj.blocks[game.held_entity].yp = key.my - game.grabber_offset_y;
+                }
+                obj.blocks[game.held_entity].rect.x = key.mx - game.grabber_offset_x;
+                obj.blocks[game.held_entity].rect.y = key.my - game.grabber_offset_y;
+            } else {
+                obj.entities[game.held_entity].xp = key.mx - game.grabber_offset_x;
+                obj.entities[game.held_entity].yp = key.my - game.grabber_offset_y;
+                if (game.holding_both) {
+                    obj.blocks[game.additional_block].rect.x = key.mx - game.grabber_offset_x;
+                    obj.blocks[game.additional_block].rect.y = key.my - game.grabber_offset_y;
+                    obj.blocks[game.additional_block].xp = key.mx - game.grabber_offset_x;
+                    obj.blocks[game.additional_block].yp = key.my - game.grabber_offset_y;
                 }
             }
-            //drawentity(i, yoff);
-        }
-        if (game.holding_entity) {
-            obj.entities[game.held_entity].xp = key.mx - game.grabber_offset_x;
-            obj.entities[game.held_entity].yp = key.my - game.grabber_offset_y;
             if (!key.leftbutton) {
                 game.first_click = true;
                 game.holding_entity = false;

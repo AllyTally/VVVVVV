@@ -449,7 +449,6 @@ public:
 
     bool disablepause;
 
-    bool frameadvance;
     bool inentityeditor;
     bool intweakmenu;
 
@@ -457,6 +456,9 @@ public:
     int grabber_offset_x;
     int grabber_offset_y;
     bool first_click;
+    bool is_block;
+    bool holding_both;
+    int additional_block;
     bool holding_entity;
 };
 

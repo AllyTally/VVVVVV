@@ -263,9 +263,9 @@ void Game::init(void)
 
     // tweaks
     intweakmenu = false;
-    frameadvance = false;
     inentityeditor = false;
     holding_entity = false;
+    is_block = false;
     held_entity = 0;
     grabber_offset_x = 0;
     grabber_offset_y = 0;
@@ -6793,7 +6793,6 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         menuyoff = 70;
         break;
     case Menu::tweakmenu:
-        option("frame advance");
         option("modify entities");
         option("a");
         menuyoff = 0;

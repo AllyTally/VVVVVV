@@ -188,6 +188,11 @@ void Graphics::create_buffers(const SDL_PixelFormat* fmt)
     SDL_SetSurfaceAlphaMod(footerbuffer, 127);
     FillRect(footerbuffer, SDL_MapRGB(fmt, 0, 0, 0));
 
+    coverbuffer = CREATE_SURFACE(320, 240);
+    SDL_SetSurfaceBlendMode(coverbuffer, SDL_BLENDMODE_BLEND);
+    SDL_SetSurfaceAlphaMod(coverbuffer, 127);
+    FillRect(coverbuffer, SDL_MapRGB(fmt, 0, 0, 0));
+
     ghostbuffer = CREATE_SURFACE(320, 240);
     SDL_SetSurfaceBlendMode(ghostbuffer, SDL_BLENDMODE_BLEND);
     SDL_SetSurfaceAlphaMod(ghostbuffer, 127);

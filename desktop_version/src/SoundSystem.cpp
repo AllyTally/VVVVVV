@@ -2,6 +2,8 @@
 
 #include <SDL.h>
 
+#include <stdio.h>
+
 #include "FileSystemUtils.h"
 
 MusicTrack::MusicTrack(const char* fileName)
