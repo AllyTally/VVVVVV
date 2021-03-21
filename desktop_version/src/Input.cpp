@@ -11,7 +11,6 @@
 #include "MakeAndPlay.h"
 #include "Map.h"
 #include "Music.h"
-#include "RenderFixed.h"
 #include "Script.h"
 #include "UtilityClass.h"
 
@@ -173,6 +172,22 @@ static void updatebuttonmappings(int bind)
     }
 }
 
+static void toggleflipmode(void)
+{
+    graphics.setflipmode = !graphics.setflipmode;
+    game.savestatsandsettings_menu();
+    if (graphics.setflipmode)
+    {
+        music.playef(18);
+        game.screenshake = 10;
+        game.flashlight = 5;
+    }
+    else
+    {
+        music.playef(11);
+    }
+}
+
 static void menuactionpress(void)
 {
     switch (game.currentmenuname)
@@ -245,10 +260,9 @@ static void menuactionpress(void)
  #define MPOFFSET -2
 #endif
         case OFFSET+5:
-            //bye!
-            music.playef(2);
-            game.mainmenu = 100;
-            graphics.fademode = 2;
+            music.playef(11);
+            game.createmenu(Menu::youwannaquit);
+            map.nexttowercolour();
             break;
 #undef OFFSET
 #undef NOCUSTOMSOFFSET
@@ -388,7 +402,6 @@ static void menuactionpress(void)
 
             // Recreate menu to update "resize to nearest"
             game.createmenu(game.currentmenuname, true);
-            game.currentmenuoption = 0;
 
             game.savestatsandsettings_menu();
             break;
@@ -441,7 +454,7 @@ static void menuactionpress(void)
             music.playef(11);
             if (game.ingame_titlemode)
             {
-                game.returntopausemenu();
+                game.returntoingame();
             }
             else
             {
@@ -462,8 +475,8 @@ static void menuactionpress(void)
             break;
         default:
             music.playef(11);
-            map.nexttowercolour(); //This goes first, otherwise mismatching continuemenu color is possible
             game.returnmenu();
+            map.nexttowercolour();
         }
         break;
     case Menu::setinvincibility:
@@ -492,7 +505,6 @@ static void menuactionpress(void)
             game.slowdown = 30;
             music.playef(11);
             game.returnmenu();
-            game.currentmenuoption = 4;
             map.nexttowercolour();
             game.savestatsandsettings_menu();
             break;
@@ -500,7 +512,6 @@ static void menuactionpress(void)
             game.slowdown = 24;
             music.playef(11);
             game.returnmenu();
-            game.currentmenuoption = 4;
             map.nexttowercolour();
             game.savestatsandsettings_menu();
             break;
@@ -508,7 +519,6 @@ static void menuactionpress(void)
             game.slowdown = 18;
             music.playef(11);
             game.returnmenu();
-            game.currentmenuoption = 4;
             map.nexttowercolour();
             game.savestatsandsettings_menu();
             break;
@@ -516,7 +526,6 @@ static void menuactionpress(void)
             game.slowdown = 12;
             music.playef(11);
             game.returnmenu();
-            game.currentmenuoption = 4;
             map.nexttowercolour();
             game.savestatsandsettings_menu();
             break;
@@ -685,19 +694,7 @@ static void menuactionpress(void)
         if (game.ingame_titlemode && game.unlock[18])
 #endif
         {
-            // toggle Flip Mode
-            graphics.setflipmode = !graphics.setflipmode;
-            game.savestatsandsettings();
-            if (graphics.setflipmode)
-            {
-                music.playef(18);
-                game.screenshake = 10;
-                game.flashlight = 5;
-            }
-            else
-            {
-                music.playef(11);
-            }
+            toggleflipmode();
             // Fix wrong area music in Tower (Positive Force vs. ecroF evitisoP)
             if (map.custommode)
             {
@@ -753,8 +750,11 @@ static void menuactionpress(void)
             //**** TOGGLE MMMMMM
             music.usingmmmmmm = !music.usingmmmmmm;
             music.playef(11);
-            music.play(music.currentsong);
-            game.savestatsandsettings();
+            if (music.currentsong > -1)
+            {
+                music.play(music.currentsong);
+            }
+            game.savestatsandsettings_menu();
         }
 
         offset += mmmmmm_offset;
@@ -765,7 +765,7 @@ static void menuactionpress(void)
             music.playef(11);
             if (game.ingame_titlemode)
             {
-                game.returntopausemenu();
+                game.returntoingame();
             }
             else
             {
@@ -783,7 +783,6 @@ static void menuactionpress(void)
             game.unlocknotify[9] = true;
             music.playef(11);
             game.createmenu(Menu::unlockmenutrials, true);
-            game.currentmenuoption = 0;
             game.savestatsandsettings_menu();
             break;
         case 1:   	//unlock 2
@@ -791,7 +790,6 @@ static void menuactionpress(void)
             game.unlocknotify[10] = true;
             music.playef(11);
             game.createmenu(Menu::unlockmenutrials, true);
-            game.currentmenuoption = 1;
             game.savestatsandsettings_menu();
             break;
         case 2:   	//unlock 3
@@ -799,7 +797,6 @@ static void menuactionpress(void)
             game.unlocknotify[11] = true;
             music.playef(11);
             game.createmenu(Menu::unlockmenutrials, true);
-            game.currentmenuoption = 2;
             game.savestatsandsettings_menu();
             break;
         case 3:   	//unlock 4
@@ -807,7 +804,6 @@ static void menuactionpress(void)
             game.unlocknotify[12] = true;
             music.playef(11);
             game.createmenu(Menu::unlockmenutrials, true);
-            game.currentmenuoption = 3;
             game.savestatsandsettings_menu();
             break;
         case 4:   	//unlock 5
@@ -815,7 +811,6 @@ static void menuactionpress(void)
             game.unlocknotify[13] = true;
             music.playef(11);
             game.createmenu(Menu::unlockmenutrials, true);
-            game.currentmenuoption = 4;
             game.savestatsandsettings_menu();
             break;
         case 5:   	//unlock 6
@@ -823,7 +818,6 @@ static void menuactionpress(void)
             game.unlocknotify[14] = true;
             music.playef(11);
             game.createmenu(Menu::unlockmenutrials, true);
-            game.currentmenuoption = 5;
             game.savestatsandsettings_menu();
             break;
         case 6:   	//back
@@ -851,7 +845,6 @@ static void menuactionpress(void)
             game.unlock[6] = true;
             game.unlock[7] = true;
             game.createmenu(Menu::unlockmenu, true);
-            game.currentmenuoption = 1;
             game.savestatsandsettings_menu();
             break;
         case 2:
@@ -860,7 +853,6 @@ static void menuactionpress(void)
             game.unlock[17] = true;
             game.unlocknotify[17] = true;
             game.createmenu(Menu::unlockmenu, true);
-            game.currentmenuoption = 2;
             game.savestatsandsettings_menu();
             break;
         case 3:
@@ -869,7 +861,6 @@ static void menuactionpress(void)
             game.unlock[18] = true;
             game.unlocknotify[18] = true;
             game.createmenu(Menu::unlockmenu, true);
-            game.currentmenuoption = 3;
             game.savestatsandsettings_menu();
             break;
         case 4:
@@ -877,7 +868,6 @@ static void menuactionpress(void)
             music.playef(11);
             game.stat_trinkets = 20;
             game.createmenu(Menu::unlockmenu, true);
-            game.currentmenuoption = 4;
             game.savestatsandsettings_menu();
             break;
         case 5:
@@ -886,7 +876,6 @@ static void menuactionpress(void)
             game.unlock[8] = true;
             game.unlocknotify[8] = true;
             game.createmenu(Menu::unlockmenu, true);
-            game.currentmenuoption = 5;
             game.savestatsandsettings_menu();
             break;
         default:
@@ -910,7 +899,6 @@ static void menuactionpress(void)
             //last page
             music.playef(11);
             game.createmenu(Menu::credits6, true);
-            game.currentmenuoption = 1;
             map.nexttowercolour();
             break;
         default:
@@ -934,7 +922,6 @@ static void menuactionpress(void)
             //previous page
             music.playef(11);
             game.createmenu(Menu::credits, true);
-            game.currentmenuoption = 1;
             map.nexttowercolour();
             break;
         case 2:
@@ -958,7 +945,6 @@ static void menuactionpress(void)
             //previous page
             music.playef(11);
             game.createmenu(Menu::credits2, true);
-            game.currentmenuoption = 1;
             map.nexttowercolour();
             break;
         default:
@@ -1007,7 +993,6 @@ static void menuactionpress(void)
                 //There are more super patrons. Refresh the menu with the next ones
                 game.createmenu(Menu::credits3, true);
             }
-            game.currentmenuoption = 1;
 
             map.nexttowercolour();
             break;
@@ -1058,7 +1043,6 @@ static void menuactionpress(void)
                 //There are more patrons. Refresh the menu with the next ones
                 game.createmenu(Menu::credits4, true);
             }
-            game.currentmenuoption = 1;
 
             map.nexttowercolour();
             break;
@@ -1109,7 +1093,6 @@ static void menuactionpress(void)
                 //There are more GitHub contributors. Refresh the menu with the next ones
                 game.createmenu(Menu::credits5, true);
             }
-            game.currentmenuoption = 1;
 
             map.nexttowercolour();
             break;
@@ -1136,7 +1119,6 @@ static void menuactionpress(void)
             music.playef(11);
             game.current_credits_list_index = SDL_arraysize(Credits::githubfriends) - 1 - (SDL_arraysize(Credits::githubfriends)-1)%9;
             game.createmenu(Menu::credits5, true);
-            game.currentmenuoption = 1;
             map.nexttowercolour();
             break;
         default:
@@ -1144,7 +1126,6 @@ static void menuactionpress(void)
             music.playef(11);
             game.returnmenu();
             map.nexttowercolour();
-            music.niceplay(6);
             break;
         }
         break;
@@ -1257,6 +1238,7 @@ static void menuactionpress(void)
         case 5:
             music.playef(11);
             game.returnmenu();
+            map.nexttowercolour();
             break;
         }
         break;
@@ -1305,19 +1287,7 @@ static void menuactionpress(void)
         }
         else if (game.currentmenuoption == 3 && game.unlock[18])    //enable/disable flip mode
         {
-            // WARNING: Partially duplicated in Menu::options
-            graphics.setflipmode = !graphics.setflipmode;
-            game.savestatsandsettings();
-            if (graphics.setflipmode)
-            {
-                music.playef(18);
-                game.screenshake = 10;
-                game.flashlight = 5;
-            }
-            else
-            {
-                music.playef(11);
-            }
+            toggleflipmode();
         }
         else if (game.currentmenuoption == 4)
         {
@@ -1650,22 +1620,24 @@ void titleinput(void)
     if (key.isDown(KEYBOARD_ENTER)) game.press_map = true;
 
     //In the menu system, all keypresses are single taps rather than holds. Therefore this test has to be done for all presses
-    if (!game.press_action && !game.press_left && !game.press_right) game.jumpheld = false;
+    if (!game.press_action && !game.press_left && !game.press_right && !key.isDown(27) && !key.isDown(game.controllerButton_esc)) game.jumpheld = false;
     if (!game.press_map) game.mapheld = false;
 
     if (!game.jumpheld && graphics.fademode==0)
     {
-        if (game.press_action || game.press_left || game.press_right || game.press_map)
+        if (game.press_action || game.press_left || game.press_right || game.press_map || key.isDown(27) || key.isDown(game.controllerButton_esc))
         {
             game.jumpheld = true;
         }
 
-        if (key.isDown(27) && game.currentmenuname != Menu::youwannaquit && game.menustart)
+        if (game.menustart
+        && game.menucountdown <= 0
+        && (key.isDown(27) || key.isDown(game.controllerButton_esc)))
         {
             music.playef(11);
-            if (game.ingame_titlemode)
+            if (game.currentmenuname == Menu::mainmenu)
             {
-                game.returntopausemenu();
+                game.createmenu(Menu::youwannaquit);
             }
             else if (game.intweakmenu) {
                 game.gamestate = GAMEMODE;
@@ -1673,8 +1645,17 @@ void titleinput(void)
             }
             else
             {
-                game.createmenu(Menu::youwannaquit);
-                map.nexttowercolour();
+                if (game.ingame_titlemode
+                && (game.currentmenuname == Menu::options
+                || game.currentmenuname == Menu::graphicoptions))
+                {
+                    game.returntoingame();
+                }
+                else
+                {
+                    game.returnmenu();
+                    map.nexttowercolour();
+                }
             }
         }
 
@@ -1813,7 +1794,7 @@ void gameinput(void)
             }else if(game.activetele && game.readytotele > 20 && game.press_map){
                 //pass, let code block below handle it
             }else{
-                game.shouldreturntoeditor = true;
+                game.returntoeditor();
                 game.mapheld = true;
             }
         }
@@ -1834,7 +1815,10 @@ void gameinput(void)
                 if (enter_pressed)
                 {
                     game.mapheld = true;
+                }
 
+                if (enter_pressed && !script.running)
+                {
                     if (game.activetele && game.readytotele > 20 && !game.intimetrial)
                     {
                         enter_already_processed = true;
@@ -2176,21 +2160,13 @@ void mapinput(void)
     && ((!game.glitchrunnermode && !game.fadetomenu && game.fadetomenudelay <= 0 && !game.fadetolab && game.fadetolabdelay <= 0)
     || graphics.fademode == 0))
     {
-        if (graphics.flipmode)
+        if (key.isDown(KEYBOARD_LEFT) || key.isDown(KEYBOARD_UP) || key.isDown(KEYBOARD_a) ||  key.isDown(KEYBOARD_w)|| key.controllerWantsLeft(true))
         {
-            if (key.isDown(KEYBOARD_LEFT) || key.isDown(KEYBOARD_DOWN) || key.isDown(KEYBOARD_a) ||  key.isDown(KEYBOARD_s) || key.controllerWantsLeft(true) ) game.press_left = true;
-            if (key.isDown(KEYBOARD_RIGHT) || key.isDown(KEYBOARD_UP) || key.isDown(KEYBOARD_d) ||  key.isDown(KEYBOARD_w) || key.controllerWantsRight(true)) game.press_right = true;
+            game.press_left = true;
         }
-        else
+        if (key.isDown(KEYBOARD_RIGHT) || key.isDown(KEYBOARD_DOWN) || key.isDown(KEYBOARD_d) ||  key.isDown(KEYBOARD_s)|| key.controllerWantsRight(true))
         {
-            if (key.isDown(KEYBOARD_LEFT) || key.isDown(KEYBOARD_UP) || key.isDown(KEYBOARD_a) ||  key.isDown(KEYBOARD_w)|| key.controllerWantsLeft(true))
-            {
-                game.press_left = true;
-            }
-            if (key.isDown(KEYBOARD_RIGHT) || key.isDown(KEYBOARD_DOWN) || key.isDown(KEYBOARD_d) ||  key.isDown(KEYBOARD_s)|| key.controllerWantsRight(true))
-            {
-                game.press_right = true;
-            }
+            game.press_right = true;
         }
         if (key.isDown(KEYBOARD_z) || key.isDown(KEYBOARD_SPACE) || key.isDown(KEYBOARD_v) || key.isDown(game.controllerButton_flip))
         {
@@ -2409,10 +2385,6 @@ static void mapmenuactionpress(void)
         }
 
         map.nexttowercolour();
-
-        // Fix delta rendering glitch
-        graphics.updatetowerbackground(graphics.titlebg);
-        titleupdatetextcol();
         break;
     }
 }

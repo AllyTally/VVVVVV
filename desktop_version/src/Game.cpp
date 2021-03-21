@@ -7,6 +7,7 @@
 #include <string.h>
 #include <tinyxml2.h>
 
+#include "DeferCallbacks.h"
 #include "editor.h"
 #include "Entity.h"
 #include "Enums.h"
@@ -298,10 +299,10 @@ void Game::init(void)
 
         for( pElem = hRoot.FirstChildElement( "Data" ).FirstChild().ToElement(); pElem; pElem=pElem->NextSiblingElement())
         {
-            std::string pKey(pElem->Value());
+            const char* pKey = pElem->Value();
             const char* pText = pElem->GetText() ;
 
-            if (pKey == "summary")
+            if (SDL_strcmp(pKey, "summary") == 0)
             {
                 quicksummary = pText;
             }
@@ -338,10 +339,10 @@ void Game::init(void)
 
         for( pElem = hRoot.FirstChildElement( "Data" ).FirstChild().ToElement(); pElem; pElem=pElem->NextSiblingElement())
         {
-            std::string pKey(pElem->Value());
+            const char* pKey = pElem->Value();
             const char* pText = pElem->GetText() ;
 
-            if (pKey == "summary")
+            if (SDL_strcmp(pKey, "summary") == 0)
             {
                 telesummary = pText;
             }
@@ -375,14 +376,13 @@ void Game::init(void)
     fadetolab = false;
     fadetolabdelay = 0;
 
-#if !defined(NO_CUSTOM_LEVELS)
-    shouldreturntoeditor = false;
-#endif
-
     over30mode = false;
     glitchrunnermode = false;
 
     ingame_titlemode = false;
+#if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
+    ingame_editormode = false;
+#endif
     kludge_ingametemp = Menu::mainmenu;
 
     disablepause = false;
@@ -453,7 +453,7 @@ void Game::updatecustomlevelstats(std::string clevel, int cscore)
 }
 
 #define LOAD_ARRAY_RENAME(ARRAY_NAME, DEST) \
-    if (pKey == #ARRAY_NAME && pText[0] != '\0') \
+    if (SDL_strcmp(pKey, #ARRAY_NAME) == 0 && pText[0] != '\0') \
     { \
         /* We're loading in 32-bit integers. If we need more than 16 chars,
          * something is seriously wrong */ \
@@ -477,7 +477,6 @@ void Game::updatecustomlevelstats(std::string clevel, int cscore)
 
 void Game::loadcustomlevelstats(void)
 {
-    //testing
     if(customlevelstatsloaded)
     {
         return;
@@ -516,14 +515,14 @@ void Game::loadcustomlevelstats(void)
     // If they don't exist, then fall back to the old system
     for (pElem = hRoot.FirstChildElement("Data").FirstChild().ToElement(); pElem; pElem = pElem->NextSiblingElement())
     {
-        std::string pKey(pElem->Value());
+        const char* pKey = pElem->Value();
         const char* pText = pElem->GetText();
         if (pText == NULL)
         {
             pText = "";
         }
 
-        if (pKey == "stats")
+        if (SDL_strcmp(pKey, "stats") == 0)
         {
             for (tinyxml2::XMLElement* stat_el = pElem->FirstChildElement(); stat_el; stat_el = stat_el->NextSiblingElement())
             {
@@ -550,7 +549,7 @@ void Game::loadcustomlevelstats(void)
     // Since we're still here, we must be on the old system
     for( pElem = hRoot.FirstChildElement( "Data" ).FirstChild().ToElement(); pElem; pElem=pElem->NextSiblingElement())
     {
-        std::string pKey(pElem->Value());
+        const char* pKey = pElem->Value();
         const char* pText = pElem->GetText() ;
         if(pText == NULL)
         {
@@ -559,7 +558,7 @@ void Game::loadcustomlevelstats(void)
 
         LOAD_ARRAY_RENAME(customlevelscore, customlevelscores)
 
-        if (pKey == "customlevelstats" && pText[0] != '\0')
+        if (SDL_strcmp(pKey, "customlevelstats") == 0 && pText[0] != '\0')
         {
             size_t start = 0;
             size_t len = 0;
@@ -638,7 +637,78 @@ void Game::savecustomlevelstats(void)
     else
     {
         printf("Could Not Save level stats!\n");
-        printf("Failed: %s%s\n", saveFilePath.c_str(), "levelstats.vvv");
+        printf("Failed: %s%s\n", saveFilePath, "levelstats.vvv");
+    }
+}
+
+void Game::levelcomplete_textbox(void)
+{
+    graphics.createtextboxflipme("", -1, 12, 165, 165, 255);
+    graphics.addline("                                   ");
+    graphics.addline("");
+    graphics.addline("");
+    graphics.textboxcenterx();
+}
+
+void Game::crewmate_textbox(const int r, const int g, const int b)
+{
+    graphics.createtextboxflipme("", -1, 64 + 8 + 16, r, g, b);
+    graphics.addline("     You have rescued  ");
+    graphics.addline("      a crew member!   ");
+    graphics.addline("");
+    graphics.textboxcenterx();
+}
+
+void Game::remaining_textbox(void)
+{
+    const int remaining = 6 - crewrescued();
+    const char* string;
+    char buffer[161]; /* 4 bytes per 40 chars (whole screen) plus 1 for null terminator */
+    if (remaining == 1)
+    {
+        string = "  One remains  ";
+    }
+    else if (remaining > 0)
+    {
+        SDL_snprintf(
+            buffer,
+            sizeof(buffer),
+            "  %s remain  ",
+            help.number(remaining).c_str()
+        );
+        string = buffer;
+    }
+    else
+    {
+        string = "  All Crew Members Rescued!  ";
+    }
+
+    graphics.createtextboxflipme(string, -1, 128 + 16, 174, 174, 174);
+    graphics.textboxcenterx();
+}
+
+void Game::actionprompt_textbox(void)
+{
+    graphics.createtextboxflipme(" Press ACTION to continue ", -1, 196, 164, 164, 255);
+    graphics.textboxcenterx();
+}
+
+void Game::savetele_textbox(void)
+{
+    if (inspecial() || map.custommode)
+    {
+        return;
+    }
+
+    if (savetele())
+    {
+        graphics.createtextboxflipme("    Game Saved    ", -1, 12, 174, 174, 174);
+        graphics.textboxtimer(25);
+    }
+    else
+    {
+        graphics.createtextboxflipme("  ERROR: Could not save game!  ", -1, 12, 255, 60, 60);
+        graphics.textboxtimer(50);
     }
 }
 
@@ -685,10 +755,6 @@ void Game::updatestate(void)
             //Demo over
             advancetext = true;
             hascontrol = false;
-            /*graphics.createtextbox("   Prototype Complete    ", 50, 80, 164, 164, 255);
-            graphics.addline("Congrats! More Info Soon!");
-            graphics.textboxcenter();
-            */
 
             startscript = true;
             newscript="returntohub";
@@ -1637,7 +1703,6 @@ void Game::updatestate(void)
             state++;
             music.playef(2);
             graphics.textboxactive();
-            int i = obj.getcompanion(); if (INBOUNDS_VEC(i, obj.entities)) {	/*obj.entities[i].tile = 66;	obj.entities[i].state = 0;*/	}
             break;
         }
         case 126:
@@ -1680,7 +1745,6 @@ void Game::updatestate(void)
             //Init final stretch
             state++;
             music.playef(9);
-            //music.play(2);
             obj.flags[72] = true;
 
             screenshake = 10;
@@ -1754,45 +1818,22 @@ void Game::updatestate(void)
             //Found a trinket!
             advancetext = true;
             state++;
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("        Congratulations!       ", 50, 105, 174, 174, 174);
-                graphics.addline("");
-                graphics.addline("You have found a shiny trinket!");
-                graphics.textboxcenterx();
+            graphics.createtextboxflipme("        Congratulations!       ", 50, 85, 174, 174, 174);
+            graphics.addline("");
+            graphics.addline("You have found a shiny trinket!");
+            graphics.textboxcenterx();
 
 #if !defined(NO_CUSTOM_LEVELS)
-                if(map.custommode)
-                {
-                    graphics.createtextbox(" " + help.number(trinkets()) + " out of " + help.number(ed.numtrinkets())+ " ", 50, 65, 174, 174, 174);
-                    graphics.textboxcenterx();
-                }
-                else
-#endif
-                {
-                    graphics.createtextbox(" " + help.number(trinkets()) + " out of Twenty ", 50, 65, 174, 174, 174);
-                    graphics.textboxcenterx();
-                }
+            if(map.custommode)
+            {
+                graphics.createtextboxflipme(" " + help.number(trinkets()) + " out of " + help.number(ed.numtrinkets())+ " ", 50, 135, 174, 174, 174);
+                graphics.textboxcenterx();
             }
             else
-            {
-                graphics.createtextbox("        Congratulations!       ", 50, 85, 174, 174, 174);
-                graphics.addline("");
-                graphics.addline("You have found a shiny trinket!");
-                graphics.textboxcenterx();
-
-#if !defined(NO_CUSTOM_LEVELS)
-                if(map.custommode)
-                {
-                    graphics.createtextbox(" " + help.number(trinkets()) + " out of " + help.number(ed.numtrinkets())+ " ", 50, 135, 174, 174, 174);
-                    graphics.textboxcenterx();
-                }
-                else
 #endif
-                {
-                    graphics.createtextbox(" " + help.number(trinkets()) + " out of Twenty ", 50, 135, 174, 174, 174);
-                    graphics.textboxcenterx();
-                }
+            {
+                graphics.createtextboxflipme(" " + help.number(trinkets()) + " out of Twenty ", 50, 135, 174, 174, 174);
+                graphics.textboxcenterx();
             }
             break;
         case 1002:
@@ -1808,7 +1849,6 @@ void Game::updatestate(void)
             advancetext = false;
             completestop = false;
             state = 0;
-            //music.play(music.resumesong);
             if(!muted && music.currentsong>-1) music.fadeMusicVolumeIn(3000);
             graphics.showcutscenebars = false;
             break;
@@ -1825,49 +1865,24 @@ void Game::updatestate(void)
             //Found a crewmate!
             advancetext = true;
             state++;
-            if (graphics.flipmode)
+            graphics.createtextboxflipme("        Congratulations!       ", 50, 85, 174, 174, 174);
+            graphics.addline("");
+            graphics.addline("You have found a lost crewmate!");
+            graphics.textboxcenterx();
+
+            if(ed.numcrewmates()-crewmates()==0)
             {
-                graphics.createtextbox("        Congratulations!       ", 50, 105, 174, 174, 174);
-                graphics.addline("");
-                graphics.addline("You have found a lost crewmate!");
-                graphics.textboxcenterx();
-
-                if(ed.numcrewmates()-crewmates()==0)
-                {
-                    graphics.createtextbox("     All crewmates rescued!    ", 50, 65, 174, 174, 174);
-                }
-                else if(ed.numcrewmates()-crewmates()==1)
-                {
-                    graphics.createtextbox("    " + help.number(ed.numcrewmates()-crewmates())+ " remains    ", 50, 65, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox("     " + help.number(ed.numcrewmates()-crewmates())+ " remain    ", 50, 65, 174, 174, 174);
-                }
-                graphics.textboxcenterx();
-
+                graphics.createtextboxflipme("     All crewmates rescued!    ", 50, 135, 174, 174, 174);
+            }
+            else if(ed.numcrewmates()-crewmates()==1)
+            {
+                graphics.createtextboxflipme("    " + help.number(ed.numcrewmates()-crewmates())+ " remains    ", 50, 135, 174, 174, 174);
             }
             else
             {
-                graphics.createtextbox("        Congratulations!       ", 50, 85, 174, 174, 174);
-                graphics.addline("");
-                graphics.addline("You have found a lost crewmate!");
-                graphics.textboxcenterx();
-
-                if(ed.numcrewmates()-crewmates()==0)
-                {
-                    graphics.createtextbox("     All crewmates rescued!    ", 50, 135, 174, 174, 174);
-                }
-                else if(ed.numcrewmates()-crewmates()==1)
-                {
-                    graphics.createtextbox("    " + help.number(ed.numcrewmates()-crewmates())+ " remains    ", 50, 135, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox("     " + help.number(ed.numcrewmates()-crewmates())+ " remain    ", 50, 135, 174, 174, 174);
-                }
-                graphics.textboxcenterx();
+                graphics.createtextboxflipme("     " + help.number(ed.numcrewmates()-crewmates())+ " remain    ", 50, 135, 174, 174, 174);
             }
+            graphics.textboxcenterx();
             break;
         case 1012:
             if (!advancetext)
@@ -1894,7 +1909,7 @@ void Game::updatestate(void)
                 }
                 else
                 {
-                    shouldreturntoeditor = true;
+                    returntoeditor();
                     if(!muted && ed.levmusic>0) music.fadeMusicVolumeIn(3000);
                     if(ed.levmusic>0) music.fadeout();
                 }
@@ -1935,24 +1950,8 @@ void Game::updatestate(void)
 
         case 2000:
             //Game Saved!
-            if (inspecial() || map.custommode)
-            {
-                state = 0;
-            }
-            else
-            {
-                if (savetele())
-                {
-                    graphics.createtextbox("    Game Saved    ", -1, graphics.flipmode ? 202 : 12, 174, 174, 174);
-                    graphics.textboxtimer(25);
-                }
-                else
-                {
-                    graphics.createtextbox("  ERROR: Could not save game!  ", -1, graphics.flipmode ? 202 : 12, 255, 60, 60);
-                    graphics.textboxtimer(50);
-                }
-                state = 0;
-            }
+            savetele_textbox();
+            state = 0;
             break;
 
         case 2500:
@@ -2051,11 +2050,6 @@ void Game::updatestate(void)
         case 2507:
         {
             state++;
-            int i = obj.getplayer();
-            if (INBOUNDS_VEC(i, obj.entities))
-            {
-                //obj.entities[i].xp += 4;
-            }
             break;
         }
         case 2508:
@@ -2148,9 +2142,6 @@ void Game::updatestate(void)
             //Activating a teleporter 2
             state++;
             statedelay = 50;
-            //testing!
-            //state = 3006; //Warp Zone
-            //state = 3020; //Space Station
             switch(companion)
             {
             case 6:
@@ -2203,100 +2194,25 @@ void Game::updatestate(void)
             state++;
             statedelay = 75;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("", -1, 180, 165, 165, 255);
-            }
-            else
-            {
-                graphics.createtextbox("", -1, 12, 165, 165, 255);
-            }
-            //graphics.addline("      Level Complete!      ");
-            graphics.addline("                                   ");
-            graphics.addline("");
-            graphics.addline("");
-            graphics.textboxcenterx();
-
-            /*												advancetext = true;
-            hascontrol = false;
-            state = 3;
-            graphics.createtextbox("To do: write quick", 50, 80, 164, 164, 255);
-            graphics.addline("intro to story!");*/
+            levelcomplete_textbox();
             break;
         case 3007:
             state++;
             statedelay = 45;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("", -1, 104, 175,174,174);
-            }
-            else
-            {
-                graphics.createtextbox("", -1, 64+8+16, 175,174,174);
-            }
-            graphics.addline("     You have rescued  ");
-            graphics.addline("      a crew member!   ");
-            graphics.addline("");
-            graphics.textboxcenterx();
+            crewmate_textbox(175, 174, 174);
             break;
         case 3008:
-        {
             state++;
             statedelay = 45;
 
-            int temp = 6 - crewrescued();
-            if (temp == 1)
-            {
-                std::string tempstring = "  One remains  ";
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox(tempstring, -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox(tempstring, -1, 128+16, 174, 174, 174);
-                }
-            }
-            else if (temp > 0)
-            {
-                std::string tempstring = "  " + help.number(temp) + " remain  ";
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox(tempstring, -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox(tempstring, -1, 128+16, 174, 174, 174);
-                }
-            }
-            else
-            {
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox("  All Crew Members Rescued!  ", -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox("  All Crew Members Rescued!  ", -1, 128+16, 174, 174, 174);
-                }
-            }
-            graphics.textboxcenterx();
+            remaining_textbox();
             break;
-        }
         case 3009:
             state++;
             statedelay = 0;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox(" Press ACTION to continue ", -1, 20, 164, 164, 255);
-            }
-            else
-            {
-                graphics.createtextbox(" Press ACTION to continue ", -1, 196, 164, 164, 255);
-            }
-            graphics.textboxcenterx();
+            actionprompt_textbox();
             break;
         case 3010:
             if (jumppressed)
@@ -2320,100 +2236,25 @@ void Game::updatestate(void)
             statedelay = 75;
 
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("", -1, 180, 165, 165, 255);
-            }
-            else
-            {
-                graphics.createtextbox("", -1, 12, 165, 165, 255);
-            }
-            //graphics.addline("      Level Complete!      ");
-            graphics.addline("                                   ");
-            graphics.addline("");
-            graphics.addline("");
-            graphics.textboxcenterx();
-
-            /*												advancetext = true;
-            hascontrol = false;
-            state = 3;
-            graphics.createtextbox("To do: write quick", 50, 80, 164, 164, 255);
-            graphics.addline("intro to story!");*/
+            levelcomplete_textbox();
             break;
         case 3021:
             state++;
             statedelay = 45;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("", -1, 104, 174,175,174);
-            }
-            else
-            {
-                graphics.createtextbox("", -1, 64+8+16, 174,175,174);
-            }
-            graphics.addline("     You have rescued  ");
-            graphics.addline("      a crew member!   ");
-            graphics.addline("");
-            graphics.textboxcenterx();
+            crewmate_textbox(174, 175, 174);
             break;
         case 3022:
-        {
             state++;
             statedelay = 45;
 
-            int temp = 6 - crewrescued();
-            if (temp == 1)
-            {
-                std::string tempstring = "  One remains  ";
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox(tempstring, -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox(tempstring, -1, 128+16, 174, 174, 174);
-                }
-            }
-            else if (temp > 0)
-            {
-                std::string tempstring = "  " + help.number(temp) + " remain  ";
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox(tempstring, -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox(tempstring, -1, 128+16, 174, 174, 174);
-                }
-            }
-            else
-            {
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox("  All Crew Members Rescued!  ", -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox("  All Crew Members Rescued!  ", -1, 128+16, 174, 174, 174);
-                }
-            }
-            graphics.textboxcenterx();
+            remaining_textbox();
             break;
-        }
         case 3023:
             state++;
             statedelay = 0;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox(" Press ACTION to continue ", -1, 20, 164, 164, 255);
-            }
-            else
-            {
-                graphics.createtextbox(" Press ACTION to continue ", -1, 196, 164, 164, 255);
-            }
-            graphics.textboxcenterx();
+            actionprompt_textbox();
             break;
         case 3024:
             if (jumppressed)
@@ -2436,100 +2277,25 @@ void Game::updatestate(void)
             state++;
             statedelay = 75;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("", -1, 180, 165, 165, 255);
-            }
-            else
-            {
-                graphics.createtextbox("", -1, 12, 165, 165, 255);
-            }
-            //graphics.addline("      Level Complete!      ");
-            graphics.addline("                                   ");
-            graphics.addline("");
-            graphics.addline("");
-            graphics.textboxcenterx();
-
-            /*												advancetext = true;
-            hascontrol = false;
-            state = 3;
-            graphics.createtextbox("To do: write quick", 50, 80, 164, 164, 255);
-            graphics.addline("intro to story!");*/
+            levelcomplete_textbox();
             break;
         case 3041:
             state++;
             statedelay = 45;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("", -1, 104, 174,174,175);
-            }
-            else
-            {
-                graphics.createtextbox("", -1, 64+8+16, 174,174,175);
-            }
-            graphics.addline("     You have rescued  ");
-            graphics.addline("      a crew member!   ");
-            graphics.addline("");
-            graphics.textboxcenterx();
+            crewmate_textbox(174, 174, 175);
             break;
         case 3042:
-        {
             state++;
             statedelay = 45;
 
-            int temp = 6 - crewrescued();
-            if (temp == 1)
-            {
-                std::string tempstring = "  One remains  ";
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox(tempstring, -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox(tempstring, -1, 128+16, 174, 174, 174);
-                }
-            }
-            else if (temp > 0)
-            {
-                std::string tempstring = "  " + help.number(temp) + " remain  ";
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox(tempstring, -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox(tempstring, -1, 128+16, 174, 174, 174);
-                }
-            }
-            else
-            {
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox("  All Crew Members Rescued!  ", -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox("  All Crew Members Rescued!  ", -1, 128+16, 174, 174, 174);
-                }
-            }
-            graphics.textboxcenterx();
+            remaining_textbox();
             break;
-        }
         case 3043:
             state++;
             statedelay = 0;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox(" Press ACTION to continue ", -1, 20, 164, 164, 255);
-            }
-            else
-            {
-                graphics.createtextbox(" Press ACTION to continue ", -1, 196, 164, 164, 255);
-            }
-            graphics.textboxcenterx();
+            actionprompt_textbox();
             break;
         case 3044:
             if (jumppressed)
@@ -2553,100 +2319,25 @@ void Game::updatestate(void)
             statedelay = 75;
 
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("", -1, 180, 165, 165, 255);
-            }
-            else
-            {
-                graphics.createtextbox("", -1, 12, 165, 165, 255);
-            }
-            //graphics.addline("      Level Complete!      ");
-            graphics.addline("                                   ");
-            graphics.addline("");
-            graphics.addline("");
-            graphics.textboxcenterx();
-
-            /*												advancetext = true;
-            hascontrol = false;
-            state = 3;
-            graphics.createtextbox("To do: write quick", 50, 80, 164, 164, 255);
-            graphics.addline("intro to story!");*/
+            levelcomplete_textbox();
             break;
         case 3051:
             state++;
             statedelay = 45;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("", -1, 104, 175,175,174);
-            }
-            else
-            {
-                graphics.createtextbox("", -1, 64+8+16, 175,175,174);
-            }
-            graphics.addline("     You have rescued  ");
-            graphics.addline("      a crew member!   ");
-            graphics.addline("");
-            graphics.textboxcenterx();
+            crewmate_textbox(175, 175, 174);
             break;
         case 3052:
-        {
             state++;
             statedelay = 45;
 
-            int temp = 6 - crewrescued();
-            if (temp == 1)
-            {
-                std::string tempstring = "  One remains  ";
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox(tempstring, -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox(tempstring, -1, 128+16, 174, 174, 174);
-                }
-            }
-            else if (temp > 0)
-            {
-                std::string tempstring = "  " + help.number(temp) + " remain  ";
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox(tempstring, -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox(tempstring, -1, 128+16, 174, 174, 174);
-                }
-            }
-            else
-            {
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox("  All Crew Members Rescued!  ", -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox("  All Crew Members Rescued!  ", -1, 128+16, 174, 174, 174);
-                }
-            }
-            graphics.textboxcenterx();
+            remaining_textbox();
             break;
-        }
         case 3053:
             state++;
             statedelay = 0;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox(" Press ACTION to continue ", -1, 20, 164, 164, 255);
-            }
-            else
-            {
-                graphics.createtextbox(" Press ACTION to continue ", -1, 196, 164, 164, 255);
-            }
-            graphics.textboxcenterx();
+            actionprompt_textbox();
             break;
         case 3054:
             if (jumppressed)
@@ -2694,100 +2385,25 @@ void Game::updatestate(void)
             state++;
             statedelay = 75;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("", -1, 180, 165, 165, 255);
-            }
-            else
-            {
-                graphics.createtextbox("", -1, 12, 165, 165, 255);
-            }
-            //graphics.addline("      Level Complete!      ");
-            graphics.addline("                                   ");
-            graphics.addline("");
-            graphics.addline("");
-            graphics.textboxcenterx();
-
-            /*												advancetext = true;
-            hascontrol = false;
-            state = 3;
-            graphics.createtextbox("To do: write quick", 50, 80, 164, 164, 255);
-            graphics.addline("intro to story!");*/
+            levelcomplete_textbox();
             break;
         case 3061:
             state++;
             statedelay = 45;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("", -1, 104, 175,174,175);
-            }
-            else
-            {
-                graphics.createtextbox("", -1, 64+8+16, 175,174,175);
-            }
-            graphics.addline("     You have rescued  ");
-            graphics.addline("      a crew member!   ");
-            graphics.addline("");
-            graphics.textboxcenterx();
+            crewmate_textbox(175, 174, 175);
             break;
         case 3062:
-        {
             state++;
             statedelay = 45;
 
-            int temp = 6 - crewrescued();
-            if (temp == 1)
-            {
-                std::string tempstring = "  One remains  ";
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox(tempstring, -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox(tempstring, -1, 128+16, 174, 174, 174);
-                }
-            }
-            else if (temp > 0)
-            {
-                std::string tempstring = "  " + help.number(temp) + " remain  ";
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox(tempstring, -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox(tempstring, -1, 128+16, 174, 174, 174);
-                }
-            }
-            else
-            {
-                if (graphics.flipmode)
-                {
-                    graphics.createtextbox("  All Crew Members Rescued!  ", -1, 72, 174, 174, 174);
-                }
-                else
-                {
-                    graphics.createtextbox("  All Crew Members Rescued!  ", -1, 128+16, 174, 174, 174);
-                }
-            }
-            graphics.textboxcenterx();
+            remaining_textbox();
             break;
-        }
         case 3063:
             state++;
             statedelay = 0;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox(" Press ACTION to continue ", -1, 20, 164, 164, 255);
-            }
-            else
-            {
-                graphics.createtextbox(" Press ACTION to continue ", -1, 196, 164, 164, 255);
-            }
-            graphics.textboxcenterx();
+            actionprompt_textbox();
             break;
         case 3064:
             if (jumppressed)
@@ -2959,14 +2575,7 @@ void Game::updatestate(void)
             statedelay = 75;
             music.play(7);
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("", -1, 180, 164, 165, 255);
-            }
-            else
-            {
-                graphics.createtextbox("", -1, 12, 164, 165, 255);
-            }
+            graphics.createtextboxflipme("", -1, 12, 164, 165, 255);
             graphics.addline("                                   ");
             graphics.addline("");
             graphics.addline("");
@@ -2976,14 +2585,7 @@ void Game::updatestate(void)
             state++;
             statedelay = 45+15;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("  All Crew Members Rescued!  ", -1, 175-24, 0, 0, 0);
-            }
-            else
-            {
-                graphics.createtextbox("  All Crew Members Rescued!  ", -1, 64, 0, 0, 0);
-            }
+            graphics.createtextboxflipme("  All Crew Members Rescued!  ", -1, 64, 0, 0, 0);
             savetime = timestring();
             savetime += "." + help.twodigits(frames*100 / 30);
             break;
@@ -2993,16 +2595,8 @@ void Game::updatestate(void)
             statedelay = 45;
 
             std::string tempstring = help.number(trinkets());
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("Trinkets Found:", 48, 155-24, 0,0,0);
-                graphics.createtextbox(tempstring, 180, 155-24, 0, 0, 0);
-            }
-            else
-            {
-                graphics.createtextbox("Trinkets Found:", 48, 84, 0,0,0);
-                graphics.createtextbox(tempstring, 180, 84, 0, 0, 0);
-            }
+            graphics.createtextboxflipme("Trinkets Found:", 48, 84, 0,0,0);
+            graphics.createtextboxflipme(tempstring, 180, 84, 0, 0, 0);
             break;
         }
         case 3504:
@@ -3011,80 +2605,39 @@ void Game::updatestate(void)
             statedelay = 45+15;
 
             std::string tempstring = savetime;
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("   Game Time:", 64, 143-24, 0,0,0);
-                graphics.createtextbox(tempstring, 180, 143-24, 0, 0, 0);
-            }
-            else
-            {
-                graphics.createtextbox("   Game Time:", 64, 96, 0,0,0);
-                graphics.createtextbox(tempstring, 180, 96, 0, 0, 0);
-            }
+            graphics.createtextboxflipme("   Game Time:", 64, 96, 0,0,0);
+            graphics.createtextboxflipme(tempstring, 180, 96, 0, 0, 0);
             break;
         }
         case 3505:
             state++;
             statedelay = 45;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox(" Total Flips:", 64, 116-24, 0,0,0);
-                graphics.createtextbox(help.String(totalflips), 180, 116-24, 0, 0, 0);
-            }
-            else
-            {
-                graphics.createtextbox(" Total Flips:", 64, 123, 0,0,0);
-                graphics.createtextbox(help.String(totalflips), 180, 123, 0, 0, 0);
-            }
+            graphics.createtextboxflipme(" Total Flips:", 64, 123, 0,0,0);
+            graphics.createtextboxflipme(help.String(totalflips), 180, 123, 0, 0, 0);
             break;
         case 3506:
             state++;
             statedelay = 45+15;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox("Total Deaths:", 64, 104-24, 0,0,0);
-                graphics.createtextbox(help.String(deathcounts), 180, 104-24, 0, 0, 0);
-            }
-            else
-            {
-                graphics.createtextbox("Total Deaths:", 64, 135, 0,0,0);
-                graphics.createtextbox(help.String(deathcounts), 180, 135, 0, 0, 0);
-            }
+            graphics.createtextboxflipme("Total Deaths:", 64, 135, 0,0,0);
+            graphics.createtextboxflipme(help.String(deathcounts), 180, 135, 0, 0, 0);
             break;
         case 3507:
         {
             state++;
             statedelay = 45+15;
 
-            if (graphics.flipmode)
-            {
-                std::string tempstring = "Hardest Room (with " + help.String(hardestroomdeaths) + " deaths)";
-                graphics.createtextbox(tempstring, -1, 81-24, 0,0,0);
-                graphics.createtextbox(hardestroom, -1, 69-24, 0, 0, 0);
-            }
-            else
-            {
-                std::string tempstring = "Hardest Room (with " + help.String(hardestroomdeaths) + " deaths)";
-                graphics.createtextbox(tempstring, -1, 158, 0,0,0);
-                graphics.createtextbox(hardestroom, -1, 170, 0, 0, 0);
-            }
+            std::string tempstring = "Hardest Room (with " + help.String(hardestroomdeaths) + " deaths)";
+            graphics.createtextboxflipme(tempstring, -1, 158, 0,0,0);
+            graphics.createtextboxflipme(hardestroom, -1, 170, 0, 0, 0);
             break;
         }
         case 3508:
             state++;
             statedelay = 0;
 
-            if (graphics.flipmode)
-            {
-                graphics.createtextbox(" Press ACTION to continue ", -1, 20, 164, 164, 255);
-            }
-            else
-            {
-                graphics.createtextbox(" Press ACTION to continue ", -1, 196, 164, 164, 255);
-            }
-            graphics.textboxcenterx();
+            actionprompt_textbox();
             break;
         case 3509:
             if (jumppressed)
@@ -3217,8 +2770,6 @@ void Game::updatestate(void)
             graphics.fademode = 4;
             state = 0;
             statedelay = 30;
-            //music.play(5);
-            //music.play(10);
 
             map.finalmode = false;
             map.final_colormode = false;
@@ -3226,8 +2777,7 @@ void Game::updatestate(void)
             map.final_colorframe = 0;
             map.finalstretch = false;
 
-            graphics.cutscenebarspos = 320;
-            graphics.oldcutscenebarspos = 320;
+            graphics.setbars(320);
 
             teleport_to_new_area = true;
             teleportscript = "gamecomplete";
@@ -3273,10 +2823,6 @@ void Game::updatestate(void)
             //Activating a teleporter 2
             state++;
             statedelay = 10;
-            //testing!
-            //state = 3006; //Warp Zone
-            //state = 3020; //Space Station
-            //state = 3040; //Lab
 
             int i = obj.getplayer();
             if (INBOUNDS_VEC(i, obj.entities))
@@ -4478,7 +4024,7 @@ void Game::loadstats(ScreenSettings* screen_settings)
 
     for( pElem = dataNode; pElem; pElem=pElem->NextSiblingElement())
     {
-        std::string pKey(pElem->Value());
+        const char* pKey = pElem->Value();
         const char* pText = pElem->GetText() ;
 
         LOAD_ARRAY(unlock)
@@ -4499,22 +4045,22 @@ void Game::loadstats(ScreenSettings* screen_settings)
 
 
 
-        if (pKey == "bestgamedeaths")
+        if (SDL_strcmp(pKey, "bestgamedeaths") == 0)
         {
             bestgamedeaths = help.Int(pText);
         }
 
-        if (pKey == "stat_trinkets")
+        if (SDL_strcmp(pKey, "stat_trinkets") == 0)
         {
             stat_trinkets = help.Int(pText);
         }
 
-        if (pKey == "swnbestrank")
+        if (SDL_strcmp(pKey, "swnbestrank") == 0)
         {
             swnbestrank = help.Int(pText);
         }
 
-        if (pKey == "swnrecord")
+        if (SDL_strcmp(pKey, "swnrecord") == 0)
         {
             swnrecord = help.Int(pText);
         }
@@ -4535,115 +4081,115 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* s
     pElem != NULL;
     pElem = pElem->NextSiblingElement())
     {
-        std::string pKey(pElem->Value());
+        const char* pKey = pElem->Value();
         const char* pText = pElem->GetText();
 
-        if (pKey == "fullscreen")
+        if (SDL_strcmp(pKey, "fullscreen") == 0)
         {
             screen_settings->fullscreen = help.Int(pText);
         }
 
-        if (pKey == "stretch")
+        if (SDL_strcmp(pKey, "stretch") == 0)
         {
             screen_settings->stretch = help.Int(pText);
         }
 
-        if (pKey == "useLinearFilter")
+        if (SDL_strcmp(pKey, "useLinearFilter") == 0)
         {
             screen_settings->linearFilter = help.Int(pText);
         }
 
-        if (pKey == "window_width")
+        if (SDL_strcmp(pKey, "window_width") == 0)
         {
             screen_settings->windowWidth = help.Int(pText);
         }
-        if (pKey == "window_height")
+        if (SDL_strcmp(pKey, "window_height") == 0)
         {
             screen_settings->windowHeight = help.Int(pText);
         }
 
 
-        if (pKey == "noflashingmode")
+        if (SDL_strcmp(pKey, "noflashingmode") == 0)
         {
             noflashingmode = help.Int(pText);
         }
 
-        if (pKey == "colourblindmode")
+        if (SDL_strcmp(pKey, "colourblindmode") == 0)
         {
             colourblindmode = help.Int(pText);
         }
 
-        if (pKey == "setflipmode")
+        if (SDL_strcmp(pKey, "setflipmode") == 0)
         {
             graphics.setflipmode = help.Int(pText);
         }
 
-        if (pKey == "invincibility")
+        if (SDL_strcmp(pKey, "invincibility") == 0)
         {
             map.invincibility = help.Int(pText);
         }
 
-        if (pKey == "slowdown")
+        if (SDL_strcmp(pKey, "slowdown") == 0)
         {
             slowdown = help.Int(pText);
         }
 
-        if (pKey == "advanced_smoothing")
+        if (SDL_strcmp(pKey, "advanced_smoothing") == 0)
         {
             screen_settings->badSignal = help.Int(pText);
         }
 
-        if (pKey == "usingmmmmmm")
+        if (SDL_strcmp(pKey, "usingmmmmmm") == 0)
         {
             music.usingmmmmmm = (bool) help.Int(pText);
         }
 
-        if (pKey == "ghostsenabled")
+        if (SDL_strcmp(pKey, "ghostsenabled") == 0)
         {
             ghostsenabled = help.Int(pText);
         }
 
-        if (pKey == "skipfakeload")
+        if (SDL_strcmp(pKey, "skipfakeload") == 0)
         {
             skipfakeload = help.Int(pText);
         }
 
-        if (pKey == "disablepause")
+        if (SDL_strcmp(pKey, "disablepause") == 0)
         {
             disablepause = help.Int(pText);
         }
 
-        if (pKey == "over30mode")
+        if (SDL_strcmp(pKey, "over30mode") == 0)
         {
             over30mode = help.Int(pText);
         }
 
-        if (pKey == "glitchrunnermode")
+        if (SDL_strcmp(pKey, "glitchrunnermode") == 0)
         {
             glitchrunnermode = help.Int(pText);
         }
 
-        if (pKey == "vsync")
+        if (SDL_strcmp(pKey, "vsync") == 0)
         {
             screen_settings->useVsync = help.Int(pText);
         }
 
-        if (pKey == "notextoutline")
+        if (SDL_strcmp(pKey, "notextoutline") == 0)
         {
             graphics.notextoutline = help.Int(pText);
         }
 
-        if (pKey == "translucentroomname")
+        if (SDL_strcmp(pKey, "translucentroomname") == 0)
         {
             graphics.translucentroomname = help.Int(pText);
         }
 
-        if (pKey == "showmousecursor")
+        if (SDL_strcmp(pKey, "showmousecursor") == 0)
         {
             graphics.showmousecursor = help.Int(pText);
         }
 
-        if (pKey == "flipButton")
+        if (SDL_strcmp(pKey, "flipButton") == 0)
         {
             SDL_GameControllerButton newButton;
             if (GetButtonFromString(pText, &newButton))
@@ -4652,7 +4198,7 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* s
             }
         }
 
-        if (pKey == "enterButton")
+        if (SDL_strcmp(pKey, "enterButton") == 0)
         {
             SDL_GameControllerButton newButton;
             if (GetButtonFromString(pText, &newButton))
@@ -4661,7 +4207,7 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* s
             }
         }
 
-        if (pKey == "escButton")
+        if (SDL_strcmp(pKey, "escButton") == 0)
         {
             SDL_GameControllerButton newButton;
             if (GetButtonFromString(pText, &newButton))
@@ -4670,7 +4216,7 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* s
             }
         }
 
-        if (pKey == "restartButton")
+        if (SDL_strcmp(pKey, "restartButton") == 0)
         {
             SDL_GameControllerButton newButton;
             if (GetButtonFromString(pText, &newButton))
@@ -4679,7 +4225,7 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* s
             }
         }
 
-        if (pKey == "controllerSensitivity")
+        if (SDL_strcmp(pKey, "controllerSensitivity") == 0)
         {
             key.sensitivity = help.Int(pText);
         }
@@ -5006,18 +4552,12 @@ void Game::customstart(void)
 
     savegc = edsavegc;
     savedir = edsavedir; //Worldmap Start
-    //savex = 6 * 8; savey = 15 * 8; saverx = 46; savery = 54; savegc = 0; savedir = 1; //Final Level Current
     savepoint = 0;
     gravitycontrol = savegc;
 
-    //state = 2; deathseq = -1; lifeseq = 10; //Not dead, in game initilisation state
     state = 0;
     deathseq = -1;
     lifeseq = 0;
-
-    //let's teleport in!
-    //state = 2500;
-    //if (!nocutscenes) music.play(5);
 }
 
 void Game::start(void)
@@ -5030,17 +4570,13 @@ void Game::start(void)
     savery = 110;
     savegc = 0;
     savedir = 1; //Worldmap Start
-    //savex = 6 * 8; savey = 15 * 8; saverx = 46; savery = 54; savegc = 0; savedir = 1; //Final Level Current
     savepoint = 0;
     gravitycontrol = savegc;
 
-    //state = 2; deathseq = -1; lifeseq = 10; //Not dead, in game initilisation state
     state = 0;
     deathseq = -1;
     lifeseq = 0;
 
-    //let's teleport in!
-    //state = 2500;
     if (!nocutscenes) music.play(5);
 }
 
@@ -5215,7 +4751,6 @@ void Game::starttrial( int t )
     savepoint = 0;
     gravitycontrol = savegc;
 
-    //state = 2; deathseq = -1; lifeseq = 10; //Not dead, in game initilisation state
     state = 0;
     deathseq = -1;
     lifeseq = 0;
@@ -5250,7 +4785,7 @@ void Game::readmaingamesave(tinyxml2::XMLDocument& doc)
 
     for( pElem = hRoot.FirstChildElement( "Data" ).FirstChild().ToElement(); pElem; pElem=pElem->NextSiblingElement())
     {
-        std::string pKey(pElem->Value());
+        const char* pKey = pElem->Value();;
         const char* pText = pElem->GetText() ;
         if(pText == NULL)
         {
@@ -5265,101 +4800,101 @@ void Game::readmaingamesave(tinyxml2::XMLDocument& doc)
 
         LOAD_ARRAY_RENAME(collect, obj.collect)
 
-        if (pKey == "finalmode")
+        if (SDL_strcmp(pKey, "finalmode") == 0)
         {
             map.finalmode = help.Int(pText);
         }
-        if (pKey == "finalstretch")
+        if (SDL_strcmp(pKey, "finalstretch") == 0)
         {
             map.finalstretch = help.Int(pText);
         }
 
-        if (pKey == "savex")
+        if (SDL_strcmp(pKey, "savex") == 0)
         {
             savex = help.Int(pText);
         }
-        else if (pKey == "savey")
+        else if (SDL_strcmp(pKey, "savey") == 0)
         {
             savey = help.Int(pText);
         }
-        else if (pKey == "saverx")
+        else if (SDL_strcmp(pKey, "saverx") == 0)
         {
             saverx = help.Int(pText);
         }
-        else if (pKey == "savery")
+        else if (SDL_strcmp(pKey, "savery") == 0)
         {
             savery = help.Int(pText);
         }
-        else if (pKey == "savegc")
+        else if (SDL_strcmp(pKey, "savegc") == 0)
         {
             savegc = help.Int(pText);
         }
-        else if (pKey == "savedir")
+        else if (SDL_strcmp(pKey, "savedir") == 0)
         {
             savedir= help.Int(pText);
         }
-        else if (pKey == "savepoint")
+        else if (SDL_strcmp(pKey, "savepoint") == 0)
         {
             savepoint = help.Int(pText);
         }
-        else if (pKey == "companion")
+        else if (SDL_strcmp(pKey, "companion") == 0)
         {
             companion = help.Int(pText);
         }
-        else if (pKey == "lastsaved")
+        else if (SDL_strcmp(pKey, "lastsaved") == 0)
         {
             lastsaved = help.Int(pText);
         }
-        else if (pKey == "teleportscript")
+        else if (SDL_strcmp(pKey, "teleportscript") == 0)
         {
             teleportscript = pText;
         }
-        else if (pKey == "supercrewmate")
+        else if (SDL_strcmp(pKey, "supercrewmate") == 0)
         {
             supercrewmate = help.Int(pText);
         }
-        else if (pKey == "scmprogress")
+        else if (SDL_strcmp(pKey, "scmprogress") == 0)
         {
             scmprogress = help.Int(pText);
         }
-        else if (pKey == "scmmoveme")
+        else if (SDL_strcmp(pKey, "scmmoveme") == 0)
         {
             scmmoveme = help.Int(pText);
         }
-        else if (pKey == "frames")
+        else if (SDL_strcmp(pKey, "frames") == 0)
         {
             frames = help.Int(pText);
             frames = 0;
         }
-        else if (pKey == "seconds")
+        else if (SDL_strcmp(pKey, "seconds") == 0)
         {
             seconds = help.Int(pText);
         }
-        else if (pKey == "minutes")
+        else if (SDL_strcmp(pKey, "minutes") == 0)
         {
             minutes = help.Int(pText);
         }
-        else if (pKey == "hours")
+        else if (SDL_strcmp(pKey, "hours") == 0)
         {
             hours = help.Int(pText);
         }
-        else if (pKey == "deathcounts")
+        else if (SDL_strcmp(pKey, "deathcounts") == 0)
         {
             deathcounts = help.Int(pText);
         }
-        else if (pKey == "totalflips")
+        else if (SDL_strcmp(pKey, "totalflips") == 0)
         {
             totalflips = help.Int(pText);
         }
-        else if (pKey == "hardestroom")
+        else if (SDL_strcmp(pKey, "hardestroom") == 0)
         {
             hardestroom = pText;
         }
-        else if (pKey == "hardestroomdeaths")
+        else if (SDL_strcmp(pKey, "hardestroomdeaths") == 0)
         {
             hardestroomdeaths = help.Int(pText);
         }
-        else if (pKey == "currentsong")
+        else if (SDL_strcmp(pKey, "currentsong") == 0)
         {
             int song = help.Int(pText);
             if (song != -1)
@@ -5426,7 +4961,7 @@ void Game::customloadquick(std::string savfile)
 
     for( pElem = hRoot.FirstChildElement( "Data" ).FirstChild().ToElement(); pElem; pElem=pElem->NextSiblingElement())
     {
-        std::string pKey(pElem->Value());
+        const char* pKey = pElem->Value();
         const char* pText = pElem->GetText() ;
         if(pText == NULL)
         {
@@ -5445,11 +4980,11 @@ void Game::customloadquick(std::string savfile)
 
         LOAD_ARRAY_RENAME(customcollect, obj.customcollect)
 
-        if (pKey == "finalmode")
+        if (SDL_strcmp(pKey, "finalmode") == 0)
         {
             map.finalmode = help.Int(pText);
         }
-        if (pKey == "finalstretch")
+        if (SDL_strcmp(pKey, "finalstretch") == 0)
         {
             map.finalstretch = help.Int(pText);
         }
@@ -5469,92 +5004,92 @@ void Game::customloadquick(std::string savfile)
         }
 
 
-        if (pKey == "savex")
+        if (SDL_strcmp(pKey, "savex") == 0)
         {
             savex = help.Int(pText);
         }
-        else if (pKey == "savey")
+        else if (SDL_strcmp(pKey, "savey") == 0)
         {
             savey = help.Int(pText);
         }
-        else if (pKey == "saverx")
+        else if (SDL_strcmp(pKey, "saverx") == 0)
         {
             saverx = help.Int(pText);
         }
-        else if (pKey == "savery")
+        else if (SDL_strcmp(pKey, "savery") == 0)
         {
             savery = help.Int(pText);
         }
-        else if (pKey == "savegc")
+        else if (SDL_strcmp(pKey, "savegc") == 0)
         {
             savegc = help.Int(pText);
         }
-        else if (pKey == "savedir")
+        else if (SDL_strcmp(pKey, "savedir") == 0)
         {
             savedir= help.Int(pText);
         }
-        else if (pKey == "savepoint")
+        else if (SDL_strcmp(pKey, "savepoint") == 0)
         {
             savepoint = help.Int(pText);
         }
-        else if (pKey == "companion")
+        else if (SDL_strcmp(pKey, "companion") == 0)
         {
             companion = help.Int(pText);
         }
-        else if (pKey == "lastsaved")
+        else if (SDL_strcmp(pKey, "lastsaved") == 0)
         {
             lastsaved = help.Int(pText);
         }
-        else if (pKey == "teleportscript")
+        else if (SDL_strcmp(pKey, "teleportscript") == 0)
         {
             teleportscript = pText;
         }
-        else if (pKey == "supercrewmate")
+        else if (SDL_strcmp(pKey, "supercrewmate") == 0)
         {
             supercrewmate = help.Int(pText);
         }
-        else if (pKey == "scmprogress")
+        else if (SDL_strcmp(pKey, "scmprogress") == 0)
         {
             scmprogress = help.Int(pText);
         }
-        else if (pKey == "scmmoveme")
+        else if (SDL_strcmp(pKey, "scmmoveme") == 0)
         {
             scmmoveme = help.Int(pText);
         }
-        else if (pKey == "frames")
+        else if (SDL_strcmp(pKey, "frames") == 0)
         {
             frames = help.Int(pText);
             frames = 0;
         }
-        else if (pKey == "seconds")
+        else if (SDL_strcmp(pKey, "seconds") == 0)
         {
             seconds = help.Int(pText);
         }
-        else if (pKey == "minutes")
+        else if (SDL_strcmp(pKey, "minutes") == 0)
         {
             minutes = help.Int(pText);
         }
-        else if (pKey == "hours")
+        else if (SDL_strcmp(pKey, "hours") == 0)
         {
             hours = help.Int(pText);
         }
-        else if (pKey == "deathcounts")
+        else if (SDL_strcmp(pKey, "deathcounts") == 0)
         {
             deathcounts = help.Int(pText);
         }
-        else if (pKey == "totalflips")
+        else if (SDL_strcmp(pKey, "totalflips") == 0)
         {
             totalflips = help.Int(pText);
         }
-        else if (pKey == "hardestroom")
+        else if (SDL_strcmp(pKey, "hardestroom") == 0)
         {
             hardestroom = pText;
         }
-        else if (pKey == "hardestroomdeaths")
+        else if (SDL_strcmp(pKey, "hardestroomdeaths") == 0)
         {
             hardestroomdeaths = help.Int(pText);
         }
-        else if (pKey == "currentsong")
+        else if (SDL_strcmp(pKey, "currentsong") == 0)
         {
             int song = help.Int(pText);
             if (song != -1)
@@ -5562,7 +5097,7 @@ void Game::customloadquick(std::string savfile)
                 music.play(song);
             }
         }
-        else if (pKey == "showminimap")
+        else if (SDL_strcmp(pKey, "showminimap") == 0)
         {
             map.customshowmm = help.Int(pText);
         }
@@ -5605,43 +5140,43 @@ void Game::loadsummary(void)
         int l_saveY = 0;
         for( pElem = hRoot.FirstChildElement( "Data" ).FirstChild().ToElement(); pElem; pElem=pElem->NextSiblingElement())
         {
-            std::string pKey(pElem->Value());
+            const char* pKey = pElem->Value();
             const char* pText = pElem->GetText() ;
 
-            if (pKey == "summary")
+            if (SDL_strcmp(pKey, "summary") == 0)
             {
                 telesummary = pText;
             }
 
-            else if (pKey == "seconds")
+            else if (SDL_strcmp(pKey, "seconds") == 0)
             {
                 l_second = help.Int(pText);
             }
-            else if (pKey == "minutes")
+            else if (SDL_strcmp(pKey, "minutes") == 0)
             {
                 l_minute = help.Int(pText);
             }
-            else if (pKey == "hours")
+            else if (SDL_strcmp(pKey, "hours") == 0)
             {
                 l_hours = help.Int(pText);
             }
-            else if (pKey == "savery")
+            else if (SDL_strcmp(pKey, "savery") == 0)
             {
                 l_saveY = help.Int(pText);
             }
-            else if (pKey == "saverx")
+            else if (SDL_strcmp(pKey, "saverx") == 0)
             {
                 l_saveX = help.Int(pText);
             }
-            else if (pKey == "trinkets")
+            else if (SDL_strcmp(pKey, "trinkets") == 0)
             {
                 tele_trinkets = help.Int(pText);
             }
-            else if (pKey == "finalmode")
+            else if (SDL_strcmp(pKey, "finalmode") == 0)
             {
                 map.finalmode = help.Int(pText);
             }
-            else if (pKey == "finalstretch")
+            else if (SDL_strcmp(pKey, "finalstretch") == 0)
             {
                 map.finalstretch = help.Int(pText);
             }
@@ -5682,43 +5217,43 @@ void Game::loadsummary(void)
         int l_saveY = 0;
         for( pElem = hRoot.FirstChildElement( "Data" ).FirstChild().ToElement(); pElem; pElem=pElem->NextSiblingElement())
         {
-            std::string pKey(pElem->Value());
+            const char* pKey = pElem->Value();
             const char* pText = pElem->GetText() ;
 
-            if (pKey == "summary")
+            if (SDL_strcmp(pKey, "summary") == 0)
             {
                 quicksummary = pText;
             }
 
-            else if (pKey == "seconds")
+            else if (SDL_strcmp(pKey, "seconds") == 0)
             {
                 l_second = help.Int(pText);
             }
-            else if (pKey == "minutes")
+            else if (SDL_strcmp(pKey, "minutes") == 0)
             {
                 l_minute = help.Int(pText);
             }
-            else if (pKey == "hours")
+            else if (SDL_strcmp(pKey, "hours") == 0)
             {
                 l_hours = help.Int(pText);
             }
-            else if (pKey == "savery")
+            else if (SDL_strcmp(pKey, "savery") == 0)
             {
                 l_saveY = help.Int(pText);
             }
-            else if (pKey == "saverx")
+            else if (SDL_strcmp(pKey, "saverx") == 0)
             {
                 l_saveX = help.Int(pText);
             }
-            else if (pKey == "trinkets")
+            else if (SDL_strcmp(pKey, "trinkets") == 0)
             {
                 quick_trinkets = help.Int(pText);
             }
-            else if (pKey == "finalmode")
+            else if (SDL_strcmp(pKey, "finalmode") == 0)
             {
                 map.finalmode = help.Int(pText);
             }
-            else if (pKey == "finalstretch")
+            else if (SDL_strcmp(pKey, "finalstretch") == 0)
             {
                 map.finalstretch = help.Int(pText);
             }
@@ -5768,7 +5303,7 @@ bool Game::savetele(void)
     if(!FILESYSTEM_saveTiXml2Document("saves/tsave.vvv", doc))
     {
         printf("Could Not Save game!\n");
-        printf("Failed: %s%s\n", saveFilePath.c_str(), "tsave.vvv");
+        printf("Failed: %s%s\n", saveFilePath, "tsave.vvv");
         return false;
     }
     printf("Game saved\n");
@@ -5795,7 +5330,7 @@ bool Game::savequick(void)
     if(!FILESYSTEM_saveTiXml2Document("saves/qsave.vvv", doc))
     {
         printf("Could Not Save game!\n");
-        printf("Failed: %s%s\n", saveFilePath.c_str(), "qsave.vvv");
+        printf("Failed: %s%s\n", saveFilePath, "qsave.vvv");
         return false;
     }
     printf("Game saved\n");
@@ -6043,7 +5578,7 @@ bool Game::customsavequick(std::string savfile)
     if(!FILESYSTEM_saveTiXml2Document(("saves/"+levelfile+".vvv").c_str(), doc))
     {
         printf("Could Not Save game!\n");
-        printf("Failed: %s%s%s\n", saveFilePath.c_str(), levelfile.c_str(), ".vvv");
+        printf("Failed: %s%s%s\n", saveFilePath, levelfile.c_str(), ".vvv");
         return false;
     }
     printf("Game saved\n");
@@ -6051,7 +5586,7 @@ bool Game::customsavequick(std::string savfile)
 }
 
 
-void Game::loadtele()
+void Game::loadtele(void)
 {
     tinyxml2::XMLDocument doc;
     if (!FILESYSTEM_loadTiXml2Document("saves/tsave.vvv", doc)) return;
@@ -6206,13 +5741,7 @@ void Game::returntomenu(enum Menu::MenuName t)
 {
     if (currentmenuname == t)
     {
-        //Re-create the menu
-        int keep_menu_option = currentmenuoption;
         createmenu(t, true);
-        if (keep_menu_option < (int) menuoptions.size())
-        {
-            currentmenuoption = keep_menu_option;
-        }
         return;
     }
 
@@ -6249,9 +5778,9 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         frame.option = currentmenuoption;
         frame.name = currentmenuname;
         menustack.push_back(frame);
+        currentmenuoption = 0;
     }
 
-    currentmenuoption = 0;
     currentmenuname = t;
     menuyoff = 0;
     int maxspacing = 30; // maximum value for menuspacing, can only become lower.
@@ -6343,7 +5872,7 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
                         static const char tmp[] = "   ";
                         prefix = tmp;
                     }
-                    char text[menutextbytes];
+                    char text[MENU_TEXT_BYTES];
                     SDL_snprintf(text, sizeof(text), "%s%s", prefix, ed.ListOfMetaData[i].title.c_str());
                     for (size_t ii = 0; text[ii] != '\0'; ++ii)
                     {
@@ -6410,6 +5939,8 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("editor ghosts");
         option("load level");
         option("save level");
+        option("graphic options");
+        option("game options");
         option("quit to main menu");
 
         menuyoff = -20;
@@ -6427,6 +5958,7 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         break;
     case Menu::ed_music:
         option("next song");
+        option("previous song");
         option("back");
         menuyoff = 16;
         maxspacing = 15;
@@ -7068,6 +6600,11 @@ void Game::returntolab(void)
 }
 
 #if !defined(NO_CUSTOM_LEVELS)
+static void resetbg(void)
+{
+    graphics.backgrounddrawn = false;
+}
+
 void Game::returntoeditor(void)
 {
     gamestate = EDITORMODE;
@@ -7086,7 +6623,7 @@ void Game::returntoeditor(void)
     ed.notedelay = 0;
     ed.roomnamehide = 0;
 
-    graphics.backgrounddrawn=false;
+    DEFER_CALLBACK(resetbg);
     music.fadeout();
     //If warpdir() is used during playtesting, we need to set it back after!
     for (int j = 0; j < ed.maxheight; j++)
@@ -7100,17 +6637,49 @@ void Game::returntoeditor(void)
 }
 #endif
 
-void Game::returntopausemenu(void)
+static void returntoingametemp(void)
+{
+    extern Game game;
+    game.returntomenu(game.kludge_ingametemp);
+}
+
+#if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
+static void returntoedsettings(void)
+{
+    extern Game game;
+    game.returntomenu(Menu::ed_settings);
+}
+#endif
+
+static void nextbgcolor(void)
+{
+    map.nexttowercolour();
+}
+
+void Game::returntoingame(void)
 {
     ingame_titlemode = false;
-    returntomenu(kludge_ingametemp);
-    gamestate = MAPMODE;
     mapheld = true;
-    graphics.flipmode = graphics.setflipmode;
-    if (!map.custommode && !graphics.flipmode)
+#if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
+    if (ingame_editormode)
     {
-        obj.flags[73] = true;
+        ingame_editormode = false;
+        DEFER_CALLBACK(returntoedsettings);
+        gamestate = EDITORMODE;
+        ed.settingskey = true;
     }
+    else
+#endif
+    {
+        DEFER_CALLBACK(returntoingametemp);
+        gamestate = MAPMODE;
+        graphics.flipmode = graphics.setflipmode;
+        if (!map.custommode && !graphics.flipmode)
+        {
+            obj.flags[73] = true;
+        }
+    }
+    DEFER_CALLBACK(nextbgcolor);
 }
 
 void Game::unlockAchievement(const char *name) {

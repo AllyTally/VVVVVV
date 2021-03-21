@@ -26,6 +26,8 @@
 static char saveDir[MAX_PATH] = {'\0'};
 static char levelDir[MAX_PATH] = {'\0'};
 
+static char assetDir[MAX_PATH] = {'\0'};
+
 static void PLATFORM_getOSDirectory(char* output);
 static void PLATFORM_migrateSaveData(char* output);
 static void PLATFORM_copyFile(const char *oldLocation, const char *newLocation);
@@ -164,6 +166,33 @@ char *FILESYSTEM_getUserLevelDirectory(void)
 	return levelDir;
 }
 
+bool FILESYSTEM_isFile(const char* filename)
+{
+	PHYSFS_Stat stat;
+
+	bool success = PHYSFS_stat(filename, &stat);
+
+	if (!success)
+	{
+		printf(
+			"Could not stat file: %s\n",
+			PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+		);
+		return false;
+	}
+
+	/* We unfortunately cannot follow symlinks (PhysFS limitation).
+	 * Let the caller deal with them.
+	 */
+	return stat.filetype == PHYSFS_FILETYPE_REGULAR
+	|| stat.filetype == PHYSFS_FILETYPE_SYMLINK;
+}
+
+bool FILESYSTEM_isMounted(const char* filename)
+{
+	return PHYSFS_getMountPoint(filename) != NULL;
+}
+
 static bool FILESYSTEM_exists(const char *fname)
 {
 	return PHYSFS_exists(fname);
@@ -194,11 +223,23 @@ void FILESYSTEM_mount(const char *fname)
 	}
 	else
 	{
-		graphics.assetdir = std::string(path);
+		SDL_strlcpy(assetDir, path, sizeof(assetDir));
 	}
 }
 
-bool FILESYSTEM_assetsmounted = false;
+void FILESYSTEM_loadZip(const char* filename)
+{
+	PHYSFS_File* zip = PHYSFS_openRead(filename);
+
+	if (!PHYSFS_mountHandle(zip, filename, "levels", 1))
+	{
+		printf(
+			"Could not mount %s: %s\n",
+			filename,
+			PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+		);
+	}
+}
 
 void FILESYSTEM_mountassets(const char* path)
 {
@@ -245,8 +286,6 @@ void FILESYSTEM_mountassets(const char* path)
 		FILESYSTEM_mount(zip_data);
 
 		graphics.reloadresources();
-
-		FILESYSTEM_assetsmounted = true;
 	}
 	else if (zip_normal != NULL && endsWith(zip_normal, ".zip"))
 	{
@@ -277,10 +316,8 @@ void FILESYSTEM_mountassets(const char* path)
 		}
 		else
 		{
-			graphics.assetdir = std::string(zip_data);
+			SDL_strlcpy(assetDir, zip_data, sizeof(assetDir));
 		}
-
-		FILESYSTEM_assetsmounted = true;
 
 		graphics.reloadresources();
 	}
@@ -291,31 +328,46 @@ void FILESYSTEM_mountassets(const char* path)
 		FILESYSTEM_mount(dir);
 
 		graphics.reloadresources();
-
-		FILESYSTEM_assetsmounted = true;
 	}
 	else
 	{
 		puts("Custom asset directory does not exist");
-
-		FILESYSTEM_assetsmounted = false;
 	}
 }
 
 void FILESYSTEM_unmountassets(void)
 {
-	if (graphics.assetdir != "")
+	if (assetDir[0] != '\0')
 	{
-		printf("Unmounting %s\n", graphics.assetdir.c_str());
-		PHYSFS_unmount(graphics.assetdir.c_str());
-		graphics.assetdir = "";
+		printf("Unmounting %s\n", assetDir);
+		PHYSFS_unmount(assetDir);
+		assetDir[0] = '\0';
 		graphics.reloadresources();
 	}
 	else
 	{
 		printf("Cannot unmount when no asset directory is mounted\n");
 	}
-	FILESYSTEM_assetsmounted = false;
+}
+
+bool FILESYSTEM_isAssetMounted(const char* filename)
+{
+	const char* realDir;
+
+	/* Fast path */
+	if (assetDir[0] == '\0')
+	{
+		return false;
+	}
+
+	realDir = PHYSFS_getRealDir(filename);
+
+	if (realDir == NULL)
+	{
+		return false;
+	}
+
+	return SDL_strcmp(assetDir, realDir) == 0;
 }
 
 void FILESYSTEM_freeMemory(unsigned char **mem);
@@ -360,9 +412,13 @@ void FILESYSTEM_loadFileToMemory(
 	{
 		return;
 	}
-	PHYSFS_uint32 length = PHYSFS_fileLength(handle);
+	PHYSFS_sint64 length = PHYSFS_fileLength(handle);
 	if (len != NULL)
 	{
+		if (length < 0)
+		{
+			length = 0;
+		}
 		*len = length;
 	}
 	if (addnull)
@@ -382,7 +438,7 @@ void FILESYSTEM_loadFileToMemory(
 			VVV_exit(1);
 		}
 	}
-	int success = PHYSFS_readBytes(handle, *mem, length);
+	PHYSFS_sint64 success = PHYSFS_readBytes(handle, *mem, length);
 	if (success == -1)
 	{
 		FILESYSTEM_freeMemory(mem);

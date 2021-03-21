@@ -71,8 +71,7 @@ void gamecompletelogic(void)
     {
         //Fix some graphical things
         graphics.showcutscenebars = false;
-        graphics.cutscenebarspos = 0;
-        graphics.oldcutscenebarspos = 0;
+        graphics.setbars(0);
         graphics.titlebg.scrolldir = 0;
         graphics.titlebg.bypos = 0;
         //Return to game
@@ -104,7 +103,7 @@ void gamecompletelogic2(void)
     {
         //Fix some graphical things
         graphics.showcutscenebars = false;
-        graphics.cutscenebarspos = 0;
+        graphics.setbars(0);
         //Fix the save thingy
         game.deletequick();
         int tmp=music.currentsong;
@@ -123,6 +122,39 @@ void gamecompletelogic2(void)
 
 void gamelogic(void)
 {
+    /* Update old lerp positions of entities */
+    {size_t i; for (i = 0; i < obj.entities.size(); ++i)
+    {
+        obj.entities[i].lerpoldxp = obj.entities[i].xp;
+        obj.entities[i].lerpoldyp = obj.entities[i].yp;
+    }}
+
+    if (!game.blackout && !game.completestop)
+    {
+        size_t i;
+        for (i = 0; i < obj.entities.size(); ++i)
+        {
+            /* Is this entity on the ground? (needed for jumping) */
+            if (obj.entitycollidefloor(i))
+            {
+                obj.entities[i].onground = 2;
+            }
+            else
+            {
+                --obj.entities[i].onground;
+            }
+
+            if (obj.entitycollideroof(i))
+            {
+                obj.entities[i].onroof = 2;
+            }
+            else
+            {
+                --obj.entities[i].onroof;
+            }
+        }
+    }
+
     //Misc
     if (map.towermode)
     {
@@ -1527,6 +1559,15 @@ void gamelogic(void)
 
     game.activeactivity = obj.checkactivity();
 
+    if (game.hascontrol && !script.running
+    && INBOUNDS_VEC(game.activeactivity, obj.entities))
+    {
+        game.activity_lastprompt = obj.blocks[game.activeactivity].prompt;
+        game.activity_r = obj.blocks[game.activeactivity].r;
+        game.activity_g = obj.blocks[game.activeactivity].g;
+        game.activity_b = obj.blocks[game.activeactivity].b;
+    }
+
     game.oldreadytotele = game.readytotele;
     if (game.activetele && !game.advancetext && game.hascontrol && !script.running && !game.intimetrial)
     {
@@ -1561,11 +1602,4 @@ void gamelogic(void)
 
     if (game.teleport_to_new_area)
         script.teleport();
-
-#if !defined(NO_CUSTOM_LEVELS)
-    if (game.shouldreturntoeditor)
-    {
-        game.returntoeditor();
-    }
-#endif
 }

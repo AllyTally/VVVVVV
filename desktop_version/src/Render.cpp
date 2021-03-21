@@ -1171,7 +1171,7 @@ static void menurender(void)
     }
 }
 
-void titlerender()
+void titlerender(void)
 {
 
     ClearSurface(graphics.backBuffer);
@@ -1597,16 +1597,20 @@ void gamerender(void)
         {
             if (int(game.swndelay / 15) % 2 == 1 || game.swndelay >= 120)
             {
+                int y1;
+                int y2;
                 if (graphics.flipmode)
                 {
-                    graphics.bigprint( -1, 30, "Survive for", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 2);
-                    graphics.bigprint( -1, 10, "60 seconds!", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 2);
+                    y1 = 30;
+                    y2 = 10;
                 }
                 else
                 {
-                    graphics.bigprint( -1, 10, "Survive for", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 2);
-                    graphics.bigprint( -1, 30, "60 seconds!", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 2);
+                    y1 = 10;
+                    y2 = 30;
                 }
+                graphics.bigprint( -1, y1, "Survive for", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 2);
+                graphics.bigprint( -1, y2, "60 seconds!", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 2);
             }
         }
         else if(game.swngame==7)
@@ -1696,13 +1700,6 @@ void gamerender(void)
     }
 
     float act_alpha = graphics.lerp(game.prev_act_fade, game.act_fade) / 10.0f;
-    if (INBOUNDS_VEC(game.activeactivity, obj.entities))
-    {
-        game.activity_lastprompt = obj.blocks[game.activeactivity].prompt;
-        game.activity_r = obj.blocks[game.activeactivity].r;
-        game.activity_g = obj.blocks[game.activeactivity].g;
-        game.activity_b = obj.blocks[game.activeactivity].b;
-    }
     if(game.act_fade>5 || game.prev_act_fade>5)
     {
         graphics.drawtextbox(16, 4, 36, 3, game.activity_r*act_alpha, game.activity_g*act_alpha, game.activity_b*act_alpha);

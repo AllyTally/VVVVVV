@@ -14,10 +14,12 @@ namespace tinyxml2
     class XMLElement;
 }
 
+/* 40 chars (160 bytes) covers the entire screen, + 1 more for null terminator */
+#define MENU_TEXT_BYTES 161
+
 struct MenuOption
 {
-    char text[161]; // 40 chars (160 bytes) covers the entire screen, + 1 more for null terminator
-    // WARNING: should match Game::menutextbytes below
+    char text[MENU_TEXT_BYTES];
     bool active;
 };
 
@@ -129,6 +131,12 @@ public:
 
     void gethardestroom(void);
 
+    void levelcomplete_textbox(void);
+    void crewmate_textbox(const int r, const int g, const int b);
+    void remaining_textbox(void);
+    void actionprompt_textbox(void);
+    void savetele_textbox(void);
+
     void updatestate(void);
 
     void unlocknum(int t);
@@ -185,7 +193,7 @@ public:
 
     void initteleportermode(void);
 
-    std::string saveFilePath;
+    const char* saveFilePath;
 
 
     int door_left;
@@ -254,7 +262,6 @@ public:
     int current_credits_list_index;
     int menuxoff, menuyoff;
     int menuspacing;
-    static const int menutextbytes = 161; // this is just sizeof(MenuOption::text), but doing that is non-standard
     std::vector<MenuStackFrame> menustack;
 
     void inline option(const char* text, bool active = true)
@@ -429,7 +436,6 @@ public:
 
 #if !defined(NO_CUSTOM_LEVELS)
     void returntoeditor(void);
-    bool shouldreturntoeditor;
 #endif
 
     int gametimer;
@@ -443,8 +449,11 @@ public:
     bool glitchrunnermode; // Have fun speedrunners! <3 Misa
 
     bool ingame_titlemode;
+#if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
+    bool ingame_editormode;
+#endif
 
-    void returntopausemenu(void);
+    void returntoingame(void);
     void unlockAchievement(const char *name);
 
     bool disablepause;

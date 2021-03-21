@@ -1,7 +1,7 @@
 #include "Screen.h"
 
+#include <SDL.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 
 #include "FileSystemUtils.h"

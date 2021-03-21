@@ -18,7 +18,6 @@ scriptclass::scriptclass(void)
 	position = 0;
 	scriptdelay = 0;
 	running = false;
-	dontrunnextframe = false;
 
 	b = 0;
 	g = 0;
@@ -30,6 +29,7 @@ scriptclass::scriptclass(void)
 	r = 0;
 	textx = 0;
 	texty = 0;
+	textflipme = false;
 }
 
 void scriptclass::clearcustom(void)
@@ -118,6 +118,8 @@ void scriptclass::run(void)
 				{
 					obj.entities[player].xp += ss_toi(words[1]);
 					obj.entities[player].yp += ss_toi(words[2]);
+					obj.entities[player].lerpoldxp = obj.entities[player].xp;
+					obj.entities[player].lerpoldyp = obj.entities[player].yp;
 				}
 				scriptdelay = 1;
 			}
@@ -317,6 +319,8 @@ void scriptclass::run(void)
 				{
 					obj.entities[player].xp = ss_toi(words[1]);
 					obj.entities[player].yp = ss_toi(words[2]);
+					obj.entities[player].lerpoldxp = obj.entities[player].xp;
+					obj.entities[player].lerpoldyp = obj.entities[player].yp;
 				}
 				game.gravitycontrol = ss_toi(words[3]);
 
@@ -635,7 +639,7 @@ void scriptclass::run(void)
 			}
 			else if (words[0] == "flipme")
 			{
-				if(graphics.flipmode) texty += 2*(120 - texty) - 8*(txt.size()+2);
+				textflipme = !textflipme;
 			}
 			else if (words[0] == "speak_active" || words[0] == "speak")
 			{
@@ -645,7 +649,8 @@ void scriptclass::run(void)
 				{
 					txt.resize(1);
 				}
-				graphics.createtextbox(txt[0], textx, texty, r, g, b);
+				graphics.createtextboxreal(txt[0], textx, texty, r, g, b, textflipme);
+				textflipme = false;
 				if ((int) txt.size() > 1)
 				{
 					for (i = 1; i < (int) txt.size(); i++)
@@ -1509,7 +1514,7 @@ void scriptclass::run(void)
 			}
 			else if (words[0] == "befadein")
 			{
-				graphics.fadeamount = 0;
+				graphics.setfade(0);
 				graphics.fademode= 0;
 			}
 			else if (words[0] == "fadein")
@@ -1964,7 +1969,6 @@ void scriptclass::run(void)
 			}
 			else if (words[0] == "foundtrinket")
 			{
-				//music.silencedasmusik();
 				music.haltdasmusik();
 				music.playef(3);
 
@@ -1976,7 +1980,7 @@ void scriptclass::run(void)
 
 				graphics.textboxremovefast();
 
-				graphics.createtextbox("        Congratulations!       ", 50, 85, 174, 174, 174);
+				graphics.createtextboxflipme("        Congratulations!       ", 50, 85, 174, 174, 174);
 				graphics.addline("");
 				graphics.addline("You have found a shiny trinket!");
 				graphics.textboxcenterx();
@@ -1992,7 +1996,7 @@ void scriptclass::run(void)
 				{
 					usethisnum = "Twenty";
 				}
-				graphics.createtextbox(" " + help.number(game.trinkets()) + " out of " + usethisnum + " ", 50, 135, 174, 174, 174);
+				graphics.createtextboxflipme(" " + help.number(game.trinkets()) + " out of " + usethisnum + " ", 50, 135, 174, 174, 174);
 				graphics.textboxcenterx();
 
 				if (!game.backgroundtext)
@@ -2652,8 +2656,7 @@ void scriptclass::startgamemode( int t )
 		game.start();
 		game.jumpheld = true;
 		graphics.showcutscenebars = true;
-		graphics.cutscenebarspos = 320;
-		graphics.oldcutscenebarspos = 320;
+		graphics.setbars(320);
 
 		//set flipmode
 		if (graphics.setflipmode) graphics.flipmode = true;
@@ -2919,8 +2922,7 @@ void scriptclass::startgamemode( int t )
 		game.start();
 		game.jumpheld = true;
 		graphics.showcutscenebars = true;
-		graphics.cutscenebarspos = 320;
-		graphics.oldcutscenebarspos = 320;
+		graphics.setbars(320);
 
 		//set flipmode
 		if (graphics.setflipmode) graphics.flipmode = true;
@@ -2948,8 +2950,7 @@ void scriptclass::startgamemode( int t )
 		game.start();
 		game.jumpheld = true;
 		graphics.showcutscenebars = true;
-		graphics.cutscenebarspos = 320;
-		graphics.oldcutscenebarspos = 320;
+		graphics.setbars(320);
 
 		//set flipmode
 		if (graphics.setflipmode) graphics.flipmode = true;
@@ -3505,10 +3506,6 @@ void scriptclass::teleport(void)
 		game.state = 0;
 		load(game.teleportscript);
 		game.teleportscript = "";
-
-		// FIXME: Remove this once game loop order is fixed in 2.4!
-		run();
-		dontrunnextframe = true;
 	}
 	else
 	{
@@ -3521,19 +3518,7 @@ void scriptclass::teleport(void)
 		{
 			music.changemusicarea(game.teleport_to_x, game.teleport_to_y);
 		}
-		if (!game.intimetrial && !game.nodeathmode && !game.inintermission)
-		{
-			if (game.savetele())
-			{
-				graphics.createtextbox("    Game Saved    ", -1, graphics.flipmode ? 202 : 12, 174, 174, 174);
-				graphics.textboxtimer(25);
-			}
-			else
-			{
-				graphics.createtextbox("  ERROR: Could not save game!  ", -1, graphics.flipmode ? 202 : 12, 255, 60, 60);
-				graphics.textboxtimer(50);
-			}
-		}
+		game.savetele_textbox();
 	}
 }
 
@@ -3655,7 +3640,7 @@ void scriptclass::hardreset(void)
 	graphics.textbox.clear();
 	graphics.flipmode = false; //This will be reset if needs be elsewhere
 	graphics.showcutscenebars = false;
-	graphics.cutscenebarspos = 0;
+	graphics.setbars(0);
 
 	//mapclass
 	map.warpx = false;

@@ -1,4 +1,11 @@
+#include "GraphicsUtil.h"
+
+#include <SDL.h>
+#include <stddef.h>
+#include <stdlib.h>
+
 #include "Graphics.h"
+#include "Maths.h"
 
 
 
@@ -11,6 +18,55 @@ void setRect( SDL_Rect& _r, int x, int y, int w, int h )
     _r.h = h;
 }
 
+static SDL_Surface* RecreateSurfaceWithDimensions(
+    SDL_Surface* surface,
+    const int width,
+    const int height
+) {
+    SDL_Surface* retval;
+    SDL_BlendMode blend_mode;
+
+    if (surface == NULL)
+    {
+        return NULL;
+    }
+
+    retval = SDL_CreateRGBSurface(
+        surface->flags,
+        width,
+        height,
+        surface->format->BitsPerPixel,
+        surface->format->Rmask,
+        surface->format->Gmask,
+        surface->format->Bmask,
+        surface->format->Amask
+    );
+
+    if (retval == NULL)
+    {
+        return NULL;
+    }
+
+    SDL_GetSurfaceBlendMode(surface, &blend_mode);
+    SDL_SetSurfaceBlendMode(retval, blend_mode);
+
+    return retval;
+}
+
+static SDL_Surface* RecreateSurface(SDL_Surface* surface)
+{
+    if (surface == NULL)
+    {
+        return NULL;
+    }
+
+    return RecreateSurfaceWithDimensions(
+        surface,
+        surface->w,
+        surface->h
+    );
+}
+
 SDL_Surface* GetSubSurface( SDL_Surface* metaSurface, int x, int y, int width, int height )
 {
     // Create an SDL_Rect with the area of the _surface
@@ -21,15 +77,10 @@ SDL_Surface* GetSubSurface( SDL_Surface* metaSurface, int x, int y, int width, i
     area.h = height;
 
     //Convert to the correct display format after nabbing the new _surface or we will slow things down.
-    SDL_Surface* preSurface = SDL_CreateRGBSurface(
-        SDL_SWSURFACE,
+    SDL_Surface* preSurface = RecreateSurfaceWithDimensions(
+        metaSurface,
         width,
-        height,
-        metaSurface->format->BitsPerPixel,
-        metaSurface->format->Rmask,
-        metaSurface->format->Gmask,
-        metaSurface->format->Bmask,
-        metaSurface->format->Amask
+        height
     );
 
     // Lastly, apply the area from the meta _surface onto the whole of the sub _surface.
@@ -103,8 +154,7 @@ SDL_Surface * ScaleSurface( SDL_Surface *_surface, int Width, int Height, SDL_Su
     SDL_Surface *_ret;
     if(Dest == NULL)
     {
-        _ret = SDL_CreateRGBSurface(_surface->flags, Width, Height, _surface->format->BitsPerPixel,
-                                    _surface->format->Rmask, _surface->format->Gmask, _surface->format->Bmask, _surface->format->Amask);
+        _ret = RecreateSurfaceWithDimensions(_surface, Width, Height);
         if(_ret == NULL)
         {
             return NULL;
@@ -132,8 +182,7 @@ SDL_Surface * ScaleSurface( SDL_Surface *_surface, int Width, int Height, SDL_Su
 
 SDL_Surface *  FlipSurfaceVerticle(SDL_Surface* _src)
 {
-    SDL_Surface * ret = SDL_CreateRGBSurface(_src->flags, _src->w, _src->h, _src->format->BitsPerPixel,
-        _src->format->Rmask, _src->format->Gmask, _src->format->Bmask, _src->format->Amask);
+    SDL_Surface * ret = RecreateSurface(_src);
     if(ret == NULL)
     {
         return NULL;
@@ -168,16 +217,7 @@ void BlitSurfaceColoured(
 
     const SDL_PixelFormat& fmt = *(_src->format);
 
-    SDL_Surface* tempsurface =  SDL_CreateRGBSurface(
-        SDL_SWSURFACE,
-        _src->w,
-        _src->h,
-        fmt.BitsPerPixel,
-        fmt.Rmask,
-        fmt.Gmask,
-        fmt.Bmask,
-        fmt.Amask
-    );
+    SDL_Surface* tempsurface =  RecreateSurface(_src);
 
     for(int x = 0; x < tempsurface->w; x++)
     {
@@ -209,16 +249,7 @@ void BlitSurfaceTinted(
 
     const SDL_PixelFormat& fmt = *(_src->format);
 
-    SDL_Surface* tempsurface =  SDL_CreateRGBSurface(
-        SDL_SWSURFACE,
-        _src->w,
-        _src->h,
-        fmt.BitsPerPixel,
-        fmt.Rmask,
-        fmt.Gmask,
-        fmt.Bmask,
-        fmt.Amask
-    );
+    SDL_Surface* tempsurface =  RecreateSurface(_src);
 
     for (int x = 0; x < tempsurface->w; x++) {
         for (int y = 0; y < tempsurface->h; y++) {
@@ -232,7 +263,7 @@ void BlitSurfaceTinted(
             double temp_pixgreen = pixgreen * 0.587;
             double temp_pixblue = pixblue * 0.114;
 
-            double gray = floor((temp_pixred + temp_pixgreen + temp_pixblue + 0.5));
+            double gray = SDL_floor((temp_pixred + temp_pixgreen + temp_pixblue + 0.5));
 
             Uint8 ctred = (ct.colour & graphics.backBuffer->format->Rmask) >> 16;
             Uint8 ctgreen = (ct.colour & graphics.backBuffer->format->Gmask) >> 8;
@@ -295,8 +326,7 @@ void UpdateFilter(void)
 
 SDL_Surface* ApplyFilter( SDL_Surface* _src )
 {
-    SDL_Surface* _ret = SDL_CreateRGBSurface(_src->flags, _src->w, _src->h, _src->format->BitsPerPixel,
-        _src->format->Rmask, _src->format->Gmask, _src->format->Bmask, _src->format->Amask);
+    SDL_Surface* _ret = RecreateSurface(_src);
 
     int redOffset = rand() % 4;
 

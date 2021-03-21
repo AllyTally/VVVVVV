@@ -45,12 +45,37 @@ public:
 	void drawmenu(int cr, int cg, int cb, bool levelmenu = false);
 
 	void processfade(void);
+	void setfade(const int amount);
 
 	void drawfade(void);
 
 	void setwarprect(int a, int b, int c, int d);
 
-	void createtextbox(std::string t, int xp, int yp, int r= 255, int g= 255, int b = 255);
+	void createtextboxreal(
+		std::string t,
+		int xp,
+		int yp,
+		int r,
+		int g,
+		int b,
+		bool flipme
+	);
+	void createtextbox(
+		std::string t,
+		int xp,
+		int yp,
+		int r,
+		int g,
+		int b
+	);
+	void createtextboxflipme(
+		std::string t,
+		int xp,
+		int yp,
+		int r,
+		int g,
+		int b
+	);
 
 	void textboxcenterx(void);
 
@@ -83,6 +108,7 @@ public:
 
 	void cutscenebars(void);
 	void cutscenebarstimer(void);
+	void setbars(const int position);
 
 	void drawpartimage(int t, int xp, int yp, int wp, int hp);
 
@@ -130,6 +156,8 @@ public:
 
 	void render(void);
 	void renderwithscreeneffects(void);
+	void renderfixedpre(void);
+	void renderfixedpost(void);
 
 	bool Hitest(SDL_Surface* surface1, point p1, SDL_Surface* surface2, point p2);
 
@@ -161,6 +189,9 @@ public:
 
 	void drawbackground(int t);
 	void updatebackground(int t);
+#ifndef NO_CUSTOM_LEVELS
+	bool shouldrecoloroneway(const int tilenum, const bool mounted);
+#endif
 	void drawtile3( int x, int y, int t, int off, int height_subtract = 0 );
 	void drawtile2( int x, int y, int t );
 	void drawtile( int x, int y, int t );
@@ -184,7 +215,10 @@ public:
 	bool onscreen(int t);
 
 	void reloadresources(void);
-	std::string assetdir;
+#ifndef NO_CUSTOM_LEVELS
+	bool tiles1_mounted;
+	bool tiles2_mounted;
+#endif
 
 
 	void menuoffrender(void);

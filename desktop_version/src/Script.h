@@ -54,12 +54,13 @@ public:
     int looppoint, loopcount;
 
     int scriptdelay;
-    bool running, dontrunnextframe;
+    bool running;
 
     //Textbox stuff
     int textx;
     int texty;
     int r,g,b;
+    bool textflipme;
 
     //Misc
     int i, j, k;

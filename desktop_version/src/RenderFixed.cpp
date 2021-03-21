@@ -7,7 +7,7 @@
 #include "Script.h"
 #include "UtilityClass.h"
 
-void titleupdatetextcol(void)
+static inline void titleupdatetextcol(void)
 {
     graphics.col_tr = graphics.titlebg.r - (help.glow / 4) - int(fRandom() * 4);
     graphics.col_tg = graphics.titlebg.g - (help.glow / 4) - int(fRandom() * 4);
@@ -26,23 +26,22 @@ void gamerenderfixed(void)
     {
         for (size_t i = 0; i < obj.entities.size(); i++)
         {
-            //Is this entity on the ground? (needed for jumping)
             if (obj.entitycollidefloor(i))
             {
-                obj.entities[i].onground = 2;
+                obj.entities[i].visualonground = 2;
             }
             else
             {
-                obj.entities[i].onground--;
+                --obj.entities[i].visualonground;
             }
 
             if (obj.entitycollideroof(i))
             {
-                obj.entities[i].onroof = 2;
+                obj.entities[i].visualonroof = 2;
             }
             else
             {
-                obj.entities[i].onroof--;
+                --obj.entities[i].visualonroof;
             }
 
             //Animate the entities
@@ -71,6 +70,8 @@ void gamerenderfixed(void)
     {
         obj.trophytext--;
     }
+
+    graphics.cutscenebarstimer();
 
     graphics.updatetextboxes();
 
@@ -246,6 +247,13 @@ void maprenderfixed(void)
     {
         map.glitchname = map.getglitchname(game.roomx, game.roomy);
     }
+}
+
+void teleporterrenderfixed(void)
+{
+    maprenderfixed();
+
+    graphics.cutscenebarstimer();
 }
 
 void gamecompleterenderfixed(void)
