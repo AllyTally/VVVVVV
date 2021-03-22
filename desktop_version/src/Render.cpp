@@ -540,7 +540,7 @@ static void menurender(void)
             break;
         case 2:
             graphics.bigprint( -1, 40, "Text Outline", tr, tg, tb, true);
-            graphics.Print( -1, 75, "Disables outline on game text", tr, tg, tb, true);
+            graphics.Print( -1, 75, "Disables outline on game text.", tr, tg, tb, true);
             // FIXME: Maybe do an outlined print instead? -flibit
             if (!graphics.notextoutline)
             {
@@ -561,7 +561,7 @@ static void menurender(void)
             }
             else
             {
-                graphics.Print( -1, 105, "Invincibility is off.", tr/2, tg/2, tb/2, true);
+                graphics.Print( -1, 105, "Invincibility is OFF.", tr/2, tg/2, tb/2, true);
             }
             break;
         case 4:

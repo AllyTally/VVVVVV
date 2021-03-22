@@ -438,8 +438,6 @@ public:
     void returntoeditor(void);
 #endif
 
-    int gametimer;
-
     bool inline inspecial(void)
     {
         return inintermission || insecretlab || intimetrial || nodeathmode;

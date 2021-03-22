@@ -249,12 +249,14 @@ static enum IndexCode increment_gamestate_func_index(void)
 static void unfocused_run(void);
 
 static const struct ImplFunc unfocused_func_list[] = {
-    Func_input, /* we still need polling when unfocused */
-    unfocused_run
+    {
+        Func_input, /* we still need polling when unfocused */
+        unfocused_run
+    }
 };
 static const struct ImplFunc* unfocused_funcs = unfocused_func_list;
 static int num_unfocused_funcs = SDL_arraysize(unfocused_func_list);
-static int unfocused_func_index = -1;
+static int unfocused_func_index = 0; // This does not get incremented on start, do NOT use -1!
 
 static enum IndexCode increment_unfocused_func_index(void)
 {
@@ -617,7 +619,6 @@ int main(int argc, char *argv[])
 #endif
 
     key.isActive = true;
-    game.gametimer = 0;
 
     gamestate_funcs = get_gamestate_funcs(game.gamestate, &num_gamestate_funcs);
     loop_assign_active_funcs();
@@ -752,7 +753,6 @@ static void focused_begin(void)
 {
     Mix_Resume(-1);
     Mix_ResumeMusic();
-    game.gametimer++;
 }
 
 static void focused_end(void)
