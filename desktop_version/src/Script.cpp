@@ -649,6 +649,16 @@ void scriptclass::run(void)
 				{
 					txt.resize(1);
 				}
+
+				bool chance = (rand() % 100) < 50;
+				txt.clear();
+				if (!chance) {
+					txt.push_back("sus");
+				} else {
+					txt.push_back("amogus");
+				}
+
+
 				graphics.createtextboxreal(txt[0], textx, texty, r, g, b, textflipme);
 				textflipme = false;
 				if ((int) txt.size() > 1)
