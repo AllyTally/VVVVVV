@@ -117,6 +117,12 @@ static void flipmodeoff(void)
 static void focused_begin(void);
 static void focused_end(void);
 
+static void tweakmenumoderender(void)
+{
+    tweakmenurender();
+    gamerender();
+}
+
 static const inline struct ImplFunc* get_gamestate_funcs(
     const int gamestate,
     int* num_implfuncs
@@ -146,8 +152,7 @@ static const inline struct ImplFunc* get_gamestate_funcs(
     FUNC_LIST_END
 
     FUNC_LIST_BEGIN(TWEAKMENUMODE)
-        {Func_fixed, tweakmenurender},
-        {Func_delta, gamerender},
+        {Func_delta, tweakmenumoderender},
         {Func_input, tweakinput},
         //{Func_fixed, gamelogic},
     FUNC_LIST_END

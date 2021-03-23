@@ -9,6 +9,7 @@
 #include "Network.h"
 #include "Script.h"
 #include "UtilityClass.h"
+#include "KeyPoll.h"
 
 void titlelogic(void)
 {
@@ -122,6 +123,14 @@ void gamecompletelogic2(void)
 
 void gamelogic(void)
 {
+    if (key.leftbutton) {
+        map.settile(key.mx/8,key.my/8,1);
+        graphics.foregrounddrawn = false;
+    }
+    if (key.rightbutton) {
+        map.settile(key.mx/8,key.my/8,0);
+        graphics.foregrounddrawn = false;
+    }
     /* Update old lerp positions of entities */
     {size_t i; for (i = 0; i < obj.entities.size(); ++i)
     {
