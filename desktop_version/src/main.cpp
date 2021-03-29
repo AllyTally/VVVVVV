@@ -517,7 +517,6 @@ int main(int argc, char *argv[])
     game.gamestate = PRELOADER;
 
     game.menustart = false;
-    game.mainmenu = 0;
 
     // Initialize title screen to cyan
     graphics.titlebg.colstate = 10;

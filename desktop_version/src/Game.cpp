@@ -302,6 +302,11 @@ void Game::init(void)
             const char* pKey = pElem->Value();
             const char* pText = pElem->GetText() ;
 
+            if (pText == NULL)
+            {
+                pText = "";
+            }
+
             if (SDL_strcmp(pKey, "summary") == 0)
             {
                 quicksummary = pText;
@@ -341,6 +346,11 @@ void Game::init(void)
         {
             const char* pKey = pElem->Value();
             const char* pText = pElem->GetText() ;
+
+            if (pText == NULL)
+            {
+                pText = "";
+            }
 
             if (SDL_strcmp(pKey, "summary") == 0)
             {
@@ -4026,6 +4036,11 @@ void Game::loadstats(ScreenSettings* screen_settings)
         const char* pKey = pElem->Value();
         const char* pText = pElem->GetText() ;
 
+        if (pText == NULL)
+        {
+            pText = "";
+        }
+
         LOAD_ARRAY(unlock)
 
         LOAD_ARRAY(unlocknotify)
@@ -4082,6 +4097,11 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* s
     {
         const char* pKey = pElem->Value();
         const char* pText = pElem->GetText();
+
+        if (pText == NULL)
+        {
+            pText = "";
+        }
 
         if (SDL_strcmp(pKey, "fullscreen") == 0)
         {
@@ -5142,6 +5162,11 @@ void Game::loadsummary(void)
             const char* pKey = pElem->Value();
             const char* pText = pElem->GetText() ;
 
+            if (pText == NULL)
+            {
+                pText = "";
+            }
+
             if (SDL_strcmp(pKey, "summary") == 0)
             {
                 telesummary = pText;
@@ -5218,6 +5243,11 @@ void Game::loadsummary(void)
         {
             const char* pKey = pElem->Value();
             const char* pText = pElem->GetText() ;
+
+            if (pText == NULL)
+            {
+                pText = "";
+            }
 
             if (SDL_strcmp(pKey, "summary") == 0)
             {
@@ -6655,6 +6685,11 @@ static void nextbgcolor(void)
     map.nexttowercolour();
 }
 
+static void setfademode(void)
+{
+    graphics.fademode = graphics.ingame_fademode;
+}
+
 void Game::returntoingame(void)
 {
     ingame_titlemode = false;
@@ -6673,6 +6708,7 @@ void Game::returntoingame(void)
         DEFER_CALLBACK(returntoingametemp);
         gamestate = MAPMODE;
         graphics.flipmode = graphics.setflipmode;
+        DEFER_CALLBACK(setfademode);
         if (!map.custommode && !graphics.flipmode)
         {
             obj.flags[73] = true;

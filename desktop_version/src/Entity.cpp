@@ -1250,9 +1250,8 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
 
 #if !defined(NO_CUSTOM_LEVELS)
     // Special case for gray Warp Zone tileset!
-    int room = game.roomx-100 + (game.roomy-100) * ed.maxwidth;
-    bool custom_gray = INBOUNDS_ARR(room, ed.level)
-    && ed.level[room].tileset == 3 && ed.level[room].tilecol == 6;
+    const edlevelclass* const room = ed.getroomprop(game.roomx - 100, game.roomy - 100);
+    bool custom_gray = room->tileset == 3 && room->tilecol == 6;
 #else
     bool custom_gray = false;
 #endif
@@ -1955,58 +1954,46 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.size = 13;
         break;
 
-    case 51: //Vertical Warp Line
-        entity.rule = 5;
-        entity.type = 51;
-        entity.size = 6;
-        entity.life = 0;
-        entity.w = 1;
-        entity.h = vx;
-        //entity.colour = 0;
+    /* Warp lines */
+    case 51: /* Vertical */
+    case 52: /* Vertical */
+    case 53: /* Horizontal */
+    case 54: /* Horizontal */
+        entity.type = t;
         entity.onentity = 1;
-        entity.invis=true;
-        if (map.custommode) customwarpmode = true;
-        break;
-      case 52: //Vertical Warp Line
-        entity.rule = 5;
-        entity.type = 52;
-        entity.size = 6;
+        entity.invis = true;
         entity.life = 0;
-        entity.w = 1;
-        entity.h = vx;
-        //entity.colour = 0;
-        entity.onentity = 1;
-        entity.invis=true;
-        if (map.custommode) customwarpmode = true;
-        break;
-      case 53: //Horizontal Warp Line
-        entity.rule = 7;
-        entity.type = 53;
-        entity.size = 5;
-        entity.life = 0;
-        entity.w = vx;
-        entity.h = 1;
-        entity.onentity = 1;
-        entity.invis=true;
-        if (map.custommode) customwarpmode = true;
-        break;
-      case 54: //Horizontal Warp Line
-        entity.rule = 7;
-        entity.type = 54;
-        entity.size = 5;
-        entity.life = 0;
-        entity.w = vx;
-        entity.h = 1;
-        entity.onentity = 1;
-        entity.invis=true;
-        if (map.custommode) customwarpmode = true;
+        switch (t)
+        {
+        case 51:
+        case 52:
+            entity.rule = 5;
+            entity.size = 6;
+            entity.w = 1;
+            entity.h = vx;
+            break;
+        case 53:
+        case 54:
+            entity.rule = 7;
+            entity.size = 5;
+            entity.w = vx;
+            entity.h = 1;
+            break;
+        }
+        if (map.custommode)
+        {
+            customwarpmode = true;
+            map.warpx = false;
+            map.warpy = false;
+        }
         break;
       case 55: // Crew Member (custom, collectable)
         //1 - position in array
         //2 - colour
         entity.rule = 3;
         entity.type = 55;
-        if(customcrewmoods[int(vy)]==1){
+        if(INBOUNDS_ARR((int) vy, customcrewmoods)
+        && customcrewmoods[int(vy)]==1){
           entity.tile = 144;
         }else{
           entity.tile = 0;
