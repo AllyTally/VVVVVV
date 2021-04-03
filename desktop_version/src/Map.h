@@ -21,7 +21,7 @@ struct Roomtext
 class mapclass
 {
 public:
-    mapclass();
+    mapclass(void);
 
     int intpol(int a, int b, float c);
 
@@ -29,16 +29,16 @@ public:
 
     void settrinket(int x, int y);
 
-    void resetmap();
+    void resetmap(void);
 
-    void resetnames();
+    void resetnames(void);
 
     void transformname(int t);
 
     std::string getglitchname(int x, int y);
 
-    void initmapdata();
-    void initcustommapdata();
+    void initmapdata(void);
+    void initcustommapdata(void);
 
     int finalat(int x, int y);
 
@@ -46,11 +46,13 @@ public:
 
     void changefinalcol(int t);
 
-    void setcol(const int r1, const int g1, const int b1 , const int r2, const  int g2, const int b2, const int c);
+    void setcol(TowerBG& bg_obj, const int r1, const int g1, const int b1 , const int r2, const  int g2, const int b2, const int c);
+
+    void updatebgobj(TowerBG& bg_obj);
 
     void updatetowerglow(TowerBG& bg_obj);
 
-    void nexttowercolour();
+    void nexttowercolour(void);
 
     void settowercolour(int t);
 
@@ -63,13 +65,14 @@ public:
 
     int area(int _rx, int _ry);
 
-    void exploretower();
+    void exploretower(void);
 
-    void hideship();
+    void hideship(void);
 
-    void showship();
+    void showship(void);
 
-    void resetplayer();
+    void resetplayer(const bool player_died);
+    void resetplayer(void);
 
     void warpto(int rx, int ry , int t, int tx, int ty);
 
@@ -79,7 +82,7 @@ public:
 
     void loadlevel(int rx, int ry);
 
-    void twoframedelayfix();
+    void twoframedelayfix(void);
 
 
     int roomdeaths[20 * 20];
@@ -88,6 +91,9 @@ public:
     short contents[40 * 30];
     bool explored[20 * 20];
     int vmult[30];
+
+    bool isexplored(const int rx, const int ry);
+    void setexplored(const int rx, const int ry, const bool status);
 
     int background;
     int rcol;
@@ -108,22 +114,17 @@ public:
     int resumedelay;
     bool minitowermode;
 
-    //This is the old colour cycle
-    int r, g,b;
     int colstatedelay;
     int colsuperstate;
     int spikeleveltop, spikelevelbottom;
     int oldspikeleveltop, oldspikelevelbottom;
     //final level navigation
-    int finalx;
-    int finaly;
     bool finalmode;
     bool finalstretch;
 
     //Variables for playing custom levels
     bool custommode;
     bool custommodeforreal;
-    int customx, customy;
     int customwidth, customheight;
     int custommmxoff, custommmyoff, custommmxsize, custommmysize;
     int customzoom;

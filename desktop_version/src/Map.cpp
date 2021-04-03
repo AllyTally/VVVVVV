@@ -10,12 +10,9 @@
 #include "Script.h"
 #include "UtilityClass.h"
 
-mapclass::mapclass()
+mapclass::mapclass(void)
 {
 	//Start here!
-	r = 196;
-	g = 196;
-	b = 196;
 	colstatedelay = 0;
 	colsuperstate = 0;
 	spikeleveltop = 0;
@@ -32,8 +29,6 @@ mapclass::mapclass()
 
 	finalmode = false;
 	finalstretch = false;
-	finalx = 50;
-	finaly = 50;
 
 	cursorstate = 0;
 	cursordelay = 0;
@@ -51,7 +46,6 @@ mapclass::mapclass()
 
 	custommode=false;
 	custommodeforreal=false;
-	customx=0; customy=0;
 	customwidth=20; customheight=20;
 	custommmxoff=0; custommmyoff=0; custommmxsize=0; custommmysize=0;
 	customzoom=0;
@@ -134,13 +128,13 @@ void mapclass::settrinket(int x, int y)
 	shinytrinkets.push_back(temp);
 }
 
-void mapclass::resetmap()
+void mapclass::resetmap(void)
 {
 	//clear the explored area of the map
 	SDL_memset(explored, 0, sizeof(explored));
 }
 
-void mapclass::resetnames()
+void mapclass::resetnames(void)
 {
 	//Reset all the special names
 	specialnames[0] = "Rear Window";
@@ -399,7 +393,7 @@ std::string mapclass::getglitchname(int x, int y)
 	return roomname;
 }
 
-void mapclass::initmapdata()
+void mapclass::initmapdata(void)
 {
 	if (custommode)
 	{
@@ -449,7 +443,7 @@ void mapclass::initmapdata()
 	settrinket(10, 8);
 }
 
-void mapclass::initcustommapdata()
+void mapclass::initcustommapdata(void)
 {
 	shinytrinkets.clear();
 
@@ -478,8 +472,7 @@ int mapclass::finalat(int x, int y)
 		//Special case: animated tiles
 		if (final_mapcol == 1)
 		{
-			// Windows hits fRandom() == 1 frequently! For fuck sake! -flibit
-			return 737 + (std::min(int(fRandom() * 12), 11) * 40);
+			return 737 + (int(fRandom() * 11) * 40);
 		}
 		else
 		{
@@ -494,7 +487,6 @@ int mapclass::finalat(int x, int y)
 	{
 		return contents[x + vmult[y]];
 	}
-	return 0;
 }
 
 int mapclass::maptiletoenemycol(int t)
@@ -566,11 +558,41 @@ void mapclass::changefinalcol(int t)
 	}
 }
 
-void mapclass::setcol(const int r1, const int g1, const int b1 , const int r2, const int g2, const int b2, const int c)
+void mapclass::setcol(TowerBG& bg_obj, const int r1, const int g1, const int b1 , const int r2, const int g2, const int b2, const int c)
 {
-	r = intpol(r1, r2, c / 5);
-	g = intpol(g1, g2, c / 5);
-	b = intpol(b1, b2, c / 5);
+	bg_obj.r = intpol(r1, r2, c / 5);
+	bg_obj.g = intpol(g1, g2, c / 5);
+	bg_obj.b = intpol(b1, b2, c / 5);
+}
+
+void mapclass::updatebgobj(TowerBG& bg_obj)
+{
+	const int check = bg_obj.colstate % 5; //current state of phase
+	const int cmode = (bg_obj.colstate - check) / 5; // current colour transition;
+
+	switch(cmode)
+	{
+	case 0:
+		setcol(bg_obj, 255, 93, 107, 255, 255, 93, check);
+		break;
+	case 1:
+		setcol(bg_obj, 255, 255, 93, 159, 255, 93, check);
+		break;
+	case 2:
+		setcol(bg_obj, 159, 255, 93, 93, 245, 255, check);
+		break;
+	case 3:
+		setcol(bg_obj, 93, 245, 255, 177, 93, 255, check);
+		break;
+	case 4:
+		setcol(bg_obj, 177, 93, 255, 255, 93, 255, check);
+		break;
+	case 5:
+		setcol(bg_obj, 255, 93, 255, 255, 93, 107, check);
+		break;
+	}
+
+	bg_obj.tdrawback = true;
 }
 
 void mapclass::updatetowerglow(TowerBG& bg_obj)
@@ -580,30 +602,9 @@ void mapclass::updatetowerglow(TowerBG& bg_obj)
 		if (colsuperstate > 0) bg_obj.colstate--;
 		bg_obj.colstate++;
 		if (bg_obj.colstate >= 30) bg_obj.colstate = 0;
-		int check = bg_obj.colstate % 5; //current state of phase
-		int cmode = (bg_obj.colstate - check) / 5; // current colour transition
 
-		switch(cmode)
-		{
-		case 0:
-			setcol(255, 93, 107, 255, 255, 93, check);
-			break;
-		case 1:
-			setcol(255, 255, 93, 159, 255, 93, check);
-			break;
-		case 2:
-			setcol(159, 255, 93, 93, 245, 255, check);
-			break;
-		case 3:
-			setcol(93, 245, 255, 177, 93, 255, check);
-			break;
-		case 4:
-			setcol(177, 93, 255, 255, 93, 255, check);
-			break;
-		case 5:
-			setcol(255, 93, 255, 255, 93, 107, check);
-			break;
-		}
+		const int check = bg_obj.colstate % 5;
+		updatebgobj(bg_obj);
 
 		if (check == 0)
 		{
@@ -614,8 +615,6 @@ void mapclass::updatetowerglow(TowerBG& bg_obj)
 			colstatedelay = 0;
 		}
 		if (colsuperstate > 0) colstatedelay = 0;
-
-		bg_obj.tdrawback = true;
 	}
 	else
 	{
@@ -623,68 +622,20 @@ void mapclass::updatetowerglow(TowerBG& bg_obj)
 	}
 }
 
-void mapclass::nexttowercolour()
+void mapclass::nexttowercolour(void)
 {
 	graphics.titlebg.colstate+=5;
 	if (graphics.titlebg.colstate >= 30) graphics.titlebg.colstate = 0;
-	int check = graphics.titlebg.colstate % 5; //current state of phase
-	int cmode = (graphics.titlebg.colstate - check) / 5; // current colour transition
 
-	switch(cmode)
-	{
-	case 0:
-		setcol(255, 93, 107, 255, 255, 93, check);
-		break;
-	case 1:
-		setcol(255, 255, 93, 159, 255, 93, check);
-		break;
-	case 2:
-		setcol(159, 255, 93, 93, 245, 255, check);
-		break;
-	case 3:
-		setcol(93, 245, 255, 177, 93, 255, check);
-		break;
-	case 4:
-		setcol(177, 93, 255, 255, 93, 255, check);
-		break;
-	case 5:
-		setcol(255, 93, 255, 255, 93, 107, check);
-		break;
-	}
-
-	graphics.titlebg.tdrawback = true;
+	updatebgobj(graphics.titlebg);
 }
 
 void mapclass::settowercolour(int t)
 {
 	graphics.titlebg.colstate=t*5;
 	if (graphics.titlebg.colstate >= 30) graphics.titlebg.colstate = 0;
-	int check = graphics.titlebg.colstate % 5; //current state of phase
-	int cmode = (graphics.titlebg.colstate - check) / 5; // current colour transition
 
-	switch(cmode)
-	{
-	case 0:
-		setcol(255, 93, 107, 255, 255, 93, check);
-		break;
-	case 1:
-		setcol(255, 255, 93, 159, 255, 93, check);
-		break;
-	case 2:
-		setcol(159, 255, 93, 93, 245, 255, check);
-		break;
-	case 3:
-		setcol(93, 245, 255, 177, 93, 255, check);
-		break;
-	case 4:
-		setcol(177, 93, 255, 255, 93, 255, check);
-		break;
-	case 5:
-		setcol(255, 93, 255, 255, 93, 107, check);
-		break;
-	}
-
-	graphics.titlebg.tdrawback = true;
+	updatebgobj(graphics.titlebg);
 }
 
 bool mapclass::spikecollide(int x, int y)
@@ -760,7 +711,6 @@ int mapclass::area(int _rx, int _ry)
 	else
 	{
 		int lookup = (_rx - 100) + ((_ry - 100) * 20);
-		//lookup = std::max(0,lookup);
 		if(_rx-100>=0 && _rx-100<20 && _ry-100>=0 && _ry-100<20){
 			return areamap[lookup];
 		}
@@ -771,37 +721,61 @@ int mapclass::area(int _rx, int _ry)
 	}
 }
 
-void mapclass::exploretower()
+bool mapclass::isexplored(const int rx, const int ry)
 {
-	for (int i = 0; i < 20; i++)
+	const int roomnum = rx + ry*20;
+	if (INBOUNDS_ARR(roomnum, explored))
 	{
-		explored[9 + (i * 20)] = 1;
+		return explored[roomnum];
+	}
+	return false;
+}
+
+void mapclass::setexplored(const int rx, const int ry, const bool status)
+{
+	const int roomnum = rx + ry*20;
+	if (INBOUNDS_ARR(roomnum, explored))
+	{
+		explored[roomnum] = status;
 	}
 }
 
-void mapclass::hideship()
+void mapclass::exploretower(void)
 {
-	//remove the ship from the explored areas
-	explored[2 + (10 * 20)] = 0;
-	explored[3 + (10 * 20)] = 0;
-	explored[4 + (10 * 20)] = 0;
-	explored[2 + (11 * 20)] = 0;
-	explored[3 + (11 * 20)] = 0;
-	explored[4 + (11 * 20)] = 0;
+	for (int i = 0; i < 20; i++)
+	{
+		setexplored(9, i, true);
+	}
 }
 
-void mapclass::showship()
+void mapclass::hideship(void)
 {
 	//remove the ship from the explored areas
-	explored[2 + (10 * 20)] = 1;
-	explored[3 + (10 * 20)] = 1;
-	explored[4 + (10 * 20)] = 1;
-	explored[2 + (11 * 20)] = 1;
-	explored[3 + (11 * 20)] = 1;
-	explored[4 + (11 * 20)] = 1;
+	setexplored(2, 10, false);
+	setexplored(3, 10, false);
+	setexplored(4, 10, false);
+	setexplored(2, 11, false);
+	setexplored(3, 11, false);
+	setexplored(4, 11, false);
 }
 
-void mapclass::resetplayer()
+void mapclass::showship(void)
+{
+	//show the ship in the explored areas
+	setexplored(2, 10, true);
+	setexplored(3, 10, true);
+	setexplored(4, 10, true);
+	setexplored(2, 11, true);
+	setexplored(3, 11, true);
+	setexplored(4, 11, true);
+}
+
+void mapclass::resetplayer(void)
+{
+	resetplayer(false);
+}
+
+void mapclass::resetplayer(const bool player_died)
 {
 	bool was_in_tower = towermode;
 	if (game.roomx != game.saverx || game.roomy != game.savery)
@@ -819,10 +793,22 @@ void mapclass::resetplayer()
 		obj.entities[i].ay = 0;
 		obj.entities[i].xp = game.savex;
 		obj.entities[i].yp = game.savey;
+
+		//Fix conveyor death loop glitch
+		obj.entities[i].newxp = obj.entities[i].xp;
+		obj.entities[i].newyp = obj.entities[i].yp;
+
 		obj.entities[i].dir = game.savedir;
 		obj.entities[i].colour = 0;
-		game.lifeseq = 10;
-		obj.entities[i].invis = true;
+		if (player_died)
+		{
+			game.lifeseq = 10;
+			obj.entities[i].invis = true;
+		}
+		else
+		{
+			obj.entities[i].invis = false;
+		}
 		if (!game.glitchrunnermode)
 		{
 			obj.entities[i].size = 0;
@@ -904,11 +890,25 @@ void mapclass::gotoroom(int rx, int ry)
 		}
 	}
 
-	for (size_t i = 0; i < obj.entities.size(); i++)
+	/* Disable all entities in the room, and deallocate any unnecessary entity slots. */
+	/* However don't disable player entities, but do preserve holes between them (if any). */
+	bool player_found = false;
+	for (int i = obj.entities.size() - 1; i >= 0; --i)
 	{
-		if (obj.entities[i].rule != 0)
+		/* Iterate in reverse order to prevent unnecessary indice shifting */
+		if (obj.entities[i].rule == 0)
 		{
-			removeentity_iter(i);
+			player_found = true;
+			continue;
+		}
+
+		if (!player_found)
+		{
+			obj.entities.erase(obj.entities.begin() + i);
+		}
+		else
+		{
+			obj.disableentity(i);
 		}
 	}
 
@@ -929,18 +929,13 @@ void mapclass::gotoroom(int rx, int ry)
 	if (finalmode)
 	{
 		//Ok, what way are we moving?
-		finalx = rx;
-		finaly = ry;
-		game.roomx = finalx;
-		game.roomy = finaly;
+		game.roomx = rx;
+		game.roomy = ry;
 		game.roomchange = true;
-		rx = finalx;
-		ry = finaly;
 
 		if (game.roomy < 10)
 		{
 			game.roomy = 11;
-			finaly = 11;
 		}
 
 		if(game.roomx>=41 && game.roomy>=48 && game.roomx<61 && game.roomy<68 )
@@ -1172,7 +1167,7 @@ void mapclass::loadlevel(int rx, int ry)
 	int t;
 	if (!finalmode)
 	{
-		explored[rx - 100 + ((ry - 100) * 20)] = true;
+		setexplored(rx - 100, ry - 100, true);
 		if (rx == 109 && !custommode)
 		{
 			exploretower();
@@ -1409,7 +1404,7 @@ void mapclass::loadlevel(int rx, int ry)
 	}
 	case 6: //final level
 	{
-		const short* tmap = finallevel.loadlevel(finalx, finaly);
+		const short* tmap = finallevel.loadlevel(rx, ry);
 		SDL_memcpy(contents, tmap, sizeof(contents));
 		roomname = finallevel.roomname;
 		tileset = 1;
@@ -1432,14 +1427,6 @@ void mapclass::loadlevel(int rx, int ry)
 
 		graphics.rcol = 6;
 		changefinalcol(final_mapcol);
-		for (size_t i = 0; i < obj.entities.size(); i++)
-		{
-			if (obj.entities[i].type == 1 || obj.entities[i].type == 2)
-			{
-				//Fix 1-frame glitch
-				obj.entities[i].drawframe = obj.entities[i].tile;
-			}
-		}
 		break;
 	}
 	case 7: //Final Level, Tower 1
@@ -1484,7 +1471,6 @@ void mapclass::loadlevel(int rx, int ry)
 			obj.entities[i].yp += (71 * 8);
 		}
 		game.roomy--;
-		finaly--;
 
 		ypos = (100-29) * 8;
 		oldypos = ypos;
@@ -1529,7 +1515,6 @@ void mapclass::loadlevel(int rx, int ry)
 			obj.entities[i].yp += (71 * 8);
 		}
 		game.roomy--;
-		finaly--;
 
 		ypos = (100-29) * 8;
 		oldypos = ypos;
@@ -1605,24 +1590,11 @@ void mapclass::loadlevel(int rx, int ry)
 #if !defined(NO_CUSTOM_LEVELS)
 	case 12: //Custom level
 	{
-		const int curlevel = rx-100 + (ry-100) * ed.maxwidth;
-		const edlevelclass* room_ptr = NULL;
-		if (!INBOUNDS_ARR(curlevel, ed.level))
-		{
-			static edlevelclass blank;
-			blank.tileset = 1;
-			room_ptr = &blank;
-		}
-		else
-		{
-			room_ptr = &ed.level[curlevel];
-		}
-		const edlevelclass& room = *room_ptr;
-
-		game.customcol = ed.getlevelcol(curlevel) + 1;
+		const edlevelclass* const room = ed.getroomprop(rx - 100, ry - 100);
+		game.customcol = ed.getlevelcol(room->tileset, room->tilecol) + 1;
 		obj.customplatformtile = game.customcol * 12;
 
-		switch (room.tileset)
+		switch (room->tileset)
 		{
 		case 0: // Space Station
 			tileset = 0;
@@ -1635,7 +1607,7 @@ void mapclass::loadlevel(int rx, int ry)
 		case 2: // Lab
 			tileset = 1;
 			background = 2;
-			graphics.rcol = room.tilecol;
+			graphics.rcol = room->tilecol;
 			break;
 		case 3: // Warp Zone/intermission
 			tileset = 1;
@@ -1658,7 +1630,7 @@ void mapclass::loadlevel(int rx, int ry)
 			graphics.backgrounddrawn = false;
 		}
 
-		switch (room.warpdir)
+		switch (room->warpdir)
 		{
 		case 1:
 			warpx = true;
@@ -1678,7 +1650,7 @@ void mapclass::loadlevel(int rx, int ry)
 			break;
 		}
 
-		roomname = room.roomname;
+		roomname = room->roomname;
 		extrarow = 1;
 		const short* tmap = ed.loadlevel(rx, ry);
 		SDL_memcpy(contents, tmap, sizeof(contents));
@@ -1714,17 +1686,17 @@ void mapclass::loadlevel(int rx, int ry)
 			{
 				if (enemy)
 				{
-					bx1 = room.enemyx1;
-					by1 = room.enemyy1;
-					bx2 = room.enemyx2;
-					by2 = room.enemyy2;
+					bx1 = room->enemyx1;
+					by1 = room->enemyy1;
+					bx2 = room->enemyx2;
+					by2 = room->enemyy2;
 				}
 				else if (moving_plat)
 				{
-					bx1 = room.platx1;
-					by1 = room.platy1;
-					bx2 = room.platx2;
-					by2 = room.platy2;
+					bx1 = room->platx1;
+					by1 = room->platy1;
+					bx2 = room->platx2;
+					by2 = room->platy2;
 				}
 
 				// Enlarge bounding boxes to fix warping entities
@@ -1743,13 +1715,13 @@ void mapclass::loadlevel(int rx, int ry)
 			switch (ent.t)
 			{
 			case 1: // Enemies
-				obj.customenemy = room.enemytype;
+				obj.customenemy = room->enemytype;
 				obj.createentity(ex, ey, 56, ent.p1, 4, bx1, by1, bx2, by2);
 				break;
 			case 2: // Platforms and conveyors
 				if (ent.p1 <= 4)
 				{
-					obj.createentity(ex, ey, 2, ent.p1, room.platv, bx1, by1, bx2, by2);
+					obj.createentity(ex, ey, 2, ent.p1, room->platv, bx1, by1, bx2, by2);
 				}
 				else if (ent.p1 >= 5 && ent.p1 <= 8) // Conveyor
 				{
@@ -2074,7 +2046,7 @@ void mapclass::loadlevel(int rx, int ry)
 	}
 }
 
-void mapclass::twoframedelayfix()
+void mapclass::twoframedelayfix(void)
 {
 	// Fixes the two-frame delay in custom levels that use scripts to spawn an entity upon room load.
 	// Because when the room loads and newscript is set to run, newscript has already ran for that frame,
@@ -2101,9 +2073,4 @@ void mapclass::twoframedelayfix()
 	game.state = 0;
 	game.statedelay = 0;
 	script.load(game.newscript);
-	if (script.running)
-	{
-		script.run();
-		script.dontrunnextframe = true;
-	}
 }

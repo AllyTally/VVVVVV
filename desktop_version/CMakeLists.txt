@@ -7,6 +7,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 OPTION(ENABLE_WARNINGS "Enable compilation warnings" ON)
 OPTION(ENABLE_WERROR "Treat compilation warnings as errors" OFF)
 
+SET(BUNDLE_DEPENDENCIES ON CACHE BOOL "Use bundled TinyXML-2, PhysicsFS, and UTF8-CPP (if disabled, TinyXML-2 and PhysicsFS will be dynamically linked, LodePNG and UTF8-CPP will still be statically linked)")
+
 SET(CUSTOM_LEVEL_SUPPORT ENABLED CACHE STRING "Optionally disable playing and/or editing of custom levels")
 SET_PROPERTY(CACHE CUSTOM_LEVEL_SUPPORT PROPERTY STRINGS ENABLED NO_EDITOR DISABLED)
 
@@ -15,29 +17,15 @@ SET(GOG OFF CACHE BOOL "Use the GOG API")
 
 SET(OFFICIAL_BUILD OFF CACHE BOOL "Compile an official build of the game")
 
-IF(OFFICIAL_BUILD)
+SET(MAKEANDPLAY OFF CACHE BOOL "Compile a version of the game without the main campaign (provided for convenience; consider modifying MakeAndPlay.h instead")
+
+IF(OFFICIAL_BUILD AND NOT MAKEANDPLAY)
 	SET(STEAM ON)
 	SET(GOG ON)
-ELSE()
-	# Get interim commit and date of commit
-	FIND_PACKAGE(Git)
-	IF(GIT_FOUND)
-		EXECUTE_PROCESS(
-			COMMAND "${GIT_EXECUTABLE}" log -1 --format=%h
-			OUTPUT_VARIABLE INTERIM_COMMIT
-			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
-		)
+ENDIF()
 
-		ADD_DEFINITIONS(-DINTERIM_COMMIT="${INTERIM_COMMIT}")
-
-		EXECUTE_PROCESS(
-			COMMAND "${GIT_EXECUTABLE}" log -1 --format=%cs
-			OUTPUT_VARIABLE COMMIT_DATE
-			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
-		)
-
-		ADD_DEFINITIONS(-DCOMMIT_DATE="${COMMIT_DATE}")
-	ENDIF()
+IF(MAKEANDPLAY)
+	ADD_DEFINITIONS(-DMAKEANDPLAY)
 ENDIF()
 
 # Set standard to C++98/C++03
@@ -88,13 +76,20 @@ IF(NOT WIN32)
 ENDIF()
 
 # Include Directories
-INCLUDE_DIRECTORIES(
-	src
-	../third_party/tinyxml2
-	../third_party/physfs
-	../third_party/lodepng
-	../third_party/utfcpp/source
-)
+IF(BUNDLE_DEPENDENCIES)
+	INCLUDE_DIRECTORIES(
+		src
+		../third_party/tinyxml2
+		../third_party/physfs
+		../third_party/lodepng
+		../third_party/utfcpp/source
+	)
+ELSE()
+	INCLUDE_DIRECTORIES(
+		src
+		../third_party/lodepng
+	)
+ENDIF()
 
 # Source Lists
 SET(VVV_SRC
@@ -117,6 +112,7 @@ SET(VVV_SRC
 	src/Otherlevel.cpp
 	src/preloader.cpp
 	src/Render.cpp
+	src/RenderFixed.cpp
 	src/Screen.cpp
 	src/Script.cpp
 	src/Scripts.cpp
@@ -129,7 +125,9 @@ SET(VVV_SRC
 	src/WarpClass.cpp
 	src/XMLUtils.cpp
 	src/main.cpp
+	src/DeferCallbacks.c
 	src/Network.c
+	src/ThirdPartyDeps.c
 )
 IF(NOT CUSTOM_LEVEL_SUPPORT STREQUAL "DISABLED")
 	LIST(APPEND VVV_SRC src/editor.cpp)
@@ -171,6 +169,38 @@ ELSE()
 	ADD_EXECUTABLE(VVVVVV ${VVV_SRC})
 ENDIF()
 
+IF(NOT OFFICIAL_BUILD)
+	# Add interim commit hash and its date to the build
+
+	# FIND_PACKAGE sets GIT_FOUND and GIT_EXECUTABLE
+	FIND_PACKAGE(Git)
+
+	IF(GIT_FOUND)
+		# These filenames have to be qualified, because when we run
+		# the CMake script, its work dir gets set to the build folder
+		SET(VERSION_INPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/Version.h.in)
+		SET(VERSION_OUTPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/Version.h.out)
+
+		ADD_CUSTOM_TARGET(
+			GenerateVersion ALL
+			# This BYPRODUCTS line is required for this to be ran every time
+			BYPRODUCTS ${VERSION_OUTPUT_FILE}
+			COMMAND ${CMAKE_COMMAND}
+			# These args have to be passed through, otherwise the script can't see them
+			# Also, these args have to come BEFORE `-P`! (Otherwise it fails with an unclear error)
+			-DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+			-DINPUT_FILE=${VERSION_INPUT_FILE}
+			-DOUTPUT_FILE=${VERSION_OUTPUT_FILE}
+			-P ${CMAKE_CURRENT_SOURCE_DIR}/version.cmake
+		)
+
+		ADD_DEPENDENCIES(VVVVVV GenerateVersion)
+
+		# This lets Version.h know that Version.h.out exists
+		ADD_DEFINITIONS(-DVERSION_H_OUT_EXISTS)
+	ENDIF()
+ENDIF()
+
 # Build options
 IF(ENABLE_WARNINGS)
 	# The weird syntax is due to CMake generator expressions.
@@ -205,19 +235,36 @@ IF(SUPPORTS_IMPLICIT_FALLTHROUGH)
 	TARGET_COMPILE_OPTIONS(VVVVVV PRIVATE -Werror=implicit-fallthrough)
 ENDIF()
 
+IF(MSVC)
+	# Disable MSVC warnings about implicit conversion
+	TARGET_COMPILE_OPTIONS(VVVVVV PRIVATE /wd4244)
+ENDIF()
+
 SET_PROPERTY(TARGET VVVVVV PROPERTY CXX_STANDARD 98)
 SET_PROPERTY(TARGET VVVVVV PROPERTY CXX_EXTENSIONS FALSE)
+
+# Unfortunately, it doesn't seem like distros package LodePNG
+ADD_LIBRARY(lodepng-static STATIC ${PNG_SRC})
+
+TARGET_COMPILE_DEFINITIONS(lodepng-static PRIVATE
+	-DLODEPNG_NO_COMPILE_ALLOCATORS
+	-DLODEPNG_NO_COMPILE_DISK
+	-DLODEPNG_NO_COMPILE_ENCODER
+)
 
 find_package(CURL REQUIRED)
 target_link_libraries(VVVVVV CURL::libcurl)
 
-# Library information
-ADD_LIBRARY(tinyxml2-static STATIC ${XML2_SRC})
-ADD_LIBRARY(physfs-static STATIC ${PFS_SRC} ${PFSP_SRC})
-ADD_LIBRARY(lodepng-static STATIC ${PNG_SRC})
+IF(BUNDLE_DEPENDENCIES)
+	ADD_LIBRARY(tinyxml2-static STATIC ${XML2_SRC})
+	ADD_LIBRARY(physfs-static STATIC ${PFS_SRC} ${PFSP_SRC})
 
-# Static Dependencies
-TARGET_LINK_LIBRARIES(VVVVVV physfs-static tinyxml2-static lodepng-static)
+	TARGET_LINK_LIBRARIES(VVVVVV physfs-static tinyxml2-static lodepng-static)
+ELSE()
+	FIND_PACKAGE(utf8cpp CONFIG)
+
+	TARGET_LINK_LIBRARIES(VVVVVV physfs tinyxml2 utf8cpp lodepng-static)
+ENDIF()
 
 # SDL2 Dependency (Detection pulled from FAudio)
 if (DEFINED SDL2_INCLUDE_DIRS AND DEFINED SDL2_LIBRARIES)

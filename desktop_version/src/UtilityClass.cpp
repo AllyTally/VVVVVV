@@ -1,87 +1,136 @@
 #define HELP_DEFINITION
 #include "UtilityClass.h"
 
-#include <cctype>
 #include <SDL.h>
 #include <sstream>
 
-/* Used by UtilityClass::GCString to generate a button list */
-const char *GCChar(SDL_GameControllerButton button)
+#include "Maths.h"
+
+static const char* GCChar(const SDL_GameControllerButton button)
 {
-	if (button == SDL_CONTROLLER_BUTTON_A)
+	switch (button)
 	{
+	case SDL_CONTROLLER_BUTTON_A:
 		return "A";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_B)
-	{
+	case SDL_CONTROLLER_BUTTON_B:
 		return "B";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_X)
-	{
+	case SDL_CONTROLLER_BUTTON_X:
 		return "X";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_Y)
-	{
+	case SDL_CONTROLLER_BUTTON_Y:
 		return "Y";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_BACK)
-	{
+	case SDL_CONTROLLER_BUTTON_BACK:
 		return "BACK";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_GUIDE)
-	{
+	case SDL_CONTROLLER_BUTTON_GUIDE:
 		return "GUIDE";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_START)
-	{
+	case SDL_CONTROLLER_BUTTON_START:
 		return "START";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_LEFTSTICK)
-	{
+	case SDL_CONTROLLER_BUTTON_LEFTSTICK:
 		return "L3";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_RIGHTSTICK)
-	{
+	case SDL_CONTROLLER_BUTTON_RIGHTSTICK:
 		return "R3";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_LEFTSHOULDER)
-	{
+	case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
 		return "LB";
-	}
-	else if (button == SDL_CONTROLLER_BUTTON_RIGHTSHOULDER)
-	{
+	case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
 		return "RB";
+	default:
+		SDL_assert(0 && "Unhandled button!");
+		return NULL;
 	}
-	SDL_assert(0 && "Unhandled button!");
-	return NULL;
 }
 
-int ss_toi( std::string _s )
+int ss_toi(const std::string& str)
 {
-	std::istringstream i(_s);
-	int x = 0;
-	i >> x;
-	return x;
-}
+	int retval = 0;
+	bool negative = false;
+	static const int radix = 10;
 
-std::vector<std::string> split( const std::string &s, char delim, std::vector<std::string> &elems )
-{
-	std::stringstream ss(s);
-	std::string item;
-	while(std::getline(ss, item, delim))
+	for (size_t i = 0; i < str.size(); ++i)
 	{
-		elems.push_back(item);
+		const char chr = str[i];
+
+		if (i == 0 && chr == '-')
+		{
+			negative = true;
+			continue;
+		}
+
+		if (SDL_isdigit(chr))
+		{
+			retval *= radix;
+			retval += chr - '0';
+		}
+		else
+		{
+			break;
+		}
 	}
-	return elems;
+
+	if (negative)
+	{
+		return -retval;
+	}
+
+	return retval;
 }
 
-std::vector<std::string> split( const std::string &s, char delim )
-{
-	std::vector<std::string> elems;
-	return split(s, delim, elems);
+bool next_split(
+	size_t* start,
+	size_t* len,
+	const char* str,
+	const char delim
+) {
+	size_t idx = 0;
+	*len = 0;
+
+	if (str[idx] == '\0')
+	{
+		return false;
+	}
+
+	while (true)
+	{
+		if (str[idx] == delim)
+		{
+			*start += 1;
+			return true;
+		}
+		else if (str[idx] == '\0')
+		{
+			return true;
+		}
+
+		idx += 1;
+		*start += 1;
+		*len += 1;
+	}
 }
 
-UtilityClass::UtilityClass() :
+bool next_split_s(
+	char buffer[],
+	const size_t buffer_size,
+	size_t* start,
+	const char* str,
+	const char delim
+) {
+	size_t len = 0;
+	const size_t prev_start = *start;
+
+	const bool retval = next_split(start, &len, &str[*start], delim);
+
+	if (retval)
+	{
+		/* Using SDL_strlcpy() here results in calling SDL_strlen() */
+		/* on the whole string, which results in a visible freeze */
+		/* if it's a very large string */
+		const size_t length = VVV_min(buffer_size - 1, len);
+		SDL_memcpy(buffer, &str[prev_start], length);
+		buffer[length] = '\0';
+	}
+
+	return retval;
+}
+
+UtilityClass::UtilityClass(void) :
 glow(0),
 	glowdir(0)
 {
@@ -110,7 +159,7 @@ int UtilityClass::Int(const char* str, int fallback /*= 0*/)
 	return (int) SDL_strtol(str, NULL, 0);
 }
 
-std::string UtilityClass::GCString(std::vector<SDL_GameControllerButton> buttons)
+std::string UtilityClass::GCString(const std::vector<SDL_GameControllerButton>& buttons)
 {
 	std::string retval = "";
 	for (size_t i = 0; i < buttons.size(); i += 1)
@@ -202,7 +251,7 @@ bool UtilityClass::intersects( SDL_Rect A, SDL_Rect B )
 	return (SDL_HasIntersection(&A, &B) == SDL_TRUE);
 }
 
-void UtilityClass::updateglow()
+void UtilityClass::updateglow(void)
 {
 	slowsine++;
 	if (slowsine >= 64) slowsine = 0;
@@ -218,47 +267,71 @@ void UtilityClass::updateglow()
 
 bool is_number(const char* str)
 {
-	for (int i = 0; str[i] != '\0'; i++)
+	if (!SDL_isdigit(str[0]) && str[0] != '-')
 	{
-		if (!SDL_isdigit(static_cast<unsigned char>(str[i])) && (i != 0 || str[0] != '-'))
+		return false;
+	}
+
+	if (str[0] == '-' && str[1] == '\0')
+	{
+		return false;
+	}
+
+	for (size_t i = 1; str[i] != '\0'; ++i)
+	{
+		if (!SDL_isdigit(str[i]))
 		{
 			return false;
 		}
 	}
+
 	return true;
 }
 
-bool is_positive_num(const std::string& str, bool hex)
+static bool VVV_isxdigit(const unsigned char digit)
 {
-	for (size_t i = 0; i < str.length(); i++)
+	return (digit >= 'a' && digit <= 'f')
+	|| (digit >= 'A' && digit <= 'F')
+	|| SDL_isdigit(digit);
+}
+
+bool is_positive_num(const char* str, const bool hex)
+{
+	if (str[0] == '\0')
+	{
+		return false;
+	}
+
+	for (size_t i = 0; str[i] != '\0'; ++i)
 	{
 		if (hex)
 		{
-			if (!isxdigit(static_cast<unsigned char>(str[i])))
+			if (!VVV_isxdigit(str[i]))
 			{
 				return false;
 			}
 		}
 		else
 		{
-			if (!SDL_isdigit(static_cast<unsigned char>(str[i])))
+			if (!SDL_isdigit(str[i]))
 			{
 				return false;
 			}
 		}
 	}
+
 	return true;
 }
 
-bool endsWith(const std::string& str, const std::string& suffix)
+bool endsWith(const char* str, const char* suffix)
 {
-	if (str.size() < suffix.size())
+	const size_t str_size = SDL_strlen(str);
+	const size_t suffix_size = SDL_strlen(suffix);
+
+	if (str_size < suffix_size)
 	{
 		return false;
 	}
-	return str.compare(
-		str.size() - suffix.size(),
-		suffix.size(),
-		suffix
-	) == 0;
+
+	return SDL_strcmp(&str[str_size - suffix_size], suffix) == 0;
 }

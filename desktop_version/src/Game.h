@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "ScreenSettings.h"
+
 // Forward decl without including all of <tinyxml2.h>
 namespace tinyxml2
 {
@@ -12,10 +14,12 @@ namespace tinyxml2
     class XMLElement;
 }
 
+/* 40 chars (160 bytes) covers the entire screen, + 1 more for null terminator */
+#define MENU_TEXT_BYTES 161
+
 struct MenuOption
 {
-    char text[161]; // 40 chars (160 bytes) covers the entire screen, + 1 more for null terminator
-    // WARNING: should match Game::menutextbytes below
+    char text[MENU_TEXT_BYTES];
     bool active;
 };
 
@@ -34,6 +38,7 @@ namespace Menu
         quickloadlevel,
         youwannaquit,
         errornostart,
+        errorsavingsettings,
         graphicoptions,
         ed_settings,
         ed_desc,
@@ -99,86 +104,98 @@ public:
     void init(void);
 
 
-    int crewrescued();
+    int crewrescued(void);
 
-    std::string unrescued();
+    std::string unrescued(void);
 
-    void resetgameclock();
+    void resetgameclock(void);
 
     bool customsavequick(std::string savfile);
-    bool savequick();
+    bool savequick(void);
 
-    void gameclock();
+    void gameclock(void);
 
     std::string giventimestring(int hrs, int min, int sec);
 
-    std::string  timestring();
+    std::string  timestring(void);
 
-    std::string partimestring();
+    std::string partimestring(void);
 
-    std::string resulttimestring();
+    std::string resulttimestring(void);
 
     std::string timetstring(int t);
 
-    void returnmenu();
+    void returnmenu(void);
     void returntomenu(enum Menu::MenuName t);
     void  createmenu(enum Menu::MenuName t, bool samemenu = false);
 
-    void lifesequence();
+    void lifesequence(void);
 
-    void gethardestroom();
+    void gethardestroom(void);
 
-    void updatestate();
+    void levelcomplete_textbox(void);
+    void crewmate_textbox(const int r, const int g, const int b);
+    void remaining_textbox(void);
+    void actionprompt_textbox(void);
+    void savetele_textbox(void);
+
+    void updatestate(void);
 
     void unlocknum(int t);
 
-    void loadstats(int *width, int *height, bool *vsync);
+    void loadstats(ScreenSettings* screen_settings);
 
-    void  savestats(const bool stats_only = false);
+    bool savestats(const ScreenSettings* screen_settings);
+    bool savestats(void);
 
-    void deletestats();
+    void deletestats(void);
 
-    void deserializesettings(tinyxml2::XMLElement* dataNode, int* width, int* height, bool* vsync);
+    void deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* screen_settings);
 
-    void serializesettings(tinyxml2::XMLElement* dataNode);
+    void serializesettings(tinyxml2::XMLElement* dataNode, const ScreenSettings* screen_settings);
 
-    void loadsettings(int* width, int* height, bool* vsync);
+    void loadsettings(ScreenSettings* screen_settings);
 
-    void savesettings();
+    bool savesettings(const ScreenSettings* screen_settings);
+    bool savesettings(void);
 
-    void deletesettings();
+    bool savestatsandsettings(void);
 
-    void deletequick();
+    void savestatsandsettings_menu(void);
 
-    bool savetele();
+    void deletesettings(void);
 
-    void loadtele();
+    void deletequick(void);
 
-    void deletetele();
+    bool savetele(void);
 
-    void customstart();
+    void loadtele(void);
 
-    void start();
+    void deletetele(void);
+
+    void customstart(void);
+
+    void start(void);
 
     void startspecial(int t);
 
     void starttrial(int t);
 
-    void swnpenalty();
+    void swnpenalty(void);
 
-    void deathsequence();
+    void deathsequence(void);
 
     void customloadquick(std::string savfile);
-    void loadquick();
+    void loadquick(void);
 
-    void loadsummary();
+    void loadsummary(void);
 
     void readmaingamesave(tinyxml2::XMLDocument& doc);
     std::string writemaingamesave(tinyxml2::XMLDocument& doc);
 
-    void initteleportermode();
+    void initteleportermode(void);
 
-    std::string saveFilePath;
+    const char* saveFilePath;
 
 
     int door_left;
@@ -200,9 +217,8 @@ public:
 
     bool glitchrunkludge;
 
-    int usingmmmmmm;
-
     int gamestate;
+    int prevgamestate; //only used sometimes
     bool hascontrol, jumpheld;
     int jumppressed;
     int gravitycontrol;
@@ -215,6 +231,7 @@ public:
     int tapleft, tapright;
 
     //Menu interaction stuff
+    void mapmenuchange(const int newgamestate);
     bool mapheld;
     int menupage;
     int lastsaved;
@@ -229,7 +246,6 @@ public:
     bool startscript;
     std::string newscript;
 
-    int mainmenu;
     bool menustart;
 
     //Teleporting
@@ -247,7 +263,6 @@ public:
     int current_credits_list_index;
     int menuxoff, menuyoff;
     int menuspacing;
-    static const int menutextbytes = 161; // this is just sizeof(MenuOption::text), but doing that is non-standard
     std::vector<MenuStackFrame> menustack;
 
     void inline option(const char* text, bool active = true)
@@ -264,6 +279,8 @@ public:
     int creditposx, creditposy, creditposdelay;
     int oldcreditposx;
 
+    bool silence_settings_error;
+
 
     //Sine Wave Ninja Minigame
     bool swnmode;
@@ -279,16 +296,22 @@ public:
     bool  colourblindmode;
     bool noflashingmode;
     int slowdown;
-    Uint32 gameframerate;
+    int get_timestep(void);
 
     bool nodeathmode;
     int gameoverdelay;
     bool nocutscenes;
+    int ndmresultcrewrescued;
+    int ndmresulttrinkets;
+    std::string ndmresulthardestroom;
+    void copyndmresults(void);
 
     //Time Trials
     bool intimetrial, timetrialparlost;
     int timetrialcountdown, timetrialshinytarget, timetriallevel;
     int timetrialpar, timetrialresulttime, timetrialresultframes, timetrialrank;
+    int timetrialresultshinytarget, timetrialresulttrinkets, timetrialresultpar;
+    int timetrialresultdeaths;
 
     int creditposition;
     int oldcreditposition;
@@ -298,6 +321,7 @@ public:
 
     static const int numcrew = 6;
     bool crewstats[numcrew];
+    bool ndmresultcrewstats[numcrew];
 
     bool alarmon;
     int alarmdelay;
@@ -310,9 +334,8 @@ public:
     static const int numunlock = 25;
     bool unlock[numunlock];
     bool unlocknotify[numunlock];
-    bool anything_unlocked();
+    bool anything_unlocked(void);
     int stat_trinkets;
-    bool fullscreen;
     int bestgamedeaths;
 
 
@@ -336,8 +359,8 @@ public:
 
     int deathseq, lifeseq;
 
-    int trinkets();
-    int crewmates();
+    int trinkets(void);
+    int crewmates(void);
     int savepoint, teleportxpos;
     bool teleport;
     int edteleportent;
@@ -355,7 +378,7 @@ public:
     std::string activity_lastprompt;
 
     std::string telesummary, quicksummary, customquicksummary;
-    bool save_exists();
+    bool save_exists(void);
 
     bool backgroundtext;
 
@@ -369,13 +392,6 @@ public:
     std::string hardestroom;
     int hardestroomdeaths, currentroomdeaths;
 
-    bool savemystats;
-
-
-    bool fullScreenEffect_badSignal;
-    bool useLinearFilter;
-    int stretchMode;
-    int controllerSensitivity;
 
     bool quickrestartkludge;
 
@@ -387,9 +403,9 @@ public:
     std::string customleveltitle;
     std::string customlevelfilename;
 
-    void clearcustomlevelstats();
-    void loadcustomlevelstats();
-    void savecustomlevelstats();
+    void clearcustomlevelstats(void);
+    void loadcustomlevelstats(void);
+    void savecustomlevelstats(void);
     void updatecustomlevelstats(std::string clevel, int cscore);
 
     std::vector<CustomLevelStat> customlevelstats;
@@ -413,21 +429,18 @@ public:
     int playmusic;
     std::string playassets;
 
-    void quittomenu();
-    void returntolab();
+    void quittomenu(void);
+    void returntolab(void);
     bool fadetomenu;
     int fadetomenudelay;
     bool fadetolab;
     int fadetolabdelay;
 
 #if !defined(NO_CUSTOM_LEVELS)
-    void returntoeditor();
-    bool shouldreturntoeditor;
+    void returntoeditor(void);
 #endif
 
-    int gametimer;
-
-    bool inline inspecial()
+    bool inline inspecial(void)
     {
         return inintermission || insecretlab || intimetrial || nodeathmode;
     }
@@ -436,11 +449,15 @@ public:
     bool glitchrunnermode; // Have fun speedrunners! <3 Misa
 
     bool ingame_titlemode;
+#if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
+    bool ingame_editormode;
+#endif
 
-    void returntopausemenu();
+    void returntoingame(void);
     void unlockAchievement(const char *name);
 
     bool disablepause;
+    bool inputdelay;
 };
 
 #ifndef GAME_DEFINITION

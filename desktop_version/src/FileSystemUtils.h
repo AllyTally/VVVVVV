@@ -1,23 +1,25 @@
 #ifndef FILESYSTEMUTILS_H
 #define FILESYSTEMUTILS_H
 
-#include <string>
-#include <vector>
+#include <stddef.h>
 
 // Forward declaration, including the entirety of tinyxml2.h across all files this file is included in is unnecessary
 namespace tinyxml2 { class XMLDocument; }
 
 int FILESYSTEM_init(char *argvZero, char* baseDir, char* assetsPath);
-void FILESYSTEM_deinit();
+void FILESYSTEM_deinit(void);
 
-char *FILESYSTEM_getUserSaveDirectory();
-char *FILESYSTEM_getUserLevelDirectory();
+char *FILESYSTEM_getUserSaveDirectory(void);
+char *FILESYSTEM_getUserLevelDirectory(void);
 
-bool FILESYSTEM_directoryExists(const char *fname);
+bool FILESYSTEM_isFile(const char* filename);
+bool FILESYSTEM_isMounted(const char* filename);
+
 void FILESYSTEM_mount(const char *fname);
-extern bool FILESYSTEM_assetsmounted;
+void FILESYSTEM_loadZip(const char* filename);
 void FILESYSTEM_mountassets(const char *path);
-void FILESYSTEM_unmountassets();
+void FILESYSTEM_unmountassets(void);
+bool FILESYSTEM_isAssetMounted(const char* filename);
 
 void FILESYSTEM_loadFileToMemory(const char *name, unsigned char **mem,
                                  size_t *len, bool addnull = false);
@@ -27,9 +29,9 @@ bool FILESYSTEM_downloadFile(const char* name, const char* url);
 bool FILESYSTEM_saveTiXml2Document(const char *name, tinyxml2::XMLDocument& doc);
 bool FILESYSTEM_loadTiXml2Document(const char *name, tinyxml2::XMLDocument& doc);
 
-std::vector<std::string> FILESYSTEM_getLevelDirFileNames();
+void FILESYSTEM_enumerateLevelDirFileNames(void (*callback)(const char* filename));
 
-bool FILESYSTEM_openDirectoryEnabled();
+bool FILESYSTEM_openDirectoryEnabled(void);
 bool FILESYSTEM_openDirectory(const char *dname);
 
 bool FILESYSTEM_delete(const char *name);

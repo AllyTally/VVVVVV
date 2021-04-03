@@ -37,41 +37,36 @@ public:
 
 	bool resetWindow;
 
-	bool quitProgram;
-	bool toggleFullscreen;
+	void toggleFullscreen(void);
 
 	int sensitivity;
 
-	void setSensitivity(int _value);
+	int inline getThreshold(void);
 
-	KeyPoll();
+	KeyPoll(void);
 
-	void enabletextentry();
+	void enabletextentry(void);
 
-	void disabletextentry();
+	void disabletextentry(void);
 
-	void Poll();
+	void Poll(void);
 
 	bool isDown(SDL_Keycode key);
 
-	bool isUp(SDL_Keycode key);
-
 	bool isDown(std::vector<SDL_GameControllerButton> buttons);
 	bool isDown(SDL_GameControllerButton button);
-	bool controllerButtonDown();
+	bool controllerButtonDown(void);
 	bool controllerWantsLeft(bool includeVert);
 	bool controllerWantsRight(bool includeVert);
 
 	int leftbutton, rightbutton, middlebutton;
 	int mx, my;
 
-	bool textentry();
+	bool textentry(void);
 	bool pressedbackspace;
 	std::string keybuffer;
 
 	bool linealreadyemptykludge;
-
-	Uint64 pauseStart;
 
 private:
 	std::map<SDL_JoystickID, SDL_GameController*> controllers;

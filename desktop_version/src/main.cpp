@@ -1,10 +1,11 @@
 #include <SDL.h>
 #include <stdio.h>
-#include <string.h>
 
+#include "DeferCallbacks.h"
 #include "editor.h"
 #include "Enums.h"
 #include "Entity.h"
+#include "Exit.h"
 #include "FileSystemUtils.h"
 #include "Game.h"
 #include "Graphics.h"
@@ -16,6 +17,7 @@
 #include "Network.h"
 #include "preloader.h"
 #include "Render.h"
+#include "RenderFixed.h"
 #include "Screen.h"
 #include "Script.h"
 #include "SoundSystem.h"
@@ -37,26 +39,305 @@ mapclass map;
 entityclass obj;
 Screen gameScreen;
 
-bool startinplaytest = false;
-bool savefileplaytest = false;
-int savex = 0;
-int savey = 0;
-int saverx = 0;
-int savery = 0;
-int savegc = 0;
-int savemusic = 0;
-std::string playassets;
+static bool startinplaytest = false;
+static bool savefileplaytest = false;
+static int savex = 0;
+static int savey = 0;
+static int saverx = 0;
+static int savery = 0;
+static int savegc = 0;
+static int savemusic = 0;
+static std::string playassets;
 
-std::string playtestname;
+static std::string playtestname;
 
-volatile Uint32 time_ = 0;
-volatile Uint32 timePrev = 0;
-volatile Uint32 accumulator = 0;
-volatile Uint32 f_time = 0;
-volatile Uint32 f_timePrev = 0;
+static volatile Uint32 time_ = 0;
+static volatile Uint32 timePrev = 0;
+static volatile Uint32 accumulator = 0;
+static volatile Uint32 f_time = 0;
+static volatile Uint32 f_timePrev = 0;
 
-void inline deltaloop();
-void inline fixedloop();
+enum FuncType
+{
+    Func_null,
+    Func_fixed,
+    Func_input,
+    Func_delta
+};
+
+struct ImplFunc
+{
+    enum FuncType type;
+    void (*func)(void);
+};
+
+static void runscript(void)
+{
+    script.run();
+}
+
+static void teleportermodeinput(void)
+{
+    if (game.useteleporter)
+    {
+        teleporterinput();
+    }
+    else
+    {
+        script.run();
+        gameinput();
+    }
+}
+
+/* Only gets used in EDITORMODE. I assume the compiler will optimize this away
+ * if this is a NO_CUSTOM_LEVELS or NO_EDITOR build
+ */
+static void flipmodeoff(void)
+{
+    graphics.flipmode = false;
+}
+
+static void focused_begin(void);
+static void focused_end(void);
+
+static const inline struct ImplFunc* get_gamestate_funcs(
+    const int gamestate,
+    int* num_implfuncs
+) {
+    switch (gamestate)
+    {
+
+#define FUNC_LIST_BEGIN(GAMESTATE) \
+    case GAMESTATE: \
+    { \
+        static const struct ImplFunc implfuncs[] = { \
+            {Func_fixed, focused_begin},
+
+#define FUNC_LIST_END \
+            {Func_fixed, focused_end} \
+        }; \
+        *num_implfuncs = SDL_arraysize(implfuncs); \
+        return implfuncs; \
+    }
+
+    FUNC_LIST_BEGIN(GAMEMODE)
+        {Func_fixed, runscript},
+        {Func_fixed, gamerenderfixed},
+        {Func_delta, gamerender},
+        {Func_input, gameinput},
+        {Func_fixed, gamelogic},
+    FUNC_LIST_END
+
+    FUNC_LIST_BEGIN(TITLEMODE)
+        {Func_input, titleinput},
+        {Func_fixed, titlerenderfixed},
+        {Func_delta, titlerender},
+        {Func_fixed, titlelogic},
+    FUNC_LIST_END
+
+    FUNC_LIST_BEGIN(MAPMODE)
+        {Func_fixed, maprenderfixed},
+        {Func_delta, maprender},
+        {Func_input, mapinput},
+        {Func_fixed, maplogic},
+    FUNC_LIST_END
+
+    FUNC_LIST_BEGIN(TELEPORTERMODE)
+        {Func_fixed, maprenderfixed},
+        {Func_delta, teleporterrender},
+        {Func_input, teleportermodeinput},
+        {Func_fixed, maplogic},
+    FUNC_LIST_END
+
+    FUNC_LIST_BEGIN(GAMECOMPLETE)
+        {Func_fixed, gamecompleterenderfixed},
+        {Func_delta, gamecompleterender},
+        {Func_input, gamecompleteinput},
+        {Func_fixed, gamecompletelogic},
+    FUNC_LIST_END
+
+    FUNC_LIST_BEGIN(GAMECOMPLETE2)
+        {Func_delta, gamecompleterender2},
+        {Func_input, gamecompleteinput2},
+        {Func_fixed, gamecompletelogic2},
+    FUNC_LIST_END
+
+#if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
+    FUNC_LIST_BEGIN(EDITORMODE)
+        {Func_fixed, flipmodeoff},
+        {Func_input, editorinput},
+        {Func_fixed, editorrenderfixed},
+        {Func_delta, editorrender},
+        {Func_fixed, editorlogic},
+    FUNC_LIST_END
+#endif
+
+    FUNC_LIST_BEGIN(PRELOADER)
+        {Func_input, preloaderinput},
+        {Func_fixed, preloaderrenderfixed},
+        {Func_delta, preloaderrender},
+    FUNC_LIST_END
+
+#undef FUNC_LIST_END
+#undef FUNC_LIST_BEGIN
+
+    }
+
+    SDL_assert(0 && "Invalid gamestate!");
+    return NULL;
+}
+
+enum IndexCode
+{
+    Index_none,
+    Index_end
+};
+
+static const struct ImplFunc* gamestate_funcs = NULL;
+static int num_gamestate_funcs = 0;
+static int gamestate_func_index = -1;
+
+static enum IndexCode increment_gamestate_func_index(void)
+{
+    gamestate_func_index++;
+
+    if (gamestate_func_index == num_gamestate_funcs)
+    {
+        /* Reached the end of current gamestate order.
+         * Re-fetch for new order if gamestate changed.
+         */
+        gamestate_funcs = get_gamestate_funcs(
+            game.gamestate,
+            &num_gamestate_funcs
+        );
+
+        /* Also run callbacks that were deferred to end of func sequence. */
+        DEFER_execute_callbacks();
+
+        gamestate_func_index = 0;
+
+        return Index_end;
+    }
+
+    return Index_none;
+}
+
+static void unfocused_run(void);
+
+static const struct ImplFunc unfocused_func_list[] = {
+    {
+        Func_input, /* we still need polling when unfocused */
+        unfocused_run
+    }
+};
+static const struct ImplFunc* unfocused_funcs = unfocused_func_list;
+static int num_unfocused_funcs = SDL_arraysize(unfocused_func_list);
+static int unfocused_func_index = 0; // This does not get incremented on start, do NOT use -1!
+
+static enum IndexCode increment_unfocused_func_index(void)
+{
+    unfocused_func_index++;
+
+    if (unfocused_func_index == num_unfocused_funcs)
+    {
+        unfocused_func_index = 0;
+
+        return Index_end;
+    }
+
+    return Index_none;
+}
+
+static const struct ImplFunc** active_funcs = NULL;
+static int* num_active_funcs = NULL;
+static int* active_func_index = NULL;
+static enum IndexCode (*increment_func_index)(void) = NULL;
+
+enum LoopCode
+{
+    Loop_continue,
+    Loop_stop
+};
+
+static enum LoopCode loop_assign_active_funcs(void)
+{
+    if (key.isActive)
+    {
+        active_funcs = &gamestate_funcs;
+        num_active_funcs = &num_gamestate_funcs;
+        active_func_index = &gamestate_func_index;
+        increment_func_index = &increment_gamestate_func_index;
+    }
+    else
+    {
+        active_funcs = &unfocused_funcs;
+        num_active_funcs = &num_unfocused_funcs;
+        active_func_index = &unfocused_func_index;
+        increment_func_index = &increment_unfocused_func_index;
+    }
+    return Loop_continue;
+}
+
+static enum LoopCode loop_run_active_funcs(void)
+{
+    while ((*active_funcs)[*active_func_index].type != Func_delta)
+    {
+        const struct ImplFunc* implfunc = &(*active_funcs)[*active_func_index];
+        enum IndexCode index_code;
+
+        if (implfunc->type == Func_input && !game.inputdelay)
+        {
+            key.Poll();
+        }
+
+        if (implfunc->type != Func_null && implfunc->func != NULL)
+        {
+            implfunc->func();
+        }
+
+        index_code = increment_func_index();
+
+        if (index_code == Index_end)
+        {
+            return Loop_continue;
+        }
+    }
+
+    /* About to switch over to rendering... but call this first. */
+    graphics.renderfixedpre();
+
+    return Loop_stop;
+}
+
+static enum LoopCode loop_begin(void);
+static enum LoopCode loop_end(void);
+
+static enum LoopCode (*const meta_funcs[])(void) = {
+    loop_begin,
+    loop_assign_active_funcs,
+    loop_run_active_funcs,
+    loop_end
+};
+static int meta_func_index = 0;
+
+static void inline fixedloop(void)
+{
+    while (true)
+    {
+        enum LoopCode loop_code = meta_funcs[meta_func_index]();
+
+        if (loop_code == Loop_stop)
+        {
+            break;
+        }
+
+        meta_func_index = (meta_func_index + 1) % SDL_arraysize(meta_funcs);
+    }
+}
+
+static void inline deltaloop(void);
+
+static void cleanup(void);
 
 int main(int argc, char *argv[])
 {
@@ -65,7 +346,7 @@ int main(int argc, char *argv[])
 
     for (int i = 1; i < argc; ++i)
     {
-#define ARG(name) (strcmp(argv[i], name) == 0)
+#define ARG(name) (SDL_strcmp(argv[i], name) == 0)
 #define ARG_INNER(code) \
     if (i + 1 < argc) \
     { \
@@ -74,7 +355,7 @@ int main(int argc, char *argv[])
     else \
     { \
         printf("%s option requires one argument.\n", argv[i]); \
-        return 1; \
+        VVV_exit(1); \
     }
 
         if (ARG("-renderer"))
@@ -137,14 +418,14 @@ int main(int argc, char *argv[])
         else
         {
             printf("Error: invalid option: %s\n", argv[i]);
-            return 1;
+            VVV_exit(1);
         }
     }
 
     if(!FILESYSTEM_init(argv[0], baseDir, assetsPath))
     {
         puts("Unable to initialize filesystem!");
-        return 1;
+        VVV_exit(1);
     }
 
     SDL_Init(
@@ -207,97 +488,30 @@ int main(int argc, char *argv[])
     game.gamestate = PRELOADER;
 
     game.menustart = false;
-    game.mainmenu = 0;
+
+    // Initialize title screen to cyan
+    graphics.titlebg.colstate = 10;
+    map.nexttowercolour();
 
     map.ypos = (700-29) * 8;
     graphics.towerbg.bypos = map.ypos / 2;
     graphics.titlebg.bypos = map.ypos / 2;
 
-    //Moved screensetting init here from main menu V2.1
-    int width = 320;
-    int height = 240;
-    bool vsync = false;
-
-    // Prioritize unlock.vvv first (2.2 and below),
-    // but settings have been migrated to settings.vvv (2.3 and up)
-    game.loadstats(&width, &height, &vsync);
-    game.loadsettings(&width, &height, &vsync);
-
-    gameScreen.init(
-        width,
-        height,
-        game.fullscreen,
-        vsync,
-        game.stretchMode,
-        game.useLinearFilter,
-        game.fullScreenEffect_badSignal
-    );
+    {
+        // Prioritize unlock.vvv first (2.2 and below),
+        // but settings have been migrated to settings.vvv (2.3 and up)
+        ScreenSettings screen_settings;
+        game.loadstats(&screen_settings);
+        game.loadsettings(&screen_settings);
+        gameScreen.init(screen_settings);
+    }
     graphics.screenbuffer = &gameScreen;
 
-    const SDL_PixelFormat* fmt = gameScreen.GetFormat();
-    #define CREATE_SURFACE(w, h) \
-        SDL_CreateRGBSurface( \
-            SDL_SWSURFACE, \
-            w, h, \
-            fmt->BitsPerPixel, \
-            fmt->Rmask, fmt->Gmask, fmt->Bmask, fmt->Amask \
-        )
-    graphics.backBuffer = CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.backBuffer, SDL_BLENDMODE_NONE);
-
-    graphics.footerbuffer = CREATE_SURFACE(320, 10);
-    SDL_SetSurfaceBlendMode(graphics.footerbuffer, SDL_BLENDMODE_BLEND);
-    SDL_SetSurfaceAlphaMod(graphics.footerbuffer, 127);
-    FillRect(graphics.footerbuffer, SDL_MapRGB(fmt, 0, 0, 0));
-
-    graphics.ghostbuffer = CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.ghostbuffer, SDL_BLENDMODE_BLEND);
-    SDL_SetSurfaceAlphaMod(graphics.ghostbuffer, 127);
-
-    graphics.Makebfont();
-
-    graphics.foregroundBuffer =  CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.foregroundBuffer, SDL_BLENDMODE_BLEND);
-
-    graphics.menubuffer = CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.menubuffer, SDL_BLENDMODE_NONE);
-
-    graphics.warpbuffer = CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.warpbuffer, SDL_BLENDMODE_NONE);
-
-    graphics.warpbuffer_lerp = CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.warpbuffer_lerp, SDL_BLENDMODE_NONE);
-
-    graphics.towerbg.buffer =  CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.towerbg.buffer, SDL_BLENDMODE_NONE);
-
-    graphics.towerbg.buffer_lerp = CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.towerbg.buffer_lerp, SDL_BLENDMODE_NONE);
-
-    graphics.titlebg.buffer = CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.titlebg.buffer, SDL_BLENDMODE_NONE);
-
-    graphics.titlebg.buffer_lerp = CREATE_SURFACE(320 + 16, 240 + 16);
-    SDL_SetSurfaceBlendMode(graphics.titlebg.buffer_lerp, SDL_BLENDMODE_NONE);
-
-    graphics.tempBuffer = CREATE_SURFACE(320, 240);
-    SDL_SetSurfaceBlendMode(graphics.tempBuffer, SDL_BLENDMODE_NONE);
-
-    #undef CREATE_SURFACE
+    graphics.create_buffers(gameScreen.GetFormat());
 
     if (game.skipfakeload)
         game.gamestate = TITLEMODE;
-    if(game.usingmmmmmm==0) music.usingmmmmmm=false;
-    if(game.usingmmmmmm==1) music.usingmmmmmm=true;
     if (game.slowdown == 0) game.slowdown = 30;
-
-    switch(game.slowdown){
-        case 30: game.gameframerate=34; break;
-        case 24: game.gameframerate=41; break;
-        case 18: game.gameframerate=55; break;
-        case 12: game.gameframerate=83; break;
-        default: game.gameframerate=34; break;
-    }
 
     //Check to see if you've already unlocked some achievements here from before the update
     if (game.swnbestrank > 0){
@@ -344,9 +558,6 @@ int main(int argc, char *argv[])
         game.playassets = playassets;
         game.menustart = true;
 
-        ed.directoryList.clear();
-        ed.directoryList.push_back(playtestname);
-
         LevelMetaData meta;
         if (ed.getLevelMetaData(playtestname, meta)) {
             ed.ListOfMetaData.clear();
@@ -358,7 +569,7 @@ int main(int argc, char *argv[])
                 ed.ListOfMetaData.push_back(meta);
             } else {
                 printf("Level not found\n");
-                return 1;
+                VVV_exit(1);
             }
         }
 
@@ -383,9 +594,11 @@ int main(int argc, char *argv[])
 #endif
 
     key.isActive = true;
-    game.gametimer = 0;
 
-    while(!key.quitProgram)
+    gamestate_funcs = get_gamestate_funcs(game.gamestate, &num_gamestate_funcs);
+    loop_assign_active_funcs();
+
+    while (true)
     {
         f_time = SDL_GetTicks();
 
@@ -405,238 +618,123 @@ int main(int argc, char *argv[])
         deltaloop();
     }
 
-    game.savestats();
-    NETWORK_shutdown();
-    SDL_Quit();
-    FILESYSTEM_deinit();
-
+    cleanup();
     return 0;
 }
 
-void inline deltaloop()
+static void cleanup(void)
+{
+    /* Order matters! */
+    game.savestatsandsettings();
+    gameScreen.destroy();
+    graphics.grphx.destroy();
+    graphics.destroy_buffers();
+    graphics.destroy();
+    music.destroy();
+    NETWORK_shutdown();
+    SDL_Quit();
+    FILESYSTEM_deinit();
+}
+
+void VVV_exit(const int exit_code)
+{
+    cleanup();
+    exit(exit_code);
+}
+
+static void inline deltaloop(void)
 {
     //timestep limit to 30
     const float rawdeltatime = static_cast<float>(time_ - timePrev);
     accumulator += rawdeltatime;
 
-    Uint32 timesteplimit;
-    if (game.gamestate == EDITORMODE)
-    {
-        timesteplimit = 24;
-    }
-    else if (game.gamestate == GAMEMODE)
-    {
-        timesteplimit = game.gameframerate;
-    }
-    else
-    {
-        timesteplimit = 34;
-    }
+    Uint32 timesteplimit = game.get_timestep();
 
     while (accumulator >= timesteplimit)
     {
+        enum IndexCode index_code = increment_func_index();
+
+        if (index_code == Index_end)
+        {
+            loop_assign_active_funcs();
+        }
+
         accumulator = SDL_fmodf(accumulator, timesteplimit);
+
+        /* We are done rendering. */
+        graphics.renderfixedpost();
 
         fixedloop();
     }
     const float alpha = game.over30mode ? static_cast<float>(accumulator) / timesteplimit : 1.0f;
     graphics.alpha = alpha;
 
-    if (key.isActive)
+    if (active_func_index == NULL
+    || *active_func_index == -1
+    || active_funcs == NULL)
     {
-        switch (game.gamestate)
-        {
-        case PRELOADER:
-            preloaderrender();
-            break;
-#if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
-        case EDITORMODE:
-            graphics.flipmode = false;
-            editorrender();
-            break;
-#endif
-        case TITLEMODE:
-            titlerender();
-            break;
-        case GAMEMODE:
-            gamerender();
-            break;
-        case MAPMODE:
-            maprender();
-            break;
-        case TELEPORTERMODE:
-            teleporterrender();
-            break;
-        case GAMECOMPLETE:
-            gamecompleterender();
-            break;
-        case GAMECOMPLETE2:
-            gamecompleterender2();
-            break;
-        case CLICKTOSTART:
-            help.updateglow();
-            break;
-        }
-        gameScreen.FlipScreen();
-    }
-}
-
-void inline fixedloop()
-{
-    // Update network per frame.
-    NETWORK_update();
-
-    key.Poll();
-    if(key.toggleFullscreen)
-    {
-        gameScreen.toggleFullScreen();
-        game.fullscreen = !game.fullscreen;
-        key.toggleFullscreen = false;
-
-        key.keymap.clear(); //we lost the input due to a new window.
-        if (game.glitchrunnermode)
-        {
-            game.press_left = false;
-            game.press_right = false;
-            game.press_action = true;
-            game.press_map = false;
-        }
-    }
-
-    if(!key.isActive)
-    {
-        Mix_Pause(-1);
-        Mix_PauseMusic();
-
-        if (!game.blackout)
-        {
-            FillRect(graphics.backBuffer, 0x00000000);
-            graphics.bprint(5, 110, "Game paused", 196 - help.glow, 255 - help.glow, 196 - help.glow, true);
-            graphics.bprint(5, 120, "[click to resume]", 196 - help.glow, 255 - help.glow, 196 - help.glow, true);
-            graphics.bprint(5, 220, "Press M to mute in game", 164 - help.glow, 196 - help.glow, 164 - help.glow, true);
-            graphics.bprint(5, 230, "Press N to mute music only", 164 - help.glow, 196 - help.glow, 164 - help.glow, true);
-        }
-        graphics.render();
-        gameScreen.FlipScreen();
-        //We are minimised, so lets put a bit of a delay to save CPU
-        SDL_Delay(100);
+        /* Somehow the first deltatime has been too small and things haven't
+         * initialized. We'll just no-op for now.
+         */
     }
     else
     {
-        Mix_Resume(-1);
-        Mix_ResumeMusic();
-        game.gametimer++;
-        graphics.cutscenebarstimer();
+        const struct ImplFunc* implfunc = &(*active_funcs)[*active_func_index];
 
-        switch(game.gamestate)
+        if (implfunc->type == Func_delta && implfunc->func != NULL)
         {
-        case PRELOADER:
-            preloaderlogic();
-            break;
-#if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
-        case EDITORMODE:
-            //Input
-            editorinput();
-            ////Logic
-            editorlogic();
-            break;
-#endif
-        case TITLEMODE:
-            //Input
-            titleinput();
-            ////Logic
-            titlelogic();
-            break;
-        case GAMEMODE:
-            // WARNING: If updating this code, don't forget to update Map.cpp mapclass::twoframedelayfix()
+            implfunc->func();
 
-            // Ugh, I hate this kludge variable but it's the only way to do it
-            if (script.dontrunnextframe)
-            {
-                script.dontrunnextframe = false;
-            }
-            else if (script.running)
-            {
-                script.run();
-            }
-
-            //Update old lerp positions of entities - has to be done BEFORE gameinput!
-            for (size_t i = 0; i < obj.entities.size(); i++)
-            {
-                obj.entities[i].lerpoldxp = obj.entities[i].xp;
-                obj.entities[i].lerpoldyp = obj.entities[i].yp;
-            }
-
-            gameinput();
-            gamelogic();
-
-
-            break;
-        case MAPMODE:
-            mapinput();
-            maplogic();
-            break;
-        case TELEPORTERMODE:
-            if(game.useteleporter)
-            {
-                teleporterinput();
-            }
-            else
-            {
-                if (script.running)
-                {
-                    script.run();
-                }
-                gameinput();
-            }
-            maplogic();
-            break;
-        case GAMECOMPLETE:
-            //Input
-            gamecompleteinput();
-            //Logic
-            gamecompletelogic();
-            break;
-        case GAMECOMPLETE2:
-            //Input
-            gamecompleteinput2();
-            //Logic
-            gamecompletelogic2();
-            break;
-        case CLICKTOSTART:
-            break;
-        default:
-
-            break;
-
+            gameScreen.FlipScreen();
         }
-
     }
+}
 
-    //Screen effects timers
-    if (key.isActive && game.flashlight > 0)
+static enum LoopCode loop_begin(void)
+{
+    if (game.inputdelay)
     {
-        game.flashlight--;
-    }
-    if (key.isActive && game.screenshake > 0)
-    {
-        game.screenshake--;
-        graphics.updatescreenshake();
+        key.Poll();
     }
 
-    if (graphics.screenbuffer->badSignalEffect)
-    {
-        UpdateFilter();
-    }
+    // Update network per frame.
+    NETWORK_update();
 
+    return Loop_continue;
+}
+
+static void unfocused_run(void)
+{
+    if (!game.blackout)
+    {
+        ClearSurface(graphics.backBuffer);
+#define FLIP(YPOS) graphics.flipmode ? 232 - YPOS : YPOS
+        graphics.bprint(5, FLIP(110), "Game paused", 196 - help.glow, 255 - help.glow, 196 - help.glow, true);
+        graphics.bprint(5, FLIP(120), "[click to resume]", 196 - help.glow, 255 - help.glow, 196 - help.glow, true);
+        graphics.bprint(5, FLIP(220), "Press M to mute in game", 164 - help.glow, 196 - help.glow, 164 - help.glow, true);
+        graphics.bprint(5, FLIP(230), "Press N to mute music only", 164 - help.glow, 196 - help.glow, 164 - help.glow, true);
+#undef FLIP
+    }
+    graphics.render();
+    gameScreen.FlipScreen();
+    //We are minimised, so lets put a bit of a delay to save CPU
+    SDL_Delay(100);
+}
+
+static void focused_begin(void)
+{
+    /* no-op. */
+}
+
+static void focused_end(void)
+{
+    /* no-op. */
+}
+
+static enum LoopCode loop_end(void)
+{
     //We did editorinput, now it's safe to turn this off
     key.linealreadyemptykludge = false;
-
-    if (game.savemystats)
-    {
-        game.savemystats = false;
-        game.savestats();
-    }
 
     //Mute button
     if (key.isDown(KEYBOARD_m) && game.mutebutton<=0 && !key.textentry())
@@ -694,4 +792,6 @@ void inline fixedloop()
     music.processmusic();
     graphics.processfade();
     game.gameclock();
+
+    return Loop_continue;
 }

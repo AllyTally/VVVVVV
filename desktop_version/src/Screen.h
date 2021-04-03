@@ -3,34 +3,31 @@
 
 #include <SDL.h>
 
+#include "ScreenSettings.h"
+
 class Screen
 {
 public:
-	void init(
-		int windowWidth,
-		int windowHeight,
-		bool fullscreen,
-		bool useVsync,
-		int stretch,
-		bool linearFilter,
-		bool badSignal
-	);
+	void init(const ScreenSettings& settings);
+	void destroy(void);
 
-	void LoadIcon();
+	void GetSettings(ScreenSettings* settings);
+
+	void LoadIcon(void);
 
 	void ResizeScreen(int x, int y);
-	void ResizeToNearestMultiple();
+	void ResizeToNearestMultiple(void);
 	void GetWindowSize(int* x, int* y);
 
 	void UpdateScreen(SDL_Surface* buffer, SDL_Rect* rect);
-	void FlipScreen();
+	void FlipScreen(void);
 
-	const SDL_PixelFormat* GetFormat();
+	const SDL_PixelFormat* GetFormat(void);
 
-	void toggleFullScreen();
-	void toggleStretchMode();
-	void toggleLinearFilter();
-	void resetRendererWorkaround();
+	void toggleFullScreen(void);
+	void toggleStretchMode(void);
+	void toggleLinearFilter(void);
+	void resetRendererWorkaround(void);
 
 	bool isWindowed;
 	bool isFiltered;
