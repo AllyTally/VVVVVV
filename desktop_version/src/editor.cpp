@@ -299,7 +299,9 @@ static void levelMetaDataCallback(const char* filename)
     LevelMetaData temp;
     std::string filename_ = filename;
 
-    if (!FILESYSTEM_isFile(filename) || FILESYSTEM_isMounted(filename))
+    if (!endsWith(filename, ".vvvvvv")
+    || !FILESYSTEM_isFile(filename)
+    || FILESYSTEM_isMounted(filename))
     {
         return;
     }
@@ -1835,14 +1837,14 @@ bool editorclass::load(std::string& _path)
         _path = levelDir + _path;
     }
 
-    FILESYSTEM_unmountassets();
+    FILESYSTEM_unmountAssets();
     if (game.playassets != "")
     {
-        FILESYSTEM_mountassets(game.playassets.c_str());
+        FILESYSTEM_mountAssets(game.playassets.c_str());
     }
     else
     {
-        FILESYSTEM_mountassets(_path.c_str());
+        FILESYSTEM_mountAssets(_path.c_str());
     }
 
     tinyxml2::XMLDocument doc;
@@ -3868,11 +3870,6 @@ void editorlogic(void)
     }
 }
 
-static void creategraphicoptions(void)
-{
-    game.createmenu(Menu::graphicoptions);
-}
-
 static void creategameoptions(void)
 {
     game.createmenu(Menu::options);
@@ -3972,22 +3969,13 @@ static void editormenuactionpress(void)
             graphics.backgrounddrawn=false;
             break;
         case 6:
-        case 7:
-            /* Graphic options and game options */
+            /* Game options */
             music.playef(11);
             game.gamestate = TITLEMODE;
             game.ingame_titlemode = true;
             game.ingame_editormode = true;
 
-            if (game.currentmenuoption == 6)
-            {
-                DEFER_CALLBACK(creategraphicoptions);
-            }
-            else
-            {
-                DEFER_CALLBACK(creategameoptions);
-            }
-
+            DEFER_CALLBACK(creategameoptions);
             DEFER_CALLBACK(nextbgcolor);
             break;
         default:
