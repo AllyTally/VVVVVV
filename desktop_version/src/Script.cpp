@@ -295,7 +295,7 @@ void scriptclass::run(void)
 			}
 			if (words[0] == "resumemusic")
 			{
-				music.resume();
+				music.resumefade(0);
 			}
 			if (words[0] == "musicfadeout")
 			{
@@ -1958,7 +1958,7 @@ void scriptclass::run(void)
 			}
 			else if (words[0] == "foundtrinket")
 			{
-				music.haltdasmusik();
+				music.silencedasmusik();
 				music.playef(3);
 
 				size_t trinket = ss_toi(words[1]);
@@ -3617,6 +3617,7 @@ void scriptclass::hardreset(void)
 	}
 
 	game.pausescript = false;
+	game.completestop = false;
 
 	game.flashlight = 0;
 	game.screenshake = 0;

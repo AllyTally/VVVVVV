@@ -370,7 +370,7 @@ void Graphics::Makebfont(void)
 
     unsigned char* charmap = NULL;
     size_t length;
-    FILESYSTEM_loadFileToMemory("graphics/font.txt", &charmap, &length);
+    FILESYSTEM_loadAssetToMemory("graphics/font.txt", &charmap, &length, false);
     if (charmap != NULL)
     {
         unsigned char* current = charmap;
@@ -404,21 +404,21 @@ int Graphics::bfontlen(uint32_t ch)
 
 void Graphics::MakeTileArray(void)
 {
-    PROCESS_TILESHEET(tiles, 8, )
-    PROCESS_TILESHEET(tiles2, 8, )
-    PROCESS_TILESHEET(tiles3, 8, )
-    PROCESS_TILESHEET(entcolours, 8, )
+    PROCESS_TILESHEET(tiles, 8, {})
+    PROCESS_TILESHEET(tiles2, 8, {})
+    PROCESS_TILESHEET(tiles3, 8, {})
+    PROCESS_TILESHEET(entcolours, 8, {})
 }
 
 void Graphics::maketelearray(void)
 {
-    PROCESS_TILESHEET_RENAME(teleporter, tele, 96, )
+    PROCESS_TILESHEET_RENAME(teleporter, tele, 96, {})
 }
 
 void Graphics::MakeSpriteArray(void)
 {
-    PROCESS_TILESHEET(sprites, 32, )
-    PROCESS_TILESHEET(flipsprites, 32, )
+    PROCESS_TILESHEET(sprites, 32, {})
+    PROCESS_TILESHEET(flipsprites, 32, {})
 }
 
 #undef PROCESS_TILESHEET
@@ -544,6 +544,28 @@ void Graphics::bigprint(  int _x, int _y, std::string _s, int r, int g, int b, b
         }
         bfontpos+=bfontlen(curr) *sc;
     }
+}
+
+void Graphics::bigbprint(int x, int y, std::string s, int r, int g, int b, bool cen, int sc)
+{
+    if (!notextoutline)
+    {
+        bigprint(x, y - sc, s, 0, 0, 0, cen, sc);
+        if (cen)
+        {
+            int x_cen = VVV_max(160 - (len(s) / 2) * sc, 0);
+            bigprint(x_cen - sc, y, s, 0, 0, 0, false, sc);
+            bigprint(x_cen + sc, y, s, 0, 0, 0, false, sc);
+        }
+        else
+        {
+            bigprint(x - sc, y, s, 0, 0, 0, cen, sc);
+            bigprint(x + sc, y, s, 0, 0, 0, cen, sc);
+        }
+        bigprint(x, y + sc, s, 0, 0, 0, cen, sc);
+    }
+
+    bigprint(x, y, s, r, g, b, cen, sc);
 }
 
 int Graphics::len(std::string t)
@@ -864,7 +886,7 @@ void Graphics::drawgui(void)
         {
             for (size_t j = 0; j < textbox[i].line.size(); j++)
             {
-                Print(textbox[i].xp + 8, yp + text_yoff + text_sign * (j * 8), textbox[i].line[j], 196, 196, 255 - help.glow);
+                bprint(textbox[i].xp + 8, yp + text_yoff + text_sign * (j * 8), textbox[i].line[j], 196, 196, 255 - help.glow);
             }
         }
         else
@@ -1457,7 +1479,7 @@ void Graphics::drawmenu( int cr, int cg, int cb, bool levelmenu /*= false*/ )
         SDL_strlcpy(tempstring, opt.text, sizeof(tempstring));
 
         char buffer[MENU_TEXT_BYTES];
-        if ((int) i == game.currentmenuoption)
+        if ((int) i == game.currentmenuoption && game.slidermode == SLIDER_NONE)
         {
             if (opt.active)
             {
@@ -3158,6 +3180,30 @@ void Graphics::bigrprint(int x, int y, std::string& t, int r, int g, int b, bool
 		}
 		bfontpos+=bfontlen(cur)* sc;
 	}
+}
+
+void Graphics::bigbrprint(int x, int y, std::string& s, int r, int g, int b, bool cen, float sc)
+{
+	if (!notextoutline)
+	{
+		int x_o = x / sc - len(s);
+		bigrprint(x, y - sc, s, 0, 0, 0, cen, sc);
+		if (cen)
+		{
+			x_o = VVV_max(160 - (len(s) / 2) * sc, 0);
+			bigprint(x_o - sc, y, s, 0, 0, 0, false, sc);
+			bigprint(x_o + sc, y, s, 0, 0, 0, false, sc);
+		}
+		else
+		{
+			x_o *= sc;
+			bigprint(x_o - sc, y, s, 0, 0, 0, false, sc);
+			bigprint(x_o + sc, y, s, 0, 0, 0, false, sc);
+		}
+		bigrprint(x, y + sc, s, 0, 0, 0, cen, sc);
+	}
+
+	bigrprint(x, y, s, r, g, b, cen, sc);
 }
 
 void Graphics::drawtele(int x, int y, int t, Uint32 c)

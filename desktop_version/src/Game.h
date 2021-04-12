@@ -41,7 +41,10 @@ namespace Menu
         ed_music,
         ed_quit,
         options,
+        gameplayoptions,
+        speedrunneroptions,
         advancedoptions,
+        audiooptions,
         accessibility,
         controller,
         cleardatamenu,
@@ -79,8 +82,15 @@ namespace Menu
         timetrialcomplete3,
         gamecompletecontinue,
         tweakmenu,
-        tweakmodifying,
+        tweakmodifying
     };
+}
+
+enum SLIDERMODE
+{
+    SLIDER_NONE,
+    SLIDER_MUSICVOLUME,
+    SLIDER_SOUNDVOLUME
 };
 
 struct MenuStackFrame
@@ -258,6 +268,7 @@ public:
     int currentmenuoption ;
     enum Menu::MenuName currentmenuname;
     enum Menu::MenuName kludge_ingametemp;
+    enum SLIDERMODE slidermode;
     int current_credits_list_index;
     int menuxoff, menuyoff;
     int menuspacing;
@@ -294,6 +305,7 @@ public:
     bool  colourblindmode;
     bool noflashingmode;
     int slowdown;
+    int get_timestep(void);
 
     bool nodeathmode;
     int gameoverdelay;
@@ -466,6 +478,7 @@ public:
     bool holding_both;
     int additional_block;
     bool holding_entity;
+    bool inputdelay;
 };
 
 #ifndef GAME_DEFINITION

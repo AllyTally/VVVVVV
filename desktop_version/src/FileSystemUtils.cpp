@@ -9,17 +9,26 @@
 
 #include "Exit.h"
 #include "Graphics.h"
+#include "Maths.h"
 #include "UtilityClass.h"
 
 /* These are needed for PLATFORM_* crap */
 #if defined(_WIN32)
 #include <windows.h>
 #include <shlobj.h>
+int mkdir(char* path, int mode)
+{
+	WCHAR utf16_path[MAX_PATH];
+	MultiByteToWideChar(CP_UTF8, 0, path, -1, utf16_path, MAX_PATH);
+	return CreateDirectoryW(utf16_path, NULL);
+}
+#define VNEEDS_MIGRATION (mkdirResult != 0)
 #elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__HAIKU__) || defined(__DragonFly__)
 #include <unistd.h>
 #include <dirent.h>
 #include <limits.h>
 #include <sys/stat.h>
+#define VNEEDS_MIGRATION (mkdirResult == 0)
 #define MAX_PATH PATH_MAX
 #endif
 
@@ -27,6 +36,7 @@ static char saveDir[MAX_PATH] = {'\0'};
 static char levelDir[MAX_PATH] = {'\0'};
 
 static char assetDir[MAX_PATH] = {'\0'};
+static char virtualMountPath[MAX_PATH] = {'\0'};
 
 static void PLATFORM_getOSDirectory(char* output);
 static void PLATFORM_migrateSaveData(char* output);
@@ -54,7 +64,9 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 {
 	char output[MAX_PATH];
 	int mkdirResult;
+	int retval;
 	const char* pathSep = PHYSFS_getDirSeparator();
+	char* basePath;
 
 	PHYSFS_setAllocator(&allocator);
 	PHYSFS_init(argvZero);
@@ -76,38 +88,41 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 		PLATFORM_getOSDirectory(output);
 	}
 
-	/* Create base user directory, mount */
-	mkdirResult = PHYSFS_mkdir(output);
-
 	/* Mount our base user directory */
 	PHYSFS_mount(output, NULL, 0);
 	PHYSFS_setWriteDir(output);
 	printf("Base directory: %s\n", output);
 
-	/* Create the save/level folders */
-	mkdirResult |= PHYSFS_mkdir("saves");
-	mkdirResult |= PHYSFS_mkdir("levels");
-
 	/* Store full save directory */
 	SDL_snprintf(saveDir, sizeof(saveDir), "%s%s%s",
 		output,
 		"saves",
-		PHYSFS_getDirSeparator()
+		pathSep
 	);
+	mkdir(saveDir, 0777); /* FIXME: Why did I not | this? -flibit */
 	printf("Save directory: %s\n", saveDir);
 
 	/* Store full level directory */
 	SDL_snprintf(levelDir, sizeof(levelDir), "%s%s%s",
 		output,
 		"levels",
-		PHYSFS_getDirSeparator()
+		pathSep
 	);
+	mkdirResult = mkdir(levelDir, 0777);
 	printf("Level directory: %s\n", levelDir);
 
 	/* We didn't exist until now, migrate files! */
-	if (mkdirResult == 0)
+	if (VNEEDS_MIGRATION)
 	{
 		PLATFORM_migrateSaveData(output);
+	}
+
+	basePath = SDL_GetBasePath();
+
+	if (basePath == NULL)
+	{
+		puts("Unable to get base path!");
+		return 0;
 	}
 
 	/* Mount the stock content last */
@@ -118,7 +133,7 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 	else
 	{
 		SDL_snprintf(output, sizeof(output), "%s%s",
-			PHYSFS_getBaseDir(),
+			basePath,
 			"data.zip"
 		);
 	}
@@ -137,15 +152,20 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 			"\nor get it from the free Make and Play Edition.",
 			NULL
 		);
-		return 0;
+		retval = 0;
+		goto end;
 	}
 
-	SDL_snprintf(output, sizeof(output), "%s%s", PHYSFS_getBaseDir(), "gamecontrollerdb.txt");
+	SDL_snprintf(output, sizeof(output), "%s%s", basePath, "gamecontrollerdb.txt");
 	if (SDL_GameControllerAddMappingsFromFile(output) < 0)
 	{
 		printf("gamecontrollerdb.txt not found!\n");
 	}
-	return 1;
+	retval = 1;
+
+end:
+	SDL_free(basePath);
+	return retval;
 }
 
 void FILESYSTEM_deinit(void)
@@ -198,10 +218,36 @@ static bool FILESYSTEM_exists(const char *fname)
 	return PHYSFS_exists(fname);
 }
 
-void FILESYSTEM_mount(const char *fname)
+static void generateVirtualMountPath(char* path, const size_t path_size)
+{
+	char random[6 + 1] = {'\0'};
+	size_t i;
+	for (i = 0; i < SDL_arraysize(random) - 1; ++i)
+	{
+		/* Generate a-z0-9 (base 36) */
+		char randchar = fRandom() * 36;
+		if (randchar <= 26)
+		{
+			randchar += 'a';
+		}
+		else
+		{
+			randchar -= 26;
+			randchar += '0';
+		}
+		random[i] = randchar;
+	}
+	SDL_snprintf(
+		path,
+		path_size,
+		".vvv-mnt-virtual-%s/custom-assets/",
+		random
+	);
+}
+
+static bool FILESYSTEM_mountAssetsFrom(const char *fname)
 {
 	const char* real_dir = PHYSFS_getRealDir(fname);
-	const char* dir_separator;
 	char path[MAX_PATH];
 
 	if (real_dir == NULL)
@@ -210,21 +256,25 @@ void FILESYSTEM_mount(const char *fname)
 			"Could not mount %s: real directory doesn't exist\n",
 			fname
 		);
-		return;
+		return false;
 	}
 
-	dir_separator = PHYSFS_getDirSeparator();
+	SDL_snprintf(path, sizeof(path), "%s/%s", real_dir, fname);
 
-	SDL_snprintf(path, sizeof(path), "%s%s%s", real_dir, dir_separator, fname);
+	generateVirtualMountPath(virtualMountPath, sizeof(virtualMountPath));
 
-	if (!PHYSFS_mount(path, NULL, 0))
+	if (!PHYSFS_mount(path, virtualMountPath, 0))
 	{
-		printf("Error mounting: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+		printf(
+			"Error mounting %s: %s\n",
+			fname,
+			PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+		);
+		return false;
 	}
-	else
-	{
-		SDL_strlcpy(assetDir, path, sizeof(assetDir));
-	}
+
+	SDL_strlcpy(assetDir, path, sizeof(assetDir));
+	return true;
 }
 
 void FILESYSTEM_loadZip(const char* filename)
@@ -241,7 +291,7 @@ void FILESYSTEM_loadZip(const char* filename)
 	}
 }
 
-void FILESYSTEM_mountassets(const char* path)
+void FILESYSTEM_mountAssets(const char* path)
 {
 	const size_t path_size = SDL_strlen(path);
 	char filename[MAX_PATH];
@@ -283,40 +333,20 @@ void FILESYSTEM_mountassets(const char* path)
 	{
 		printf("Custom asset directory is .data.zip at %s\n", zip_data);
 
-		FILESYSTEM_mount(zip_data);
+		if (!FILESYSTEM_mountAssetsFrom(zip_data))
+		{
+			return;
+		}
 
 		graphics.reloadresources();
 	}
 	else if (zip_normal != NULL && endsWith(zip_normal, ".zip"))
 	{
-		PHYSFS_File* zip = PHYSFS_openRead(zip_normal);
-
 		printf("Custom asset directory is .zip at %s\n", zip_normal);
 
-		SDL_snprintf(
-			zip_data,
-			sizeof(zip_data),
-			"%s.data.zip",
-			zip_normal
-		);
-
-		if (zip == NULL)
+		if (!FILESYSTEM_mountAssetsFrom(zip_normal))
 		{
-			printf(
-				"Error loading .zip: %s\n",
-				PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
-			);
-		}
-		else if (PHYSFS_mountHandle(zip, zip_data, "/", 0) == 0)
-		{
-			printf(
-				"Error mounting .zip: %s\n",
-				PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
-			);
-		}
-		else
-		{
-			SDL_strlcpy(assetDir, zip_data, sizeof(assetDir));
+			return;
 		}
 
 		graphics.reloadresources();
@@ -325,7 +355,10 @@ void FILESYSTEM_mountassets(const char* path)
 	{
 		printf("Custom asset directory exists at %s\n", dir);
 
-		FILESYSTEM_mount(dir);
+		if (!FILESYSTEM_mountAssetsFrom(dir))
+		{
+			return;
+		}
 
 		graphics.reloadresources();
 	}
@@ -335,7 +368,7 @@ void FILESYSTEM_mountassets(const char* path)
 	}
 }
 
-void FILESYSTEM_unmountassets(void)
+void FILESYSTEM_unmountAssets(void)
 {
 	if (assetDir[0] != '\0')
 	{
@@ -446,6 +479,39 @@ void FILESYSTEM_loadFileToMemory(
 	PHYSFS_close(handle);
 }
 
+void FILESYSTEM_loadAssetToMemory(
+	const char* name,
+	unsigned char** mem,
+	size_t* len,
+	const bool addnull
+) {
+	const char* path;
+	const bool assets_mounted = assetDir[0] != '\0';
+	char mounted_path[MAX_PATH];
+
+	if (assets_mounted)
+	{
+		SDL_snprintf(
+			mounted_path,
+			sizeof(mounted_path),
+			"%s%s",
+			virtualMountPath,
+			name
+		);
+	}
+
+	if (assets_mounted && PHYSFS_exists(mounted_path))
+	{
+		path = mounted_path;
+	}
+	else
+	{
+		path = name;
+	}
+
+	FILESYSTEM_loadFileToMemory(path, mem, len, addnull);
+}
+
 void FILESYSTEM_freeMemory(unsigned char **mem)
 {
 	SDL_free(*mem);
@@ -524,6 +590,7 @@ static void PLATFORM_getOSDirectory(char* output)
 	SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, utf16_path);
 	WideCharToMultiByte(CP_UTF8, 0, utf16_path, -1, output, MAX_PATH, NULL, NULL);
 	SDL_strlcat(output, "\\VVVVVV\\", MAX_PATH);
+	mkdir(output, 0777);
 #else
 	SDL_strlcpy(output, PHYSFS_getPrefDir("distractionware", "VVVVVV"), MAX_PATH);
 #endif

@@ -57,23 +57,6 @@ static volatile Uint32 accumulator = 0;
 static volatile Uint32 f_time = 0;
 static volatile Uint32 f_timePrev = 0;
 
-static inline Uint32 get_framerate(const int slowdown)
-{
-    switch (slowdown)
-    {
-    case 30:
-        return 34;
-    case 24:
-        return 41;
-    case 18:
-        return 55;
-    case 12:
-        return 83;
-    }
-
-    return 34;
-}
-
 enum FuncType
 {
     Func_null,
@@ -314,7 +297,7 @@ static enum LoopCode loop_run_active_funcs(void)
         const struct ImplFunc* implfunc = &(*active_funcs)[*active_func_index];
         enum IndexCode index_code;
 
-        if (implfunc->type == Func_input)
+        if (implfunc->type == Func_input && !game.inputdelay)
         {
             key.Poll();
         }
@@ -438,7 +421,7 @@ int main(int argc, char *argv[])
         {
             ARG_INNER({
                 i++;
-                // Even if this is a directory, FILESYSTEM_mountassets() expects '.vvvvvv' on the end
+                // Even if this is a directory, FILESYSTEM_mountAssets() expects '.vvvvvv' on the end
                 playassets = "levels/" + std::string(argv[i]) + ".vvvvvv";
             })
         }
@@ -627,7 +610,7 @@ int main(int argc, char *argv[])
     gamestate_funcs = get_gamestate_funcs(game.gamestate, &num_gamestate_funcs);
     loop_assign_active_funcs();
 
-    while(!key.quitProgram)
+    while (true)
     {
         f_time = SDL_GetTicks();
 
@@ -677,23 +660,16 @@ static void inline deltaloop(void)
     const float rawdeltatime = static_cast<float>(time_ - timePrev);
     accumulator += rawdeltatime;
 
-    Uint32 timesteplimit;
-    if (game.gamestate == EDITORMODE)
-    {
-        timesteplimit = 24;
-    }
-    else if (game.gamestate == GAMEMODE)
-    {
-        timesteplimit = get_framerate(game.slowdown);
-    }
-    else
-    {
-        timesteplimit = 34;
-    }
+    Uint32 timesteplimit = game.get_timestep();
 
     while (accumulator >= timesteplimit)
     {
-        increment_func_index();
+        enum IndexCode index_code = increment_func_index();
+
+        if (index_code == Index_end)
+        {
+            loop_assign_active_funcs();
+        }
 
         accumulator = SDL_fmodf(accumulator, timesteplimit);
 
@@ -728,6 +704,11 @@ static void inline deltaloop(void)
 
 static enum LoopCode loop_begin(void)
 {
+    if (game.inputdelay)
+    {
+        key.Poll();
+    }
+
     // Update network per frame.
     NETWORK_update();
 
@@ -736,16 +717,15 @@ static enum LoopCode loop_begin(void)
 
 static void unfocused_run(void)
 {
-    Mix_Pause(-1);
-    Mix_PauseMusic();
-
     if (!game.blackout)
     {
         ClearSurface(graphics.backBuffer);
-        graphics.bprint(5, 110, "Game paused", 196 - help.glow, 255 - help.glow, 196 - help.glow, true);
-        graphics.bprint(5, 120, "[click to resume]", 196 - help.glow, 255 - help.glow, 196 - help.glow, true);
-        graphics.bprint(5, 220, "Press M to mute in game", 164 - help.glow, 196 - help.glow, 164 - help.glow, true);
-        graphics.bprint(5, 230, "Press N to mute music only", 164 - help.glow, 196 - help.glow, 164 - help.glow, true);
+#define FLIP(YPOS) graphics.flipmode ? 232 - YPOS : YPOS
+        graphics.bprint(5, FLIP(110), "Game paused", 196 - help.glow, 255 - help.glow, 196 - help.glow, true);
+        graphics.bprint(5, FLIP(120), "[click to resume]", 196 - help.glow, 255 - help.glow, 196 - help.glow, true);
+        graphics.bprint(5, FLIP(220), "Press M to mute in game", 164 - help.glow, 196 - help.glow, 164 - help.glow, true);
+        graphics.bprint(5, FLIP(230), "Press N to mute music only", 164 - help.glow, 196 - help.glow, 164 - help.glow, true);
+#undef FLIP
     }
     graphics.render();
     gameScreen.FlipScreen();
@@ -755,8 +735,7 @@ static void unfocused_run(void)
 
 static void focused_begin(void)
 {
-    Mix_Resume(-1);
-    Mix_ResumeMusic();
+    /* no-op. */
 }
 
 static void focused_end(void)
@@ -804,7 +783,7 @@ static enum LoopCode loop_end(void)
     }
     else
     {
-        Mix_Volume(-1,MIX_MAX_VOLUME);
+        Mix_Volume(-1,MIX_MAX_VOLUME * music.user_sound_volume / USER_VOLUME_MAX);
 
         if (game.musicmuted)
         {
@@ -812,7 +791,7 @@ static enum LoopCode loop_end(void)
         }
         else
         {
-            Mix_VolumeMusic(music.musicVolume);
+            Mix_VolumeMusic(music.musicVolume * music.user_music_volume / USER_VOLUME_MAX);
         }
     }
 

@@ -21,6 +21,10 @@
 #include "UtilityClass.h"
 #include "XMLUtils.h"
 
+#ifdef _WIN32
+#define SCNx32 "x"
+#define SCNu32 "u"
+#else
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
 #endif
@@ -28,6 +32,7 @@
 #define _POSIX_SOURCE
 #endif
 #include <inttypes.h>
+#endif
 
 edlevelclass::edlevelclass(void)
 {
@@ -190,14 +195,14 @@ static std::string NAME(const std::string& buf) \
     return find_tag(buf, "<" TAG ">", "</" TAG ">"); \
 }
 
-TAG_FINDER(find_metadata, "MetaData"); //only for checking that it exists
+TAG_FINDER(find_metadata, "MetaData") //only for checking that it exists
 
-TAG_FINDER(find_creator, "Creator");
-TAG_FINDER(find_title, "Title");
-TAG_FINDER(find_desc1, "Desc1");
-TAG_FINDER(find_desc2, "Desc2");
-TAG_FINDER(find_desc3, "Desc3");
-TAG_FINDER(find_website, "website");
+TAG_FINDER(find_creator, "Creator")
+TAG_FINDER(find_title, "Title")
+TAG_FINDER(find_desc1, "Desc1")
+TAG_FINDER(find_desc2, "Desc2")
+TAG_FINDER(find_desc3, "Desc3")
+TAG_FINDER(find_website, "website")
 
 #undef TAG_FINDER
 
@@ -207,7 +212,9 @@ static void levelMetaDataCallback(const char* filename)
     LevelMetaData temp;
     std::string filename_ = filename;
 
-    if (!FILESYSTEM_isFile(filename) || FILESYSTEM_isMounted(filename))
+    if (!endsWith(filename, ".vvvvvv")
+    || !FILESYSTEM_isFile(filename)
+    || FILESYSTEM_isMounted(filename))
     {
         return;
     }
@@ -1743,14 +1750,14 @@ bool editorclass::load(std::string& _path)
         _path = levelDir + _path;
     }
 
-    FILESYSTEM_unmountassets();
+    FILESYSTEM_unmountAssets();
     if (game.playassets != "")
     {
-        FILESYSTEM_mountassets(game.playassets.c_str());
+        FILESYSTEM_mountAssets(game.playassets.c_str());
     }
     else
     {
-        FILESYSTEM_mountassets(_path.c_str());
+        FILESYSTEM_mountAssets(_path.c_str());
     }
 
     tinyxml2::XMLDocument doc;
@@ -3776,11 +3783,6 @@ void editorlogic(void)
     }
 }
 
-static void creategraphicoptions(void)
-{
-    game.createmenu(Menu::graphicoptions);
-}
-
 static void creategameoptions(void)
 {
     game.createmenu(Menu::options);
@@ -3880,22 +3882,13 @@ static void editormenuactionpress(void)
             graphics.backgrounddrawn=false;
             break;
         case 6:
-        case 7:
-            /* Graphic options and game options */
+            /* Game options */
             music.playef(11);
             game.gamestate = TITLEMODE;
             game.ingame_titlemode = true;
             game.ingame_editormode = true;
 
-            if (game.currentmenuoption == 6)
-            {
-                DEFER_CALLBACK(creategraphicoptions);
-            }
-            else
-            {
-                DEFER_CALLBACK(creategameoptions);
-            }
-
+            DEFER_CALLBACK(creategameoptions);
             DEFER_CALLBACK(nextbgcolor);
             break;
         default:

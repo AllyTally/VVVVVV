@@ -127,11 +127,12 @@ void Screen::GetSettings(ScreenSettings* settings)
 
 void Screen::LoadIcon(void)
 {
+#ifndef __APPLE__
 	unsigned char *fileIn = NULL;
 	size_t length = 0;
 	unsigned char *data;
 	unsigned int width, height;
-	FILESYSTEM_loadFileToMemory("VVVVVV.png", &fileIn, &length);
+	FILESYSTEM_loadAssetToMemory("VVVVVV.png", &fileIn, &length, false);
 	lodepng_decode24(&data, &width, &height, fileIn, length);
 	FILESYSTEM_freeMemory(&fileIn);
 	SDL_Surface *icon = SDL_CreateRGBSurfaceFrom(
@@ -148,6 +149,7 @@ void Screen::LoadIcon(void)
 	SDL_SetWindowIcon(m_window, icon);
 	SDL_FreeSurface(icon);
 	SDL_free(data);
+#endif /* __APPLE__ */
 }
 
 void Screen::ResizeScreen(int x, int y)
