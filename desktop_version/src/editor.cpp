@@ -223,17 +223,22 @@ bool editorclass::loadOnlineLevels(void)
 
     CURL* curl;
     CURLcode res;
+    char errbuf[CURL_ERROR_SIZE];
     std::string returned_xml;
     curl = curl_easy_init();
     if (!curl) return false;
 
     char buffer[1024];
 
-    SDL_snprintf(buffer, sizeof(buffer), "https://vsix.dev/levels/api/levels?page=%i&order=newest", current_page);
+    SDL_snprintf(buffer, sizeof(buffer), "http://127.0.0.1:8000/api/levels?page=%i&order=newest", current_page);
 
     std::cout << "Sending request to " << buffer << std::endl;
 
     curl_easy_setopt(curl, CURLOPT_URL, buffer);
+    
+    // Provide a buffer to store errors in
+    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+    errbuf[0] = 0;
 
     // Make sure it works with https
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -247,12 +252,25 @@ bool editorclass::loadOnlineLevels(void)
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &returned_xml);
 
+    // We should follow redirects; maybe levels?page=1 will redirect to levels/?page=1
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+
     // Perform the request, res will get the return code
     res = curl_easy_perform(curl);
     // cleanup
     curl_easy_cleanup(curl);
 
-    if (res != CURLE_OK) return false;
+    if (res != CURLE_OK) {
+        size_t len = strlen(errbuf);
+        fprintf(stderr, "\nlibcurl: (%d) ", res);
+        if(len) {
+            (stderr, "%s%s", errbuf,
+                ((errbuf[len - 1] != '\n') ? "\n" : ""));
+        } else {
+            fprintf(stderr, "%s\n", curl_easy_strerror(res));
+        }
+        return false;
+    }
 
     tinyxml2::XMLDocument doc;
     doc.Parse(returned_xml.c_str());
@@ -264,6 +282,8 @@ bool editorclass::loadOnlineLevels(void)
     pElem=hDoc.FirstChildElement().ToElement();
     if (!pElem)
     {
+        printf(returned_xml.c_str());
+        printf("\n");
         printf("Received corrupted file: No XML Root.\n");
         return false;
     }
