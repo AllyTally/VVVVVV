@@ -17,6 +17,9 @@ musicclass::musicclass(void)
 	musicVolume = 0;
 	FadeVolAmountPerFrame = 0;
 
+	user_music_volume = USER_VOLUME_MAX;
+	user_sound_volume = USER_VOLUME_MAX;
+
 	currentsong = 0;
 	nicechange = -1;
 	nicefade = false;
@@ -235,7 +238,6 @@ void musicclass::play(int t)
 		else
 		{
 			fadeMusicVolumeIn(3000);
-			musicVolume = 0;
 		}
 	}
 }
@@ -265,6 +267,9 @@ void musicclass::haltdasmusik(void)
 {
 	/* Just pauses music. This is intended. */
 	pause();
+	currentsong = -1;
+	m_doFadeInVol = false;
+	m_doFadeOutVol = false;
 }
 
 void musicclass::silencedasmusik(void)
@@ -286,6 +291,13 @@ void musicclass::fadeMusicVolumeIn(int ms)
 {
 	m_doFadeInVol = true;
 	m_doFadeOutVol = false;
+
+	/* Ensure it starts at 0 */
+	musicVolume = 0;
+
+	/* Fix 1-frame glitch */
+	Mix_VolumeMusic(0);
+
 	setfadeamount(ms);
 }
 
@@ -318,7 +330,7 @@ void musicclass::processmusicfadeout(void)
 	{
 		musicVolume = 0;
 		m_doFadeOutVol = false;
-		pause();
+		haltdasmusik();
 	}
 }
 
@@ -329,13 +341,6 @@ void musicclass::processmusic(void)
 		return;
 	}
 
-	if (nicefade && Mix_PausedMusic() == 1)
-	{
-		play(nicechange);
-		nicechange = -1;
-		nicefade = false;
-	}
-
 	if(m_doFadeInVol)
 	{
 		processmusicfadein();
@@ -344,6 +349,14 @@ void musicclass::processmusic(void)
 	if (m_doFadeOutVol)
 	{
 		processmusicfadeout();
+	}
+
+	/* This needs to come after processing fades */
+	if (nicefade && Mix_PausedMusic() == 1)
+	{
+		play(nicechange);
+		nicechange = -1;
+		nicefade = false;
 	}
 }
 

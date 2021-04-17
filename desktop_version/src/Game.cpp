@@ -214,10 +214,7 @@ void Game::init(void)
 
     deathcounts = 0;
     gameoverdelay = 0;
-    frames = 0;
-    seconds = 0;
-    minutes = 0;
-    hours = 0;
+    resetgameclock();
     gamesaved = false;
     gamesavefailed = false;
     savetime = "00:00";
@@ -383,6 +380,7 @@ void Game::init(void)
     ingame_editormode = false;
 #endif
     kludge_ingametemp = Menu::mainmenu;
+    slidermode = SLIDER_NONE;
 
     disablepause = false;
     inputdelay = false;
@@ -414,8 +412,6 @@ void Game::clearcustomlevelstats(void)
 {
     //just clearing the array
     customlevelstats.clear();
-
-    customlevelstatsloaded=false; //To ensure we don't load it where it isn't needed
 }
 
 
@@ -477,11 +473,6 @@ void Game::updatecustomlevelstats(std::string clevel, int cscore)
 
 void Game::loadcustomlevelstats(void)
 {
-    if(customlevelstatsloaded)
-    {
-        return;
-    }
-
     tinyxml2::XMLDocument doc;
     if (!FILESYSTEM_loadTiXml2Document("saves/levelstats.vvv", doc))
     {
@@ -735,10 +726,19 @@ void Game::updatestate(void)
         case 0:
             //Do nothing here! Standard game state
 
-            //Prevent softlocks if there's no cutscene running right now
-            if (!script.running)
+            if (script.running)
             {
+                if (pausescript && !advancetext)
+                {
+                    /* Prevent softlocks if we somehow don't have advancetext */
+                    pausescript = false;
+                }
+            }
+            else
+            {
+                /* Prevent softlocks if there's no cutscene running right now */
                 hascontrol = true;
+                completestop = false;
             }
             break;
         case 1:
@@ -4208,9 +4208,14 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* s
             graphics.translucentroomname = help.Int(pText);
         }
 
-        if (SDL_strcmp(pKey, "showmousecursor") == 0)
+        if (SDL_strcmp(pKey, "musicvolume") == 0)
         {
-            graphics.showmousecursor = help.Int(pText);
+            music.user_music_volume = help.Int(pText);
+        }
+
+        if (SDL_strcmp(pKey, "soundvolume") == 0)
+        {
+            music.user_sound_volume = help.Int(pText);
         }
 
         if (SDL_strcmp(pKey, "flipButton") == 0)
@@ -4254,15 +4259,6 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* s
             key.sensitivity = help.Int(pText);
         }
 
-    }
-
-    if (graphics.showmousecursor)
-    {
-        SDL_ShowCursor(SDL_ENABLE);
-    }
-    else
-    {
-        SDL_ShowCursor(SDL_DISABLE);
     }
 
     if (controllerButton_flip.size() < 1)
@@ -4434,8 +4430,6 @@ void Game::serializesettings(tinyxml2::XMLElement* dataNode, const ScreenSetting
 
     xml::update_tag(dataNode, "translucentroomname", (int) graphics.translucentroomname);
 
-    xml::update_tag(dataNode, "showmousecursor", (int) graphics.showmousecursor);
-
     xml::update_tag(dataNode, "over30mode", (int) over30mode);
 
     xml::update_tag(dataNode, "inputdelay", (int) inputdelay);
@@ -4443,6 +4437,10 @@ void Game::serializesettings(tinyxml2::XMLElement* dataNode, const ScreenSetting
     xml::update_tag(dataNode, "glitchrunnermode", (int) glitchrunnermode);
 
     xml::update_tag(dataNode, "vsync", (int) screen_settings->useVsync);
+
+    xml::update_tag(dataNode, "musicvolume", music.user_music_volume);
+
+    xml::update_tag(dataNode, "soundvolume", music.user_sound_volume);
 
     // Delete all controller buttons we had previously.
     // dataNode->FirstChildElement() shouldn't be NULL at this point...
@@ -4890,7 +4888,6 @@ void Game::readmaingamesave(tinyxml2::XMLDocument& doc)
         else if (SDL_strcmp(pKey, "frames") == 0)
         {
             frames = help.Int(pText);
-            frames = 0;
         }
         else if (SDL_strcmp(pKey, "seconds") == 0)
         {
@@ -5085,7 +5082,6 @@ void Game::customloadquick(std::string savfile)
         else if (SDL_strcmp(pKey, "frames") == 0)
         {
             frames = help.Int(pText);
-            frames = 0;
         }
         else if (SDL_strcmp(pKey, "seconds") == 0)
         {
@@ -5662,6 +5658,11 @@ std::string Game::unrescued(void)
 
 void Game::gameclock(void)
 {
+    if (timetrialcountdown > 0)
+    {
+        return;
+    }
+
     frames++;
     if (frames >= 30)
     {
@@ -6059,13 +6060,9 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
     case Menu::options:
         option("gameplay");
         option("graphics");
+        option("audio");
         option("game pad");
         option("accessibility");
-        //Add extra menu for mmmmmm mod
-        if(music.mmmmmm){
-            option("soundtrack");
-        }
-
         option("return");
         menuyoff = 0;
         maxspacing = 15;
@@ -6079,9 +6076,19 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         maxspacing = 15;
         break;
     case Menu::advancedoptions:
-        option("toggle mouse");
         option("unfocus pause");
         option("room name background");
+        option("return");
+        menuyoff = 0;
+        maxspacing = 15;
+        break;
+    case Menu::audiooptions:
+        option("music volume");
+        option("sound volume");
+        if (music.mmmmmm)
+        {
+            option("soundtrack");
+        }
         option("return");
         menuyoff = 0;
         maxspacing = 15;
@@ -6607,6 +6614,7 @@ void Game::quittomenu(void)
     gamestate = TITLEMODE;
     graphics.fademode = 4;
     FILESYSTEM_unmountAssets();
+    cliplaytest = false;
     graphics.titlebg.tdrawback = true;
     graphics.flipmode = false;
     //Don't be stuck on the summary screen,

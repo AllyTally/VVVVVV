@@ -728,7 +728,9 @@ static void focused_begin(void)
 
 static void focused_end(void)
 {
-    /* no-op. */
+    game.gameclock();
+    music.processmusic();
+    graphics.processfade();
 }
 
 static enum LoopCode loop_end(void)
@@ -771,7 +773,7 @@ static enum LoopCode loop_end(void)
     }
     else
     {
-        Mix_Volume(-1,MIX_MAX_VOLUME);
+        Mix_Volume(-1,MIX_MAX_VOLUME * music.user_sound_volume / USER_VOLUME_MAX);
 
         if (game.musicmuted)
         {
@@ -779,7 +781,7 @@ static enum LoopCode loop_end(void)
         }
         else
         {
-            Mix_VolumeMusic(music.musicVolume);
+            Mix_VolumeMusic(music.musicVolume * music.user_music_volume / USER_VOLUME_MAX);
         }
     }
 
@@ -788,10 +790,6 @@ static enum LoopCode loop_end(void)
         key.resetWindow = false;
         gameScreen.ResizeScreen(-1, -1);
     }
-
-    music.processmusic();
-    graphics.processfade();
-    game.gameclock();
 
     return Loop_continue;
 }

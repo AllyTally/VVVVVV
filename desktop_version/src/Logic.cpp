@@ -731,7 +731,6 @@ void gamelogic(void)
 
             if (game.timetrialcountdown > 0)
             {
-                game.timetrialparlost = false;
                 game.hascontrol = true;
                 game.timetrialcountdown--;
                 if (game.timetrialcountdown > 30)
@@ -1189,7 +1188,7 @@ void gamelogic(void)
 
         //Warp tokens
         if (map.custommode){
-            if (game.teleport)
+            if (game.teleport && INBOUNDS_VEC(game.edteleportent, obj.entities))
             {
                 int edi=obj.entities[game.edteleportent].behave;
                 int edj=obj.entities[game.edteleportent].para;

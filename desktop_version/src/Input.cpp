@@ -200,6 +200,56 @@ static void startmode(const int mode)
     fadetomodedelay = 16;
 }
 
+static int* user_changing_volume = NULL;
+static int previous_volume = 0;
+
+static void initvolumeslider(const int menuoption)
+{
+    switch (menuoption)
+    {
+    case 0:
+        game.slidermode = SLIDER_MUSICVOLUME;
+        user_changing_volume = &music.user_music_volume;
+        break;
+    case 1:
+        game.slidermode = SLIDER_SOUNDVOLUME;
+        user_changing_volume = &music.user_sound_volume;
+        break;
+    default:
+        SDL_assert(0 && "Unhandled volume slider option!");
+        game.slidermode = SLIDER_NONE;
+        user_changing_volume = NULL;
+        return;
+    }
+    previous_volume = *user_changing_volume;
+}
+
+static void deinitvolumeslider(void)
+{
+    user_changing_volume = NULL;
+    game.savestatsandsettings_menu();
+    game.slidermode = SLIDER_NONE;
+}
+
+static void slidermodeinput(void)
+{
+    if (user_changing_volume == NULL)
+    {
+        SDL_assert(0 && "user_changing_volume is NULL!");
+        return;
+    }
+
+    if (game.press_left)
+    {
+        *user_changing_volume -= USER_VOLUME_STEP;
+    }
+    else if (game.press_right)
+    {
+        *user_changing_volume += USER_VOLUME_STEP;
+    }
+    *user_changing_volume = clamp(*user_changing_volume, 0, USER_VOLUME_MAX);
+}
+
 static void menuactionpress(void)
 {
     switch (game.currentmenuname)
@@ -523,15 +573,8 @@ static void menuactionpress(void)
         default:
             //back
             music.playef(11);
-            if (game.ingame_titlemode)
-            {
-                game.returntoingame();
-            }
-            else
-            {
-                game.returnmenu();
-                map.nexttowercolour();
-            }
+            game.returnmenu();
+            map.nexttowercolour();
             break;
         }
         break;
@@ -634,25 +677,12 @@ static void menuactionpress(void)
         switch (game.currentmenuoption)
         {
         case 0:
-            //toggle mouse cursor
-            music.playef(11);
-            if (graphics.showmousecursor == true) {
-                SDL_ShowCursor(SDL_DISABLE);
-                graphics.showmousecursor = false;
-            }
-            else {
-                SDL_ShowCursor(SDL_ENABLE);
-                graphics.showmousecursor = true;
-            }
-            game.savestatsandsettings_menu();
-            break;
-        case 1:
             // toggle unfocus pause
             game.disablepause = !game.disablepause;
             game.savestatsandsettings_menu();
             music.playef(11);
             break;
-        case 2:
+        case 1:
             // toggle translucent roomname BG
             graphics.translucentroomname = !graphics.translucentroomname;
             game.savestatsandsettings_menu();
@@ -811,15 +841,8 @@ static void menuactionpress(void)
         else if (game.currentmenuoption == gameplayoptionsoffset + 4) {
             //return to previous menu
             music.playef(11);
-            if (game.ingame_titlemode)
-            {
-                game.returntoingame();
-            }
-            else
-            {
-                game.returnmenu();
-                map.nexttowercolour();
-            }
+            game.returnmenu();
+            map.nexttowercolour();
         }
 
         break;
@@ -840,34 +863,25 @@ static void menuactionpress(void)
             map.nexttowercolour();
             break;
         case 2:
+            /* Audio options */
+            music.playef(11);
+            game.createmenu(Menu::audiooptions);
+            map.nexttowercolour();
+            break;
+        case 3:
             //gamepad options
             music.playef(11);
             game.createmenu(Menu::controller);
             map.nexttowercolour();
             break;
-        case 3:
+        case 4:
             //accessibility options
             music.playef(11);
             game.createmenu(Menu::accessibility);
             map.nexttowercolour();
             break;
-        }
-
-        if (game.currentmenuoption == 4 && music.mmmmmm)
-        {
-            //**** TOGGLE MMMMMM
-            music.usingmmmmmm = !music.usingmmmmmm;
-            music.playef(11);
-            if (music.currentsong > -1)
-            {
-                music.play(music.currentsong);
-            }
-            game.savestatsandsettings_menu();
-        }
-
-        if (game.currentmenuoption == 4 + (music.mmmmmm?1:0))
-        {
-            //Last option here is "return"
+        default:
+            /* Return */
             music.playef(11);
             if (game.ingame_titlemode)
             {
@@ -878,8 +892,47 @@ static void menuactionpress(void)
                 game.returnmenu();
                 map.nexttowercolour();
             }
+            break;
+        }
+        break;
+    case Menu::audiooptions:
+        switch (game.currentmenuoption)
+        {
+        case 0:
+        case 1:
+            music.playef(11);
+            if (game.slidermode == SLIDER_NONE)
+            {
+                initvolumeslider(game.currentmenuoption);
+            }
+            else
+            {
+                deinitvolumeslider();
+            }
+            break;
+        case 2:
+            if (!music.mmmmmm)
+            {
+                break;
+            }
+
+            /* Toggle MMMMMM */
+            music.usingmmmmmm = !music.usingmmmmmm;
+            music.playef(11);
+            if (music.currentsong > -1)
+            {
+                music.play(music.currentsong);
+            }
+            game.savestatsandsettings_menu();
+            break;
         }
 
+        if (game.currentmenuoption == 2 + (int) music.mmmmmm)
+        {
+            /* Return */
+            game.returnmenu();
+            map.nexttowercolour();
+        }
         break;
     case Menu::unlockmenutrials:
         switch (game.currentmenuoption)
@@ -1590,15 +1643,6 @@ static void menuactionpress(void)
             map.nexttowercolour();
             break;
         case 1:
-            //Ok but first quickly remove the last stack frame to prevent piling up timetrialcomplete stack frames
-            if (game.menustack.empty())
-            {
-                puts("Error: menu stack is empty!");
-            }
-            else
-            {
-                game.menustack.pop_back();
-            }
             //duplicate the above based on given time trial level!
             if (game.timetriallevel == 0)   //space station 1
             {
@@ -1707,9 +1751,28 @@ void titleinput(void)
             }
             else
             {
-                if (game.ingame_titlemode
-                && (game.currentmenuname == Menu::options
-                || game.currentmenuname == Menu::graphicoptions))
+                if (game.slidermode != SLIDER_NONE)
+                {
+                    switch (game.slidermode)
+                    {
+                    /* Cancel volume change. */
+                    case SLIDER_MUSICVOLUME:
+                    case SLIDER_SOUNDVOLUME:
+                        if (user_changing_volume == NULL)
+                        {
+                            SDL_assert(0 && "user_changing_volume is NULL!");
+                            break;
+                        }
+                        *user_changing_volume = previous_volume;
+                        deinitvolumeslider();
+                        break;
+                    default:
+                        SDL_assert(0 && "Unhandled slider mode!");
+                        break;
+                    }
+                }
+                else if (game.ingame_titlemode
+                && game.currentmenuname == Menu::options)
                 {
                     game.returntoingame();
                 }
@@ -1723,13 +1786,20 @@ void titleinput(void)
 
         if(game.menustart)
         {
-            if (game.press_left)
+            if (game.slidermode == SLIDER_NONE)
             {
-                game.currentmenuoption--;
+                if (game.press_left)
+                {
+                    game.currentmenuoption--;
+                }
+                else if (game.press_right)
+                {
+                    game.currentmenuoption++;
+                }
             }
-            else if (game.press_right)
+            else
             {
-                game.currentmenuoption++;
+                slidermodeinput();
             }
         }
 
@@ -2223,7 +2293,7 @@ void mapinput(void)
         {
             game.press_action = true;
         }
-        if (game.menupage < 12 || (game.menupage >= 30 && game.menupage <= 33))
+        if (game.menupage < 12 || (game.menupage >= 30 && game.menupage <= 32))
         {
             if (key.isDown(KEYBOARD_ENTER) || key.isDown(game.controllerButton_map) ) game.press_map = true;
             if (key.isDown(27) && !game.mapheld)
@@ -2235,7 +2305,7 @@ void mapinput(void)
                 }
                 else if (game.menupage < 12)
                 {
-                    game.menupage = 31;
+                    game.menupage = 32;
                 }
                 else
                 {
@@ -2373,7 +2443,7 @@ static void mapmenuactionpress(void)
     case 10:
         //return to pause menu
         music.playef(11);
-        game.menupage = 31;
+        game.menupage = 32;
         break;
     case 11:
         //quit to menu

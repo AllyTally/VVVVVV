@@ -200,14 +200,14 @@ static std::string NAME(const std::string& buf) \
     return find_tag(buf, "<" TAG ">", "</" TAG ">"); \
 }
 
-TAG_FINDER(find_metadata, "MetaData"); //only for checking that it exists
+TAG_FINDER(find_metadata, "MetaData") //only for checking that it exists
 
-TAG_FINDER(find_creator, "Creator");
-TAG_FINDER(find_title, "Title");
-TAG_FINDER(find_desc1, "Desc1");
-TAG_FINDER(find_desc2, "Desc2");
-TAG_FINDER(find_desc3, "Desc3");
-TAG_FINDER(find_website, "website");
+TAG_FINDER(find_creator, "Creator")
+TAG_FINDER(find_title, "Title")
+TAG_FINDER(find_desc1, "Desc1")
+TAG_FINDER(find_desc2, "Desc2")
+TAG_FINDER(find_desc3, "Desc3")
+TAG_FINDER(find_website, "website")
 
 #undef TAG_FINDER
 
@@ -1858,7 +1858,7 @@ bool editorclass::load(std::string& _path)
     }
 
     FILESYSTEM_unmountAssets();
-    if (game.playassets != "")
+    if (game.cliplaytest && game.playassets != "")
     {
         FILESYSTEM_mountAssets(game.playassets.c_str());
     }

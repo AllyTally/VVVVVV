@@ -1,6 +1,9 @@
 #ifndef FILESYSTEMUTILS_H
 #define FILESYSTEMUTILS_H
 
+/* Forward declaration */
+class binaryBlob;
+
 #include <stddef.h>
 
 // Forward declaration, including the entirety of tinyxml2.h across all files this file is included in is unnecessary
@@ -31,6 +34,9 @@ void FILESYSTEM_loadAssetToMemory(
 void FILESYSTEM_freeMemory(unsigned char **mem);
 int FILESYSTEM_getDownloadProgress();
 bool FILESYSTEM_downloadFile(const char* name, const char* url);
+
+bool FILESYSTEM_loadBinaryBlob(binaryBlob* blob, const char* filename);
+
 bool FILESYSTEM_saveTiXml2Document(const char *name, tinyxml2::XMLDocument& doc);
 bool FILESYSTEM_loadTiXml2Document(const char *name, tinyxml2::XMLDocument& doc);
 
