@@ -1866,8 +1866,11 @@ void scriptclass::run(void)
 			}
 			else if (words[0] == "setactivitytext")
 			{
-				position++;
-				obj.customactivitytext = commands[position];
+				++position;
+				if (INBOUNDS_VEC(position, commands))
+				{
+					obj.customactivitytext = commands[position];
+				}
 			}
 			else if (words[0] == "createrescuedcrew")
 			{
