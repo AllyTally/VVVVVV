@@ -3,7 +3,6 @@
 #define ED_DEFINITION
 #include "editor.h"
 
-#include <algorithm>
 #include <stdio.h>
 #include <string>
 #include <tinyxml2.h>
@@ -248,7 +247,7 @@ void editorclass::getDirectoryData(void)
 }
 bool editorclass::getLevelMetaData(std::string& _path, LevelMetaData& _data )
 {
-    unsigned char *uMem = NULL;
+    unsigned char *uMem;
     FILESYSTEM_loadFileToMemory(_path.c_str(), &uMem, NULL, true);
 
     if (uMem == NULL)
@@ -453,15 +452,14 @@ void editorclass::addhooktoscript(std::string t)
 
 void editorclass::removehookfromscript(std::string t)
 {
-    //Find hook t in the scriptclass, then removes it (and any other code with it)
-    for (size_t i = 0; i < script.customscripts.size(); i++)
+    /* Find hook t in the scriptclass, then removes it (and any other code with it)
+     * When this loop reaches the end, it wraps to SIZE_MAX; SIZE_MAX + 1 is 0 */
+    size_t i;
+    for (i = script.customscripts.size() - 1; i + 1 > 0; --i)
     {
-        Script& script_ = script.customscripts[i];
-
-        if (script_.name == t)
+        if (script.customscripts[i].name == t)
         {
             script.customscripts.erase(script.customscripts.begin() + i);
-            break;
         }
     }
 }
@@ -469,8 +467,16 @@ void editorclass::removehookfromscript(std::string t)
 void editorclass::removehook(std::string t)
 {
     //Check the hooklist for the hook t. If it's there, remove it from here and the script
+    size_t i;
     removehookfromscript(t);
-    hooklist.erase(std::remove(hooklist.begin(), hooklist.end(), t), hooklist.end());
+    /* When this loop reaches the end, it wraps to SIZE_MAX; SIZE_MAX + 1 is 0 */
+    for (i = hooklist.size() - 1; i + 1 > 0; --i)
+    {
+        if (hooklist[i] == t)
+        {
+            hooklist.erase(hooklist.begin() + i);
+        }
+    }
 }
 
 void editorclass::addhook(std::string t)
@@ -1751,7 +1757,7 @@ bool editorclass::load(std::string& _path)
     }
 
     FILESYSTEM_unmountAssets();
-    if (game.playassets != "")
+    if (game.cliplaytest && game.playassets != "")
     {
         FILESYSTEM_mountAssets(game.playassets.c_str());
     }
@@ -3989,6 +3995,7 @@ void editorinput(void)
     game.press_right = false;
     game.press_action = false;
     game.press_map = false;
+    game.press_interact = false;
 
     if (key.isDown(KEYBOARD_LEFT) || key.isDown(KEYBOARD_a) || key.controllerWantsLeft(false))
     {
@@ -4079,13 +4086,17 @@ void editorinput(void)
 
             if (ed.settingsmod)
             {
-                bool edsettings_in_stack = false;
-                for (size_t i = 0; i < game.menustack.size(); i++)
+                bool edsettings_in_stack = game.currentmenuname == Menu::ed_settings;
+                if (!edsettings_in_stack)
                 {
-                    if (game.menustack[i].name == Menu::ed_settings)
+                    size_t i;
+                    for (i = 0; i < game.menustack.size(); ++i)
                     {
-                        edsettings_in_stack = true;
-                        break;
+                        if (game.menustack[i].name == Menu::ed_settings)
+                        {
+                            edsettings_in_stack = true;
+                            break;
+                        }
                     }
                 }
                 if (edsettings_in_stack)
@@ -4259,8 +4270,15 @@ void editorinput(void)
                 ed.keydelay=6;
             }
 
-            // Remove all pipes, they are the line separator in the XML
-            key.keybuffer.erase(std::remove(key.keybuffer.begin(), key.keybuffer.end(), '|'), key.keybuffer.end());
+            /* Remove all pipes, they are the line separator in the XML
+             * When this loop reaches the end, it wraps to SIZE_MAX; SIZE_MAX + 1 is 0 */
+            {size_t i; for (i = key.keybuffer.length() - 1; i + 1 > 0; --i)
+            {
+                if (key.keybuffer[i] == '|')
+                {
+                    key.keybuffer.erase(key.keybuffer.begin() + i);
+                }
+            }}
 
             ed.sb[ed.pagey+ed.sby]=key.keybuffer;
             ed.sbx = utf8::unchecked::distance(ed.sb[ed.pagey+ed.sby].begin(), ed.sb[ed.pagey+ed.sby].end());
@@ -5286,7 +5304,7 @@ void editorinput(void)
                                 ed.lclickdelay=1;
                                 ed.textent=edentity.size();
                                 addedentity(ed.tilex+(ed.levx*40),ed.tiley+ (ed.levy*30),18,0);
-                                ed.getlin(TEXT_SCRIPT, "Enter script name", &(edentity[ed.textent].scriptname));
+                                ed.getlin(TEXT_SCRIPT, "Enter script name:", &(edentity[ed.textent].scriptname));
                             }
                             else if(ed.drawmode==13)
                             {

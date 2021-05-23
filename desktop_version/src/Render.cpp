@@ -1,3 +1,5 @@
+#include <SDL.h>
+
 #include "Credits.h"
 #include "editor.h"
 #include "Entity.h"
@@ -256,6 +258,12 @@ static void menurender(void)
         }
         break;
     case Menu::graphicoptions:
+        if (graphics.screenbuffer == NULL)
+        {
+            SDL_assert(0 && "Screenbuffer is NULL!");
+            break;
+        }
+
         switch (game.currentmenuoption)
         {
         case 0:
@@ -524,24 +532,24 @@ static void menurender(void)
             switch(key.sensitivity)
             {
             case 0:
-                graphics.Print( -1, 85, " Low     Medium     High", tr, tg, tb, true);
-                graphics.Print( -1, 95, "[]..................", tr, tg, tb, true);
+                graphics.Print( -1, 75, " Low     Medium     High", tr, tg, tb, true);
+                graphics.Print( -1, 85, "[]..................", tr, tg, tb, true);
                 break;
             case 1:
-                graphics.Print( -1, 85, " Low     Medium     High", tr, tg, tb, true);
-                graphics.Print( -1, 95, ".....[].............", tr, tg, tb, true);
+                graphics.Print( -1, 75, " Low     Medium     High", tr, tg, tb, true);
+                graphics.Print( -1, 85, ".....[].............", tr, tg, tb, true);
                 break;
             case 2:
-                graphics.Print( -1, 85, " Low     Medium     High", tr, tg, tb, true);
-                graphics.Print( -1, 95, ".........[].........", tr, tg, tb, true);
+                graphics.Print( -1, 75, " Low     Medium     High", tr, tg, tb, true);
+                graphics.Print( -1, 85, ".........[].........", tr, tg, tb, true);
                 break;
             case 3:
-                graphics.Print( -1, 85, " Low     Medium     High", tr, tg, tb, true);
-                graphics.Print( -1, 95, ".............[].....", tr, tg, tb, true);
+                graphics.Print( -1, 75, " Low     Medium     High", tr, tg, tb, true);
+                graphics.Print( -1, 85, ".............[].....", tr, tg, tb, true);
                 break;
             case 4:
-                graphics.Print( -1, 85, " Low     Medium     High", tr, tg, tb, true);
-                graphics.Print( -1, 95, "..................[]", tr, tg, tb, true);
+                graphics.Print( -1, 75, " Low     Medium     High", tr, tg, tb, true);
+                graphics.Print( -1, 85, "..................[]", tr, tg, tb, true);
                 break;
             }
             break;
@@ -549,10 +557,12 @@ static void menurender(void)
         case 2:
         case 3:
         case 4:
-            graphics.Print( -1, 85, "Flip is bound to: " + std::string(help.GCString(game.controllerButton_flip)) , tr, tg, tb, true);
-            graphics.Print( -1, 95, "Enter is bound to: "  + std::string(help.GCString(game.controllerButton_map)), tr, tg, tb, true);
-            graphics.Print( -1, 105, "Menu is bound to: " + std::string(help.GCString(game.controllerButton_esc)) , tr, tg, tb, true);
-            graphics.Print( -1, 115, "Restart is bound to: " + std::string(help.GCString(game.controllerButton_restart)) , tr, tg, tb, true);
+        case 5:
+            graphics.Print( -1, 75, "Flip is bound to: " + std::string(help.GCString(game.controllerButton_flip)) , tr, tg, tb, true);
+            graphics.Print( -1, 85, "Enter is bound to: "  + std::string(help.GCString(game.controllerButton_map)), tr, tg, tb, true);
+            graphics.Print( -1, 95, "Menu is bound to: " + std::string(help.GCString(game.controllerButton_esc)) , tr, tg, tb, true);
+            graphics.Print( -1, 105, "Restart is bound to: " + std::string(help.GCString(game.controllerButton_restart)) , tr, tg, tb, true);
+            graphics.Print( -1, 115, "Interact is bound to: " + std::string(help.GCString(game.controllerButton_interact)) , tr, tg, tb, true);
             break;
         }
 
@@ -588,6 +598,29 @@ static void menurender(void)
             }
             break;
         case 2:
+        {
+            /* Screen width 40 chars, 4 per char */
+            char buffer[160 + 1];
+            const char* button;
+
+            graphics.bigprint(-1, 30, "Interact Button", tr, tg, tb, true);
+            graphics.Print(-1, 65, "Toggle whether you interact", tr, tg, tb, true);
+            graphics.Print(-1, 75, "with prompts using ENTER or E.", tr, tg, tb, true);
+
+            if (game.separate_interact)
+            {
+                button = "E";
+            }
+            else
+            {
+                button = "ENTER";
+            }
+
+            SDL_snprintf(buffer, sizeof(buffer), "Interact button: %s", button);
+            graphics.Print(-1, 95, buffer, tr, tg, tb, true);
+            break;
+        }
+        case 3:
             graphics.bigprint(-1, 30, "Fake Load Screen", tr, tg, tb, true);
             if (game.skipfakeload)
                 graphics.Print(-1, 65, "Fake loading screen is OFF", tr / 2, tg / 2, tb / 2, true);
@@ -600,17 +633,6 @@ static void menurender(void)
         switch (game.currentmenuoption)
         {
         case 0:
-            graphics.bigprint(-1, 30, "Toggle Mouse Cursor", tr, tg, tb, true);
-            graphics.Print(-1, 65, "Show/hide the system mouse cursor.", tr, tg, tb, true);
-
-            if (graphics.showmousecursor) {
-                graphics.Print(-1, 95, "Current mode: SHOW", tr, tg, tb, true);
-            }
-            else {
-                graphics.Print(-1, 95, "Current mode: HIDE", tr/2, tg/2, tb/2, true);
-            }
-            break;
-        case 1:
             graphics.bigprint( -1, 30, "Unfocus Pause", tr, tg, tb, true);
             graphics.Print( -1, 65, "Toggle if the game will pause", tr, tg, tb, true);
             graphics.Print( -1, 75, "when the window is unfocused.", tr, tg, tb, true);
@@ -623,7 +645,7 @@ static void menurender(void)
                 graphics.Print(-1, 95, "Unfocus pause is ON", tr, tg, tb, true);
             }
             break;
-        case 2:
+        case 1:
             graphics.bigprint(-1, 30, "Room Name BG", tr, tg, tb, true);
             graphics.Print( -1, 65, "Lets you see through what is behind", tr, tg, tb, true);
             graphics.Print( -1, 75, "the name at the bottom of the screen.", tr, tg, tb, true);
@@ -723,7 +745,7 @@ static void menurender(void)
             graphics.Print( -1, 65, "Replay any level in the game in", tr, tg, tb, true);
             graphics.Print( -1, 75, "a competitive time trial mode.", tr, tg, tb, true);
 
-            if (game.slowdown < 30 || map.invincibility)
+            if (game.nocompetitive())
             {
                 graphics.Print( -1, 105, "Time Trials are not available", tr, tg, tb, true);
                 graphics.Print( -1, 115, "with slowdown or invincibility.", tr, tg, tb, true);
@@ -744,7 +766,7 @@ static void menurender(void)
             graphics.Print( -1, 65, "Play the entire game", tr, tg, tb, true);
             graphics.Print( -1, 75, "without dying once.", tr, tg, tb, true);
 
-            if (game.slowdown < 30 || map.invincibility)
+            if (game.nocompetitive())
             {
                 graphics.Print( -1, 105, "No Death Mode is not available", tr, tg, tb, true);
                 graphics.Print( -1, 115, "with slowdown or invincibility.", tr, tg, tb, true);
@@ -1543,6 +1565,35 @@ void gamecompleterender2(void)
     graphics.render();
 }
 
+static const char* interact_prompt(
+    char* buffer,
+    const size_t buffer_size,
+    const char* raw
+) {
+    const char* string_fmt_loc = SDL_strstr(raw, "%s");
+    const char* button;
+
+    if (string_fmt_loc == NULL /* No "%s". */
+    || string_fmt_loc != SDL_strchr(raw, '%') /* First "%" found is not "%s". */
+    || SDL_strchr(&string_fmt_loc[1], '%') != NULL) /* Other "%" after "%s". */
+    {
+        return raw;
+    }
+
+    if (game.separate_interact)
+    {
+        button = "E";
+    }
+    else
+    {
+        button = "ENTER";
+    }
+
+    SDL_snprintf(buffer, buffer_size, raw, button);
+
+    return buffer;
+}
+
 void gamerender(void)
 {
 
@@ -1573,7 +1624,7 @@ void gamerender(void)
             {
                 ClearSurface(graphics.backBuffer);
             }
-            if (map.final_colormode)
+            if ((map.finalmode || map.custommode) && map.final_colormode)
             {
                 graphics.drawfinalmap();
             }
@@ -1645,15 +1696,17 @@ void gamerender(void)
 
     if (game.readytotele > 100 || game.oldreadytotele > 100)
     {
+        /* Screen width 40 chars, 4 per char */
+        char buffer[160 + 1];
+        static const char raw[] = "- Press %s to Teleport - ";
+        const char* final_string = interact_prompt(
+            buffer,
+            sizeof(buffer),
+            raw
+        );
         int alpha = graphics.lerp(game.oldreadytotele, game.readytotele);
-        if(graphics.flipmode)
-        {
-            graphics.bprint(5, 20, "- Press ENTER to Teleport -", alpha - 20 - (help.glow / 2), alpha - 20 - (help.glow / 2), alpha, true);
-        }
-        else
-        {
-            graphics.bprint(5, 210, "- Press ENTER to Teleport -", alpha - 20 - (help.glow / 2), alpha - 20 - (help.glow / 2), alpha, true);
-        }
+
+        graphics.bprint(5, graphics.flipmode ? 20 : 210, final_string, alpha - 20 - (help.glow / 2), alpha - 20 - (help.glow / 2), alpha, true);
     }
 
     if (game.swnmode)
@@ -1777,7 +1830,6 @@ void gamerender(void)
         {
             if (game.timetrialcountdown < 30)
             {
-                game.resetgameclock();
                 if (int(game.timetrialcountdown / 4) % 2 == 0) graphics.bigprint( -1, 100, "Go!", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 4);
             }
             else if (game.timetrialcountdown < 60)
@@ -1841,8 +1893,16 @@ void gamerender(void)
     float act_alpha = graphics.lerp(game.prev_act_fade, game.act_fade) / 10.0f;
     if(game.act_fade>5 || game.prev_act_fade>5)
     {
+        /* Screen width 40 chars, 4 per char */
+        char buffer[160 + 1];
+        const char* final_string = interact_prompt(
+            buffer,
+            sizeof(buffer),
+            game.activity_lastprompt.c_str()
+        );
+
         graphics.drawtextbox(16, 4, 36, 3, game.activity_r*act_alpha, game.activity_g*act_alpha, game.activity_b*act_alpha);
-        graphics.Print(5, 12, game.activity_lastprompt, game.activity_r*act_alpha, game.activity_g*act_alpha, game.activity_b*act_alpha, true);
+        graphics.Print(5, 12, final_string, game.activity_r*act_alpha, game.activity_g*act_alpha, game.activity_b*act_alpha, true);
     }
 
     if (obj.trophytext > 0 || obj.oldtrophytext > 0)
@@ -1948,11 +2008,19 @@ void maprender(void)
             }
             graphics.Print(-1, 105, "NO SIGNAL", 245, 245, 245, true);
         }
+#ifndef NO_CUSTOM_LEVELS
         else if(map.custommode)
         {
           //draw the map image
           graphics.drawcustompixeltextbox(35+map.custommmxoff, 16+map.custommmyoff, map.custommmxsize+10, map.custommmysize+10, (map.custommmxsize+10)/8, (map.custommmysize+10)/8, 65, 185, 207,4,0);
-          graphics.drawpartimage(12, 40+map.custommmxoff, 21+map.custommmyoff, map.custommmxsize,map.custommmysize);
+          if (graphics.minimap_mounted)
+          {
+            graphics.drawpartimage(1, 40+map.custommmxoff, 21+map.custommmyoff, map.custommmxsize, map.custommmysize);
+          }
+          else
+          {
+            graphics.drawpartimage(12, 40+map.custommmxoff, 21+map.custommmyoff, map.custommmxsize,map.custommmysize);
+          }
 
           //Black out here
           if(map.customzoom==4){
@@ -2057,6 +2125,7 @@ void maprender(void)
             }
           }
         }
+#endif /* NO_CUSTOM_LEVELS */
         else
         {
             //draw the map image
@@ -2824,9 +2893,18 @@ void teleporterrender(void)
 
     if (game.useteleporter)
     {
+        /* Screen width 40 chars, 4 per char */
+        char buffer[160 + 1];
+        static const char raw[] = "Press %s to Teleport";
+        const char* final_string = interact_prompt(
+            buffer,
+            sizeof(buffer),
+            raw
+        );
+
         //Instructions!
         graphics.Print(5, 210, "Press Left/Right to choose a Teleporter", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true);
-        graphics.Print(5, 225, "Press ENTER to Teleport", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true);
+        graphics.Print(5, 225, final_string, 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true);
     }
 
     graphics.drawgui();

@@ -5,6 +5,7 @@
 
 
 #include "FileSystemUtils.h"
+#include "Game.h"
 #include "GraphicsUtil.h"
 
 // Used to create the window icon
@@ -128,8 +129,8 @@ void Screen::GetSettings(ScreenSettings* settings)
 void Screen::LoadIcon(void)
 {
 #ifndef __APPLE__
-	unsigned char *fileIn = NULL;
-	size_t length = 0;
+	unsigned char *fileIn;
+	size_t length;
 	unsigned char *data;
 	unsigned int width, height;
 	FILESYSTEM_loadAssetToMemory("VVVVVV.png", &fileIn, &length, false);
@@ -329,6 +330,12 @@ void Screen::toggleFullScreen(void)
 {
 	isWindowed = !isWindowed;
 	ResizeScreen(-1, -1);
+
+	if (game.currentmenuname == Menu::graphicoptions)
+	{
+		/* Recreate menu to update "resize to nearest" */
+		game.createmenu(game.currentmenuname, true);
+	}
 }
 
 void Screen::toggleStretchMode(void)

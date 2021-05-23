@@ -418,6 +418,7 @@ void entityclass::generateswnwave( int t )
             case 3:
                 //Choose a major action
                 game.swnstate2 = int(fRandom() * 100);
+                game.swnstate4 = 0;
                 if (game.swnstate2 < 25)
                 {
                     //complex
@@ -838,151 +839,151 @@ void entityclass::createblock( int t, int xp, int yp, int w, int h, int trig /*=
         switch(trig)
         {
         case 0: //testing zone
-            block.prompt = "Press ENTER to explode";
+            block.prompt = "Press %s to explode";
             block.script = "intro";
             block.setblockcolour("orange");
             trig=1;
             break;
         case 1:
-            block.prompt = "Press ENTER to talk to Violet";
+            block.prompt = "Press %s to talk to Violet";
             block.script = "talkpurple";
             block.setblockcolour("purple");
             trig=0;
             break;
         case 2:
-            block.prompt = "Press ENTER to talk to Vitellary";
+            block.prompt = "Press %s to talk to Vitellary";
             block.script = "talkyellow";
             block.setblockcolour("yellow");
             trig=0;
             break;
         case 3:
-            block.prompt = "Press ENTER to talk to Vermilion";
+            block.prompt = "Press %s to talk to Vermilion";
             block.script = "talkred";
             block.setblockcolour("red");
             trig=0;
             break;
         case 4:
-            block.prompt = "Press ENTER to talk to Verdigris";
+            block.prompt = "Press %s to talk to Verdigris";
             block.script = "talkgreen";
             block.setblockcolour("green");
             trig=0;
             break;
         case 5:
-            block.prompt = "Press ENTER to talk to Victoria";
+            block.prompt = "Press %s to talk to Victoria";
             block.script = "talkblue";
             block.setblockcolour("blue");
             trig=0;
             break;
         case 6:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_station_1";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 7:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_outside_1";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 8:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_outside_2";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 9:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_outside_3";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 10:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_outside_4";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 11:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_outside_5";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 12:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_outside_6";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 13:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_finallevel";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 14:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_station_2";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 15:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_station_3";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 16:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_station_4";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 17:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_warp_1";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 18:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_warp_2";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 19:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_lab_1";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 20:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_lab_2";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 21:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_secretlab";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 22:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_shipcomputer";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 23:
-            block.prompt = "Press ENTER to activate terminals";
+            block.prompt = "Press %s to activate terminals";
             block.script = "terminal_radio";
             block.setblockcolour("orange");
             trig=0;
             break;
         case 24:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "terminal_jukebox";
             block.setblockcolour("orange");
             trig=0;
@@ -1048,7 +1049,7 @@ void entityclass::createblock( int t, int xp, int yp, int w, int h, int trig /*=
             trig=0;
             break;
         case 35:
-            block.prompt = "Press ENTER to activate terminal";
+            block.prompt = "Press %s to activate terminal";
             block.script = "custom_"+customscript;
             block.setblockcolour("orange");
             trig=0;
@@ -1202,7 +1203,7 @@ int entityclass::crewcolour( int t )
     return 0;
 }
 
-void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, float vy /*= 0*/, int p1 /*= 0*/, int p2 /*= 0*/, int p3 /*= 320*/, int p4 /*= 240 */ )
+void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int p1, int p2, int p3, int p4)
 {
     k = entities.size();
 
@@ -1259,8 +1260,6 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
     entclass& entity = *entptr;
     entity.xp = xp;
     entity.yp = yp;
-    entity.lerpoldxp = xp;
-    entity.lerpoldyp = yp;
     entity.type = t;
     switch(t)
     {
@@ -1274,14 +1273,14 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.h = 21;
         entity.dir = 1;
 
-        if( (vx)==1) entity.invis = true;
+        if (meta1 == 1) entity.invis = true;
 
         entity.gravity = true;
         break;
     case 1: //Simple enemy, bouncing off the walls
         entity.rule = 1;
-        entity.behave = vx;
-        entity.para = vy;
+        entity.behave = meta1;
+        entity.para = meta2;
         entity.w = 16;
         entity.h = 16;
         entity.cx = 0;
@@ -1345,35 +1344,35 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.w = 32;
         entity.h = 8;
 
-        if (int(vx) <= 1) vertplatforms = true;
-        if (int(vx) >= 2  && int(vx) <= 5) horplatforms = true;
-        if (int(vx) == 14 || int(vx) == 15) horplatforms = true; //special case for last part of Space Station
-        if (int(vx) >= 6  && int(vx) <= 7) vertplatforms = true;
+        if (meta1 <= 1) vertplatforms = true;
+        if (meta1 >= 2  && meta1 <= 5) horplatforms = true;
+        if (meta1 == 14 || meta1 == 15) horplatforms = true; //special case for last part of Space Station
+        if (meta1 >= 6  && meta1 <= 7) vertplatforms = true;
 
-        if (int(vx) >= 10  && int(vx) <= 11)
+        if (meta1 >= 10  && meta1 <= 11)
         {
             //Double sized threadmills
             entity.w = 64;
             entity.h = 8;
-            vx -= 2;
+            meta1 -= 2;
             entity.size = 8;
         }
 
-        entity.behave = vx;
-        entity.para = vy;
+        entity.behave = meta1;
+        entity.para = meta2;
 
-        if (int(vx) >= 8  && int(vx) <= 9)
+        if (meta1 >= 8  && meta1 <= 9)
         {
             horplatforms = true; //threadmill!
             entity.animate = 10;
             if(customplatformtile>0){
               entity.tile = customplatformtile+4;
-              if (int(vx) == 8) entity.tile += 4;
-              if (int(vx) == 9) entity.animate = 11;
+              if (meta1 == 8) entity.tile += 4;
+              if (meta1 == 9) entity.animate = 11;
             }else{
               entity.settreadmillcolour(game.roomx, game.roomy);
-              if (int(vx) == 8) entity.tile += 40;
-              if (int(vx) == 9) entity.animate = 11;
+              if (meta1 == 8) entity.tile += 40;
+              if (meta1 == 9) entity.animate = 11;
             }
         }
         else
@@ -1400,9 +1399,9 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         {
           entity.tile=customplatformtile;
         }
-        else if (vx > 0)
+        else if (meta1 > 0)
         {
-            entity.tile = int(vx);
+            entity.tile = meta1;
         }
         else
         {
@@ -1413,8 +1412,8 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.cy = -1;
         entity.w = 32;
         entity.h = 10;
-        entity.behave = vx;
-        entity.para = vy;
+        entity.behave = meta1;
+        entity.para = meta2;
         entity.onentity = 1;
         entity.animate = 100;
 
@@ -1428,8 +1427,8 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.cy = -1;
         entity.w = 8;
         entity.h = 10;
-        entity.behave = vx;
-        entity.para = vy;
+        entity.behave = meta1;
+        entity.para = meta2;
         entity.onentity = 1;
         entity.animate = 100;
 
@@ -1442,8 +1441,8 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.tile = 11;
         entity.w = 16;
         entity.h = 16;
-        entity.behave = vx;
-        entity.para = vy;
+        entity.behave = meta1;
+        entity.para = meta2;
         entity.onentity = 1;
         entity.animate = 100;
         break;
@@ -1452,8 +1451,8 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.type = 5;  //Particles
         entity.colour = 1;
         entity.size = 3;
-        entity.vx = vx;
-        entity.vy = vy;
+        entity.vx = meta1;
+        entity.vy = meta2;
 
         entity.life = 12;
         break;
@@ -1462,8 +1461,8 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.type = 5;  //Particles
         entity.colour = 2;
         entity.size = 3;
-        entity.vx = vx;
-        entity.vy = vy;
+        entity.vx = meta1;
+        entity.vy = meta2;
 
         entity.life = 12;
         break;
@@ -1478,8 +1477,8 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.animate = 100;
 
         //Check if it's already been collected
-        entity.para = vx;
-        if (!INBOUNDS_ARR(vx, collect) || collect[(int) vx]) return;
+        entity.para = meta1;
+        if (!INBOUNDS_ARR(meta1, collect) || collect[meta1]) return;
         break;
     case 9: //Something Shiny
         entity.rule = 3;
@@ -1493,22 +1492,22 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.animate = 100;
 
         //Check if it's already been collected
-        entity.para = vx;
-        if (!INBOUNDS_ARR(vx, collect) || collect[(int) vx]) return;
+        entity.para = meta1;
+        if (!INBOUNDS_ARR(meta1, collect) || collect[meta1]) return;
         break;
     case 10: //Savepoint
         entity.rule = 3;
         entity.type = 8;
         entity.size = 0;
-        entity.tile = 20 + vx;
+        entity.tile = 20 + meta1;
         entity.w = 16;
         entity.h = 16;
         entity.colour = 4;
         entity.onentity = 1;
         entity.animate = 100;
-        entity.para = vy;
+        entity.para = meta2;
 
-        if (game.savepoint ==  (vy))
+        if (game.savepoint == meta2)
         {
             entity.colour = 5;
             entity.onentity = 0;
@@ -1524,7 +1523,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.type = 9;
         entity.size = 5;
         entity.life = 0;
-        entity.w = vx;
+        entity.w = meta1;
         entity.h = 1;
         entity.onentity = 1;
         break;
@@ -1534,7 +1533,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.size = 6;
         entity.life = 0;
         entity.w = 1;
-        entity.h = vx;
+        entity.h = meta1;
         //entity.colour = 0;
         entity.onentity = 1;
         break;
@@ -1549,8 +1548,8 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.onentity = 1;
         entity.animate = 2;
         //Added in port, hope it doesn't break anything
-        entity.behave = vx;
-        entity.para = vy;
+        entity.behave = meta1;
+        entity.para = meta2;
         break;
     case 14: // Teleporter
         entity.rule = 3;
@@ -1562,7 +1561,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.colour = 100;
         entity.onentity = 1;
         entity.animate = 100;
-        entity.para = vy;
+        entity.para = meta2;
         break;
     case 15: // Crew Member (warp zone)
         entity.rule = 6;
@@ -1575,7 +1574,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.h = 21;
         entity.dir = 0;
 
-        entity.state = vx;
+        entity.state = meta1;
 
         entity.gravity = true;
         break;
@@ -1590,7 +1589,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.h = 21;
         entity.dir = 1;
 
-        entity.state = vx;
+        entity.state = meta1;
 
         entity.gravity = true;
         break;
@@ -1605,7 +1604,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.h = 21;
         entity.dir = 1;
 
-        entity.state = vx;
+        entity.state = meta1;
 
         entity.gravity = true;
         break;
@@ -1613,8 +1612,8 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         //This is the scriping crewmember
         entity.rule = 6;
         entity.type = 12; //A special case!
-        entity.colour = vx;
-        if (int(vy) == 0)
+        entity.colour = meta1;
+        if (meta2 == 0)
         {
             entity.tile = 0;
         }
@@ -1649,7 +1648,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.h = 21;
         entity.dir = 1;
 
-        entity.state = vx;
+        entity.state = meta1;
 
         entity.gravity = true;
         break;
@@ -1657,25 +1656,25 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.rule = 3;
         entity.type = 13;
         entity.size = 0;
-        entity.tile = 16 + vx;
+        entity.tile = 16 + meta1;
         entity.w = 16;
         entity.h = 16;
         entity.colour = 4;
         entity.onentity = 1;
         entity.animate = 100;
-        entity.para = vy;
+        entity.para = meta2;
         break;
     case 21: //as above, except doesn't highlight
         entity.rule = 3;
         entity.type = 13;
         entity.size = 0;
-        entity.tile = 16 + vx;
+        entity.tile = 16 + meta1;
         entity.w = 16;
         entity.h = 16;
         entity.colour = 4;
         entity.onentity = 0;
         entity.animate = 100;
-        entity.para = vy;
+        entity.para = meta2;
         break;
     case 22: //Fake trinkets, only appear if you've collected them
         entity.rule = 3;
@@ -1689,15 +1688,15 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.animate = 100;
 
         //Check if it's already been collected
-        entity.para = vx;
-        if (INBOUNDS_ARR(vx, collect) && !collect[(int) vx]) return;
+        entity.para = meta1;
+        if (INBOUNDS_ARR(meta1, collect) && !collect[meta1]) return;
         break;
     case 23: //SWN Enemies
         //Given a different behavior, these enemies are especially for SWN mode and disappear outside the screen.
         entity.rule = 1;
         entity.type = 23;
-        entity.behave = vx;
-        entity.para = vy;
+        entity.behave = meta1;
+        entity.para = meta2;
         entity.w = 16;
         entity.h = 16;
         entity.cx = 0;
@@ -1725,17 +1724,17 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         //This special crewmember is way more advanced than the usual kind, and can interact with game objects
         entity.rule = 6;
         entity.type = 14; //A special case!
-        entity.colour = vx;
-        if( (vx)==16)
+        entity.colour = meta1;
+        if (meta1 == 16)
         {
             //victoria is sad!
-            if (int(vy) == 2) vy = 1;
+            if (meta2 == 2) meta2 = 1;
         }
         else
         {
-            if (int(vy) == 2) vy = 0;
+            if (meta2 == 2) meta2 = 0;
         }
-        if (int(vy) == 0)
+        if (meta2 == 0)
         {
             entity.tile = 0;
         }
@@ -1773,52 +1772,52 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.colour = 4;
         entity.onentity = 1;
         entity.animate = 100;
-        entity.para = vy;
+        entity.para = meta2;
 
         //Decide tile here based on given achievement: both whether you have them and what they are
         //default is just a trophy base:
-        entity.tile = 180 + vx;
-        switch(int(vy))
+        entity.tile = 180 + meta1;
+        switch (meta2)
         {
         case 1:
             if(game.bestrank[0]>=3)
             {
-                entity.tile = 184 + vx;
+                entity.tile = 184 + meta1;
                 entity.colour = 31;
             }
             break;
         case 2:
             if(game.bestrank[1]>=3)
             {
-                entity.tile = 186 + vx;
+                entity.tile = 186 + meta1;
                 entity.colour = 33;
             }
             break;
         case 3:
             if(game.bestrank[2]>=3)
             {
-                entity.tile = 184 + vx;
+                entity.tile = 184 + meta1;
                 entity.colour = 35;
             }
             break;
         case 4:
             if(game.bestrank[3]>=3)
             {
-                entity.tile = 184 + vx;
+                entity.tile = 184 + meta1;
                 entity.colour = 30;
             }
             break;
         case 5:
             if(game.bestrank[4]>=3)
             {
-                entity.tile = 184 + vx;
+                entity.tile = 184 + meta1;
                 entity.colour = 34;
             }
             break;
         case 6:
             if(game.bestrank[5]>=3)
             {
-                entity.tile = 184 + vx;
+                entity.tile = 184 + meta1;
                 entity.colour = 32;
             }
             break;
@@ -1826,17 +1825,16 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         case 7:
             if(game.unlock[5])
             {
-                entity.tile = 188 + vx;
+                entity.tile = 188 + meta1;
                 entity.colour = 37;
                 entity.h += 3;
-                entity.lerpoldyp -= 3;
                 entity.yp -= 3;
             }
             break;
         case 8:
             if(game.unlock[19])
             {
-                entity.tile = 188 + vx;
+                entity.tile = 188 + meta1;
                 entity.colour = 37;
                 entity.h += 3;
             }
@@ -1847,7 +1845,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
             {
                 if (game.bestgamedeaths <= 50)
                 {
-                    entity.tile = 182 + vx;
+                    entity.tile = 182 + meta1;
                     entity.colour = 40;
                 }
             }
@@ -1857,7 +1855,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
             {
                 if (game.bestgamedeaths <= 100)
                 {
-                    entity.tile = 182 + vx;
+                    entity.tile = 182 + meta1;
                     entity.colour = 36;
                 }
             }
@@ -1867,7 +1865,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
             {
                 if (game.bestgamedeaths <= 250)
                 {
-                    entity.tile = 182 + vx;
+                    entity.tile = 182 + meta1;
                     entity.colour = 38;
                 }
             }
@@ -1877,7 +1875,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
             {
                 if (game.bestgamedeaths <= 500)
                 {
-                    entity.tile = 182 + vx;
+                    entity.tile = 182 + meta1;
                     entity.colour = 39;
                 }
             }
@@ -1886,42 +1884,42 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         case 13:
             if(game.swnbestrank>=1)
             {
-                entity.tile = 182 + vx;
+                entity.tile = 182 + meta1;
                 entity.colour = 39;
             }
             break;
         case 14:
             if(game.swnbestrank>=2)
             {
-                entity.tile =  (182 + vx);
+                entity.tile = 182 + meta1;
                 entity.colour = 39;
             }
             break;
         case 15:
             if(game.swnbestrank>=3)
             {
-                entity.tile =  (182 + vx);
+                entity.tile = 182 + meta1;
                 entity.colour = 39;
             }
             break;
         case 16:
             if(game.swnbestrank>=4)
             {
-                entity.tile =  (182 + vx);
+                entity.tile = 182 + meta1;
                 entity.colour = 38;
             }
             break;
         case 17:
             if(game.swnbestrank>=5)
             {
-                entity.tile =  (182 + vx);
+                entity.tile = 182 + meta1;
                 entity.colour = 36;
             }
             break;
         case 18:
             if(game.swnbestrank>=6)
             {
-                entity.tile =  (182 + vx);
+                entity.tile = 182 + meta1;
                 entity.colour = 40;
             }
             break;
@@ -1950,7 +1948,7 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         entity.colour = 3;
         entity.onentity = 0;
         entity.animate = 100;
-        entity.para = vy;
+        entity.para = meta2;
         entity.size = 13;
         break;
 
@@ -1970,13 +1968,13 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
             entity.rule = 5;
             entity.size = 6;
             entity.w = 1;
-            entity.h = vx;
+            entity.h = meta1;
             break;
         case 53:
         case 54:
             entity.rule = 7;
             entity.size = 5;
-            entity.w = vx;
+            entity.w = meta1;
             entity.h = 1;
             break;
         }
@@ -1992,13 +1990,13 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         //2 - colour
         entity.rule = 3;
         entity.type = 55;
-        if(INBOUNDS_ARR((int) vy, customcrewmoods)
-        && customcrewmoods[int(vy)]==1){
+        if(INBOUNDS_ARR(meta2, customcrewmoods)
+        && customcrewmoods[meta2]==1){
           entity.tile = 144;
         }else{
           entity.tile = 0;
         }
-        entity.colour = crewcolour(int(vy));
+        entity.colour = crewcolour(meta2);
         entity.cx = 6;
         entity.cy = 2;
         entity.w = 12;
@@ -2007,19 +2005,19 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
 
         entity.state = 0;
         entity.onentity = 1;
-        //entity.state = vx;
+        //entity.state = meta1;
 
         entity.gravity = true;
 
         //Check if it's already been collected
-        entity.para = vx;
-        if (!INBOUNDS_ARR(vx, customcollect) || customcollect[(int) vx]) return;
+        entity.para = meta1;
+        if (!INBOUNDS_ARR(meta1, customcollect) || customcollect[meta1]) return;
         break;
       case 56: //Custom enemy
         entity.rule = 1;
         entity.type = 1;
-        entity.behave = vx;
-        entity.para = vy;
+        entity.behave = meta1;
+        entity.para = meta2;
         entity.w = 16;
         entity.h = 16;
         entity.cx = 0;
@@ -2094,6 +2092,8 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         break;
     }
 
+    entity.lerpoldxp = entity.xp;
+    entity.lerpoldyp = entity.yp;
     entity.drawframe = entity.tile;
 
     if (!reuse)
@@ -2118,6 +2118,31 @@ void entityclass::createentity( float xp, float yp, int t, float vx /*= 0*/, flo
         }
         updateentities(indice);
     }
+}
+
+void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int p1, int p2)
+{
+    createentity(xp, yp, t, meta1, meta2, p1, p2, 320, 240);
+}
+
+void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int p1)
+{
+    createentity(xp, yp, t, meta1, meta2, p1, 0);
+}
+
+void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2)
+{
+    createentity(xp, yp, t, meta1, meta2, 0);
+}
+
+void entityclass::createentity(int xp, int yp, int t, int meta1)
+{
+    createentity(xp, yp, t, meta1, 0);
+}
+
+void entityclass::createentity(int xp, int yp, int t)
+{
+    createentity(xp, yp, t, 0);
 }
 
 //Returns true if entity is removed
@@ -2584,7 +2609,7 @@ bool entityclass::updateentities( int i )
             if (entities[i].state == 1)
             {
                 music.playef(4);
-                if (INBOUNDS_ARR(entities[i].para, customcollect))
+                if (INBOUNDS_ARR(entities[i].para, collect))
                 {
                     collect[(int) entities[i].para] = true;
                 }

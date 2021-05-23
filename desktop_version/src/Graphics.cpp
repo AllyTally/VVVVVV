@@ -45,7 +45,7 @@ void Graphics::init(void)
     //Background inits
     for (int i = 0; i < numstars; i++)
     {
-        SDL_Rect s = {Sint16(fRandom() * 320), Sint16(fRandom() * 240), 2, 2};
+        SDL_Rect s = {(int) (fRandom() * 320), (int) (fRandom() * 240), 2, 2};
         int s2 = 4+(fRandom()*4);
         stars[i] = s;
         starsspeed[i] = s2;
@@ -126,7 +126,6 @@ void Graphics::init(void)
     warprect = SDL_Rect();
 
     translucentroomname = false;
-    showmousecursor = true;
 
     alpha = 1.0f;
 
@@ -151,6 +150,7 @@ void Graphics::init(void)
 #ifndef NO_CUSTOM_LEVELS
     tiles1_mounted = false;
     tiles2_mounted = false;
+    minimap_mounted = false;
 #endif
 }
 
@@ -313,15 +313,19 @@ void Graphics::updatetitlecolours(void)
 }
 
 #define PROCESS_TILESHEET_CHECK_ERROR(tilesheet, tile_square) \
-    if (grphx.im_##tilesheet->w % tile_square != 0 \
+    if (grphx.im_##tilesheet == NULL) \
+    { \
+        /* We have already asserted; just no-op. */ \
+    } \
+    else if (grphx.im_##tilesheet->w % tile_square != 0 \
     || grphx.im_##tilesheet->h % tile_square != 0) \
     { \
         const char* error = "Error: %s.png dimensions not exact multiples of %i!"; \
         char message[128]; \
-        SDL_snprintf(message, sizeof(message), error, #tilesheet, tile_square); \
-        \
         const char* error_title = "Error with %s.png"; \
         char message_title[128]; \
+        \
+        SDL_snprintf(message, sizeof(message), error, #tilesheet, tile_square); \
         SDL_snprintf(message_title, sizeof(message_title), error_title, #tilesheet); \
         \
         puts(message); \
@@ -339,23 +343,28 @@ void Graphics::updatetitlecolours(void)
 #define PROCESS_TILESHEET_RENAME(tilesheet, vector, tile_square, extra_code) \
     PROCESS_TILESHEET_CHECK_ERROR(tilesheet, tile_square) \
     \
-    for (int j = 0; j < grphx.im_##tilesheet->h / tile_square; j++) \
+    else \
     { \
-        for (int i = 0; i < grphx.im_##tilesheet->w / tile_square; i++) \
+        int j; \
+        for (j = 0; j < grphx.im_##tilesheet->h / tile_square; ++j) \
         { \
-            SDL_Surface* temp = GetSubSurface( \
-                grphx.im_##tilesheet, \
-                i * tile_square, j * tile_square, \
-                tile_square, tile_square \
-            ); \
-            vector.push_back(temp); \
-            \
-            extra_code \
+            int i; \
+            for (i = 0; i < grphx.im_##tilesheet->w / tile_square; ++i) \
+            { \
+                SDL_Surface* temp = GetSubSurface( \
+                    grphx.im_##tilesheet, \
+                    i * tile_square, j * tile_square, \
+                    tile_square, tile_square \
+                ); \
+                vector.push_back(temp); \
+                \
+                extra_code \
+            } \
         } \
-    } \
-    \
-    SDL_FreeSurface(grphx.im_##tilesheet); \
-    grphx.im_##tilesheet = NULL;
+        \
+        SDL_FreeSurface(grphx.im_##tilesheet); \
+        grphx.im_##tilesheet = NULL; \
+    }
 
 #define PROCESS_TILESHEET(tilesheet, tile_square, extra_code) \
     PROCESS_TILESHEET_RENAME(tilesheet, tilesheet, tile_square, extra_code)
@@ -368,7 +377,7 @@ void Graphics::Makebfont(void)
         flipbfont.push_back(TempFlipped);
     })
 
-    unsigned char* charmap = NULL;
+    unsigned char* charmap;
     size_t length;
     FILESYSTEM_loadAssetToMemory("graphics/font.txt", &charmap, &length, false);
     if (charmap != NULL)
@@ -538,7 +547,7 @@ void Graphics::bigprint(  int _x, int _y, std::string _s, int r, int g, int b, b
         if (INBOUNDS_VEC(idx, font))
         {
             SDL_Surface* tempPrint = ScaleSurface(font[idx], font[idx]->w *sc,font[idx]->h *sc);
-            SDL_Rect printrect = { static_cast<Sint16>((_x) + bfontpos), static_cast<Sint16>(_y) , static_cast<Sint16>((bfont_rect.w*sc)+1), static_cast<Sint16>((bfont_rect.h * sc)+1)};
+            SDL_Rect printrect = {_x + bfontpos, _y, bfont_rect.w*sc + 1, bfont_rect.h*sc + 1};
             BlitSurfaceColoured(tempPrint, NULL, backBuffer, &printrect, ct);
             SDL_FreeSurface(tempPrint);
         }
@@ -721,9 +730,10 @@ void Graphics::drawsprite( int x, int y, int t, int r, int g,  int b )
     if (!INBOUNDS_VEC(t, sprites))
     {
         WHINE_ONCE("drawsprite() out-of-bounds!");
+        return;
     }
 
-    SDL_Rect rect = { Sint16(x), Sint16(y), sprites_rect.w, sprites_rect.h };
+    SDL_Rect rect = {x, y, sprites_rect.w, sprites_rect.h};
     setcolreal(getRGB(r,g,b));
     BlitSurfaceColoured(sprites[t], NULL, backBuffer, &rect, ct);
 }
@@ -733,9 +743,10 @@ void Graphics::drawsprite(int x, int y, int t, Uint32 c)
     if (!INBOUNDS_VEC(t, sprites))
     {
         WHINE_ONCE("drawsprite() out-of-bounds!");
+        return;
     }
 
-    SDL_Rect rect = { Sint16(x), Sint16(y), sprites_rect.w, sprites_rect.h };
+    SDL_Rect rect = {x, y, sprites_rect.w, sprites_rect.h};
     setcolreal(c);
     BlitSurfaceColoured(sprites[t], NULL, backBuffer, &rect, ct);
 }
@@ -757,7 +768,7 @@ void Graphics::drawtile( int x, int y, int t )
         return;
     }
 
-    SDL_Rect rect = { Sint16(x), Sint16(y), tiles_rect.w, tiles_rect.h };
+    SDL_Rect rect = {x, y, tiles_rect.w, tiles_rect.h};
 
 #if !defined(NO_CUSTOM_LEVELS)
     if (shouldrecoloroneway(t, tiles1_mounted))
@@ -781,7 +792,7 @@ void Graphics::drawtile2( int x, int y, int t )
         return;
     }
 
-    SDL_Rect rect = { Sint16(x), Sint16(y), tiles_rect.w, tiles_rect.h };
+    SDL_Rect rect = {x, y, tiles_rect.w, tiles_rect.h};
 
 #if !defined(NO_CUSTOM_LEVELS)
     if (shouldrecoloroneway(t, tiles2_mounted))
@@ -807,7 +818,7 @@ void Graphics::drawtile3( int x, int y, int t, int off, int height_subtract /*= 
         return;
     }
     SDL_Rect src_rect = { 0, 0, tiles_rect.w, tiles_rect.h - height_subtract };
-    SDL_Rect rect = { Sint16(x), Sint16(y), tiles_rect.w, tiles_rect.h };
+    SDL_Rect rect = {x, y, tiles_rect.w, tiles_rect.h};
     BlitSurfaceStandard(tiles3[t], &src_rect, backBuffer, &rect);
 }
 
@@ -820,7 +831,7 @@ void Graphics::drawtowertile( int x, int y, int t )
     }
     x += 8;
     y += 8;
-    SDL_Rect rect = { Sint16(x), Sint16(y), tiles_rect.w, tiles_rect.h };
+    SDL_Rect rect = {x, y, tiles_rect.w, tiles_rect.h};
     BlitSurfaceStandard(tiles2[t], NULL, warpbuffer, &rect);
 }
 
@@ -835,7 +846,7 @@ void Graphics::drawtowertile3( int x, int y, int t, TowerBG& bg_obj )
     }
     x += 8;
     y += 8;
-    SDL_Rect rect = { Sint16(x), Sint16(y), tiles_rect.w, tiles_rect.h };
+    SDL_Rect rect = {x, y, tiles_rect.w, tiles_rect.h};
     BlitSurfaceStandard(tiles3[t], NULL, bg_obj.buffer, &rect);
 }
 
@@ -948,7 +959,7 @@ void Graphics::drawgui(void)
         if (textbox[i].tr == 175 && textbox[i].tg == 175)
         {
             //purple guy
-            drawsprite(80 - 6, crew_yp, crew_sprite, 220- help.glow/4 - int(fRandom()*20), 120- help.glow/4, 210 - help.glow/4);
+            drawsprite(80 - 6, crew_yp, crew_sprite, 220- help.glow/4 - textbox[i].rand, 120- help.glow/4, 210 - help.glow/4);
         }
         else if (textbox[i].tr == 175 && textbox[i].tb == 175)
         {
@@ -958,17 +969,17 @@ void Graphics::drawgui(void)
         else if (textbox[i].tr == 175)
         {
             //green guy
-            drawsprite(80 - 6, crew_yp, crew_sprite, 120 - help.glow / 4 - int(fRandom() * 20), 220 - help.glow / 4, 120 - help.glow / 4);
+            drawsprite(80 - 6, crew_yp, crew_sprite, 120 - help.glow / 4 - textbox[i].rand, 220 - help.glow / 4, 120 - help.glow / 4);
         }
         else if (textbox[i].tg == 175)
         {
             //yellow guy
-            drawsprite(80 - 6, crew_yp, crew_sprite, 220- help.glow/4 - int(fRandom()*20), 210 - help.glow/4, 120- help.glow/4);
+            drawsprite(80 - 6, crew_yp, crew_sprite, 220- help.glow/4 - textbox[i].rand, 210 - help.glow/4, 120- help.glow/4);
         }
         else if (textbox[i].tb == 175)
         {
             //blue guy
-            drawsprite(80 - 6, crew_yp, crew_sprite, 75, 75, 255- help.glow/4 - int(fRandom()*20));
+            drawsprite(80 - 6, crew_yp, crew_sprite, 75, 75, 255- help.glow/4 - textbox[i].rand);
         }
     }
 }
@@ -984,6 +995,16 @@ void Graphics::updatetextboxes(void)
             textbox.erase(textbox.begin() + i);
             i--;
             continue;
+        }
+
+        if (textbox[i].tl >= 1.0f
+        && ((textbox[i].tr == 175 && textbox[i].tg == 175)
+        || textbox[i].tr == 175
+        || textbox[i].tg == 175
+        || textbox[i].tb == 175)
+        && (textbox[i].tr != 175 || textbox[i].tb != 175))
+        {
+            textbox[i].rand = fRandom() * 20;
         }
     }
 }
@@ -1802,15 +1823,15 @@ void Graphics::drawentity(const int i, const int yoff)
         }
 
         wrappedPoint.y = tpoint.y;
-        if (tpoint.y < 0)
+        if (tpoint.y < 8)
         {
             wrapY = true;
-            wrappedPoint.y += 230;
+            wrappedPoint.y += 232;
         }
         else if (tpoint.y > 210)
         {
             wrapY = true;
-            wrappedPoint.y -= 230;
+            wrappedPoint.y -= 232;
         }
 
         const bool isInWrappingAreaOfTower = map.towermode && !map.minitowermode && map.ypos >= 500 && map.ypos <= 5000;
@@ -2068,7 +2089,7 @@ void Graphics::drawentity(const int i, const int yoff)
 
         tpoint.x = xp; tpoint.y = yp - yoff;
         setcolreal(obj.entities[i].realcol);
-        setRect(drawRect, Sint16(xp), Sint16(yp - yoff), Sint16(sprites_rect.x * 6), Sint16(sprites_rect.y * 6 ) );
+        setRect(drawRect, xp, yp - yoff, sprites_rect.x * 6, sprites_rect.y * 6);
         SDL_Surface* TempSurface = ScaleSurface( spritesvec[obj.entities[i].drawframe], 6 * sprites_rect.w,6* sprites_rect.h );
         BlitSurfaceColoured(TempSurface, NULL , backBuffer,  &drawRect, ct );
         SDL_FreeSurface(TempSurface);
@@ -2387,7 +2408,7 @@ void Graphics::updatebackground(int t)
         {
             stars[i].w = 2;
             stars[i].h = 2;
-            stars[i].x -= Sint16(starsspeed[i]);
+            stars[i].x -= starsspeed[i];
             if (stars[i].x < -10)
             {
                 stars[i].x += 340;
@@ -3174,7 +3195,7 @@ void Graphics::bigrprint(int x, int y, std::string& t, int r, int g, int b, bool
 		if (INBOUNDS_VEC(idx, font))
 		{
 			SDL_Surface* tempPrint = ScaleSurface(font[idx], font[idx]->w *sc,font[idx]->h *sc);
-			SDL_Rect printrect = { Sint16((x) + bfontpos), Sint16(y) , Sint16(bfont_rect.w*sc), Sint16(bfont_rect.h * sc)};
+			SDL_Rect printrect = {x + bfontpos, y, (int) (bfont_rect.w * sc), (int) (bfont_rect.h * sc)};
 			BlitSurfaceColoured(tempPrint, NULL, backBuffer, &printrect, ct);
 			SDL_FreeSurface(tempPrint);
 		}
@@ -3397,6 +3418,7 @@ void Graphics::reloadresources(void)
 #ifndef NO_CUSTOM_LEVELS
 	tiles1_mounted = FILESYSTEM_isAssetMounted("graphics/tiles.png");
 	tiles2_mounted = FILESYSTEM_isAssetMounted("graphics/tiles2.png");
+	minimap_mounted = FILESYSTEM_isAssetMounted("graphics/minimap.png");
 #endif
 }
 

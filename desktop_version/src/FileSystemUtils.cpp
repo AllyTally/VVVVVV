@@ -39,7 +39,7 @@ static char levelDir[MAX_PATH] = {'\0'};
 static char assetDir[MAX_PATH] = {'\0'};
 static char virtualMountPath[MAX_PATH] = {'\0'};
 
-static void PLATFORM_getOSDirectory(char* output);
+static int PLATFORM_getOSDirectory(char* output, const size_t output_size);
 static void PLATFORM_migrateSaveData(char* output);
 static void PLATFORM_copyFile(const char *oldLocation, const char *newLocation);
 
@@ -70,7 +70,16 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 	char* basePath;
 
 	PHYSFS_setAllocator(&allocator);
-	PHYSFS_init(argvZero);
+
+	if (!PHYSFS_init(argvZero))
+	{
+		printf(
+			"Unable to initialize PhysFS: %s\n",
+			PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+		);
+		return 0;
+	}
+
 	PHYSFS_permitSymbolicLinks(1);
 
 	/* Determine the OS user directory */
@@ -84,14 +93,30 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 			!trailing_pathsep ? pathSep : ""
 		);
 	}
-	else
+	else if (!PLATFORM_getOSDirectory(output, sizeof(output)))
 	{
-		PLATFORM_getOSDirectory(output);
+		return 0;
 	}
 
 	/* Mount our base user directory */
-	PHYSFS_mount(output, NULL, 0);
-	PHYSFS_setWriteDir(output);
+	if (!PHYSFS_mount(output, NULL, 0))
+	{
+		printf(
+			"Could not mount %s: %s\n",
+			output,
+			PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+		);
+		return 0;
+	}
+	if (!PHYSFS_setWriteDir(output))
+	{
+		printf(
+			"Could not set write dir to %s: %s\n",
+			output,
+			PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+		);
+		return 0;
+	}
 	printf("Base directory: %s\n", output);
 
 	/* Store full save directory */
@@ -447,11 +472,21 @@ void FILESYSTEM_loadFileToMemory(
 	size_t *len,
 	bool addnull
 ) {
+	PHYSFS_File *handle;
+	PHYSFS_sint64 length;
+	PHYSFS_sint64 success;
+
+	if (name == NULL || mem == NULL)
+	{
+		goto fail;
+	}
+
 	if (SDL_strcmp(name, "levels/special/stdin.vvvvvv") == 0)
 	{
 		// this isn't *technically* necessary when piping directly from a file, but checking for that is annoying
 		static std::vector<char> STDIN_BUFFER;
 		static bool STDIN_LOADED = false;
+		size_t stdin_length;
 		if (!STDIN_LOADED)
 		{
 			std::istreambuf_iterator<char> begin(std::cin), end;
@@ -460,14 +495,14 @@ void FILESYSTEM_loadFileToMemory(
 			STDIN_LOADED = true;
 		}
 
-		size_t length = STDIN_BUFFER.size() - 1;
+		stdin_length = STDIN_BUFFER.size() - 1;
 		if (len != NULL)
 		{
-			*len = length;
+			*len = stdin_length;
 		}
 
-		++length;
-		*mem = static_cast<unsigned char*>(SDL_malloc(length)); // STDIN_BUFFER.data() causes double-free
+		++stdin_length;
+		*mem = static_cast<unsigned char*>(SDL_malloc(stdin_length)); // STDIN_BUFFER.data() causes double-free
 		if (*mem == NULL)
 		{
 			VVV_exit(1);
@@ -476,12 +511,12 @@ void FILESYSTEM_loadFileToMemory(
 		return;
 	}
 
-	PHYSFS_File *handle = PHYSFS_openRead(name);
+	handle = PHYSFS_openRead(name);
 	if (handle == NULL)
 	{
-		return;
+		goto fail;
 	}
-	PHYSFS_sint64 length = PHYSFS_fileLength(handle);
+	length = PHYSFS_fileLength(handle);
 	if (len != NULL)
 	{
 		if (length < 0)
@@ -507,12 +542,23 @@ void FILESYSTEM_loadFileToMemory(
 			VVV_exit(1);
 		}
 	}
-	PHYSFS_sint64 success = PHYSFS_readBytes(handle, *mem, length);
+	success = PHYSFS_readBytes(handle, *mem, length);
 	if (success == -1)
 	{
 		FILESYSTEM_freeMemory(mem);
 	}
 	PHYSFS_close(handle);
+	return;
+
+fail:
+	if (mem != NULL)
+	{
+		*mem = NULL;
+	}
+	if (len != NULL)
+	{
+		*len = 0;
+	}
 }
 
 void FILESYSTEM_loadAssetToMemory(
@@ -640,7 +686,7 @@ bool FILESYSTEM_saveTiXml2Document(const char *name, tinyxml2::XMLDocument& doc)
 bool FILESYSTEM_loadTiXml2Document(const char *name, tinyxml2::XMLDocument& doc)
 {
 	/* XMLDocument.LoadFile doesn't account for Unicode paths, PHYSFS does */
-	unsigned char *mem = NULL;
+	unsigned char *mem;
 	FILESYSTEM_loadFileToMemory(name, &mem, NULL, true);
 	if (mem == NULL)
 	{
@@ -686,17 +732,63 @@ void FILESYSTEM_enumerateLevelDirFileNames(
 	}
 }
 
-static void PLATFORM_getOSDirectory(char* output)
+static int PLATFORM_getOSDirectory(char* output, const size_t output_size)
 {
 #ifdef _WIN32
 	/* This block is here for compatibility, do not touch it! */
 	WCHAR utf16_path[MAX_PATH];
-	SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, utf16_path);
-	WideCharToMultiByte(CP_UTF8, 0, utf16_path, -1, output, MAX_PATH, NULL, NULL);
+	HRESULT retcode = SHGetFolderPathW(
+		NULL,
+		CSIDL_PERSONAL,
+		NULL,
+		SHGFP_TYPE_CURRENT,
+		utf16_path
+	);
+	int num_bytes;
+
+	if (FAILED(retcode))
+	{
+		printf(
+			"Could not get OS directory: SHGetFolderPathW returned 0x%08x\n",
+			retcode
+		);
+		return 0;
+	}
+
+	num_bytes = WideCharToMultiByte(
+		CP_UTF8,
+		0,
+		utf16_path,
+		-1,
+		output,
+		output_size,
+		NULL,
+		NULL
+	);
+	if (num_bytes == 0)
+	{
+		printf(
+			"Could not get OS directory: UTF-8 conversion failed with %d\n",
+			GetLastError()
+		);
+		return 0;
+	}
+
 	SDL_strlcat(output, "\\VVVVVV\\", MAX_PATH);
 	mkdir(output, 0777);
+	return 1;
 #else
-	SDL_strlcpy(output, PHYSFS_getPrefDir("distractionware", "VVVVVV"), MAX_PATH);
+	const char* prefDir = PHYSFS_getPrefDir("distractionware", "VVVVVV");
+	if (prefDir == NULL)
+	{
+		printf(
+			"Could not get OS directory: %s\n",
+			PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+		);
+		return 0;
+	}
+	SDL_strlcpy(output, prefDir, output_size);
+	return 1;
 #endif
 }
 

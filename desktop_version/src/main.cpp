@@ -506,8 +506,9 @@ int main(int argc, char *argv[])
     map.nexttowercolour();
 
     map.ypos = (700-29) * 8;
-    graphics.towerbg.bypos = map.ypos / 2;
-    graphics.titlebg.bypos = map.ypos / 2;
+    map.oldypos = map.ypos;
+    map.setbgobjlerp(graphics.towerbg);
+    map.setbgobjlerp(graphics.titlebg);
 
     {
         // Prioritize unlock.vvv first (2.2 and below),
@@ -740,7 +741,9 @@ static void focused_begin(void)
 
 static void focused_end(void)
 {
-    /* no-op. */
+    game.gameclock();
+    music.processmusic();
+    graphics.processfade();
 }
 
 static enum LoopCode loop_end(void)
@@ -800,10 +803,6 @@ static enum LoopCode loop_end(void)
         key.resetWindow = false;
         gameScreen.ResizeScreen(-1, -1);
     }
-
-    music.processmusic();
-    graphics.processfade();
-    game.gameclock();
 
     return Loop_continue;
 }

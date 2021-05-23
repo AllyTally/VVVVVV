@@ -1553,10 +1553,7 @@ void scriptclass::run(void)
 				game.deathcounts = 0;
 				game.advancetext = false;
 				game.hascontrol = true;
-				game.frames = 0;
-				game.seconds = 0;
-				game.minutes = 0;
-				game.hours = 0;
+				game.resetgameclock();
 				game.gravitycontrol = 0;
 				game.teleport = false;
 				game.companion = 0;
@@ -2719,180 +2716,68 @@ void scriptclass::startgamemode( int t )
 			if (INBOUNDS_VEC(i, obj.entities))
 			{
 				map.ypos = obj.entities[i].yp - 120;
+				map.oldypos = map.ypos;
 			}
-			graphics.towerbg.bypos = map.ypos / 2;
+			map.setbgobjlerp(graphics.towerbg);
 			map.cameramode = 0;
 			map.colsuperstate = 0;
 		}
 		graphics.fademode = 4;
 		break;
 	case 3:
-		//Start Time Trial 1
-		hardreset();
-		game.nocutscenes = true;
-		game.intimetrial = true;
-		game.timetrialcountdown = 150;
-		game.timetrialparlost = false;
-		game.timetriallevel = 0;
-		game.timetrialpar = 75;
-		game.timetrialshinytarget = 2;
-
-		music.fadeout();
-		game.gamestate = GAMEMODE;
-		game.starttrial(game.timetriallevel);
-		game.jumpheld = true;
-
-		if (graphics.setflipmode) graphics.flipmode = true;//set flipmode
-		if(obj.entities.empty())
-		{
-			obj.createentity(game.savex, game.savey, 0, 0); //In this game, constant, never destroyed
-		}
-		else
-		{
-			map.resetplayer();
-		}
-		map.gotoroom(game.saverx, game.savery);
-		map.initmapdata();
-		graphics.fademode = 4;
-		break;
 	case 4:
-		//Start Time Trial 2
-		hardreset();
-		game.nocutscenes = true;
-		game.intimetrial = true;
-		game.timetrialcountdown = 150;
-		game.timetrialparlost = false;
-		game.timetriallevel = 1;
-		game.timetrialpar = 165;
-		game.timetrialshinytarget = 4;
-
-		music.fadeout();
-		game.gamestate = GAMEMODE;
-		game.starttrial(game.timetriallevel);
-		game.jumpheld = true;
-
-		if (graphics.setflipmode) graphics.flipmode = true;//set flipmode
-		if(obj.entities.empty())
-		{
-			obj.createentity(game.savex, game.savey, 0, 0); //In this game, constant, never destroyed
-		}
-		else
-		{
-			map.resetplayer();
-		}
-		map.gotoroom(game.saverx, game.savery);
-		map.initmapdata();
-		graphics.fademode = 4;
-		break;
 	case 5:
-		//Start Time Trial 3 tow
-		hardreset();
-		game.nocutscenes = true;
-		game.intimetrial = true;
-		game.timetrialcountdown = 150;
-		game.timetrialparlost = false;
-		game.timetriallevel = 2;
-		game.timetrialpar = 105;
-		game.timetrialshinytarget = 2;
-
-		music.fadeout();
-		game.gamestate = GAMEMODE;
-		game.starttrial(game.timetriallevel);
-		game.jumpheld = true;
-
-		if (graphics.setflipmode) graphics.flipmode = true;//set flipmode
-		if(obj.entities.empty())
-		{
-			obj.createentity(game.savex, game.savey, 0, 0); //In this game, constant, never destroyed
-		}
-		else
-		{
-			map.resetplayer();
-		}
-		map.gotoroom(game.saverx, game.savery);
-		map.initmapdata();
-		graphics.fademode = 4;
-		break;
 	case 6:
-		//Start Time Trial 4 station
-		hardreset();
-		game.nocutscenes = true;
-		game.intimetrial = true;
-		game.timetrialcountdown = 150;
-		game.timetrialparlost = false;
-		game.timetriallevel = 3;
-		game.timetrialpar = 200;
-		game.timetrialshinytarget = 5;
-
-		music.fadeout();
-		game.gamestate = GAMEMODE;
-		game.starttrial(game.timetriallevel);
-		game.jumpheld = true;
-
-		if (graphics.setflipmode) graphics.flipmode = true;//set flipmode
-		if(obj.entities.empty())
-		{
-			obj.createentity(game.savex, game.savey, 0, 0); //In this game, constant, never destroyed
-		}
-		else
-		{
-			map.resetplayer();
-		}
-		map.gotoroom(game.saverx, game.savery);
-		map.initmapdata();
-		graphics.fademode = 4;
-		break;
 	case 7:
-		//Start Time Trial 5 warp
-		hardreset();
-		game.nocutscenes = true;
-		game.intimetrial = true;
-		game.timetrialcountdown = 150;
-		game.timetrialparlost = false;
-		game.timetriallevel = 4;
-		game.timetrialpar = 120;
-		game.timetrialshinytarget = 1;
-
-		music.fadeout();
-		game.gamestate = GAMEMODE;
-		game.starttrial(game.timetriallevel);
-		game.jumpheld = true;
-
-		if (graphics.setflipmode) graphics.flipmode = true;//set flipmode
-		if(obj.entities.empty())
-		{
-			obj.createentity(game.savex, game.savey, 0, 0); //In this game, constant, never destroyed
-		}
-		else
-		{
-			map.resetplayer();
-		}
-		map.gotoroom(game.saverx, game.savery);
-		map.initmapdata();
-		graphics.fademode = 4;
-		break;
 	case 8:
-		//Start Time Trial 6// final level!
+		//Start Time Trial
+		music.fadeout();
+
 		hardreset();
 		game.nocutscenes = true;
 		game.intimetrial = true;
 		game.timetrialcountdown = 150;
 		game.timetrialparlost = false;
-		game.timetriallevel = 5;
-		game.timetrialpar = 135;
-		game.timetrialshinytarget = 1;
+		game.timetriallevel = t - 3;
 
-		music.fadeout();
-		map.finalmode = true; //Enable final level mode
-		map.final_colormode = false;
-		map.final_mapcol = 0;
-		map.final_colorframe = 0;
+		switch (t)
+		{
+		case 3:
+			game.timetrialpar = 75;
+			game.timetrialshinytarget = 2;
+			break;
+		case 4:
+			game.timetrialpar = 165;
+			game.timetrialshinytarget = 4;
+			break;
+		case 5:
+			game.timetrialpar = 105;
+			game.timetrialshinytarget = 2;
+			break;
+		case 6:
+			game.timetrialpar = 200;
+			game.timetrialshinytarget = 5;
+			break;
+		case 7:
+			game.timetrialpar = 120;
+			game.timetrialshinytarget = 1;
+			break;
+		case 8:
+			game.timetrialpar = 135;
+			game.timetrialshinytarget = 1;
+			map.finalmode = true; //Enable final level mode
+			map.final_colormode = false;
+			map.final_mapcol = 0;
+			map.final_colorframe = 0;
+			break;
+		}
+
 		game.gamestate = GAMEMODE;
 		game.starttrial(game.timetriallevel);
 		game.jumpheld = true;
 
 		if (graphics.setflipmode) graphics.flipmode = true;//set flipmode
-		if(obj.entities.empty())
+		if (obj.entities.empty())
 		{
 			obj.createentity(game.savex, game.savey, 0, 0); //In this game, constant, never destroyed
 		}
@@ -3554,10 +3439,7 @@ void scriptclass::hardreset(void)
 
 	game.deathcounts = 0;
 	game.gameoverdelay = 0;
-	game.frames = 0;
-	game.seconds = 0;
-	game.minutes = 0;
-	game.hours = 0;
+	game.resetgameclock();
 	game.gamesaved = false;
 	game.gamesavefailed = false;
 	game.savetime = "00:00";

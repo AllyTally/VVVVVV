@@ -394,7 +394,9 @@ public:
     int activeactivity, act_fade;
     int prev_act_fade;
 
-    bool press_left, press_right, press_action, press_map;
+    bool press_left, press_right, press_action, press_map, press_interact;
+    bool interactheld;
+    bool separate_interact;
 
     //Some stats:
     int totalflips;
@@ -418,13 +420,13 @@ public:
     void updatecustomlevelstats(std::string clevel, int cscore);
 
     std::vector<CustomLevelStat> customlevelstats;
-    bool customlevelstatsloaded;
 
 
     std::vector<SDL_GameControllerButton> controllerButton_map;
     std::vector<SDL_GameControllerButton> controllerButton_flip;
     std::vector<SDL_GameControllerButton> controllerButton_esc;
     std::vector<SDL_GameControllerButton> controllerButton_restart;
+    std::vector<SDL_GameControllerButton> controllerButton_interact;
 
     bool skipfakeload;
     bool ghostsenabled;
@@ -453,6 +455,10 @@ public:
     {
         return inintermission || insecretlab || intimetrial || nodeathmode;
     }
+
+    bool incompetitive(void);
+
+    bool nocompetitive(void);
 
     bool over30mode;
     bool glitchrunnermode; // Have fun speedrunners! <3 Misa

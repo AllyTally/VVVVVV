@@ -15,7 +15,6 @@ musicclass::musicclass(void)
 	m_doFadeInVol = false;
 	m_doFadeOutVol = false;
 	musicVolume = 0;
-	FadeVolAmountPerFrame = 0;
 
 	user_music_volume = USER_VOLUME_MAX;
 	user_sound_volume = USER_VOLUME_MAX;
@@ -201,6 +200,9 @@ void musicclass::play(int t)
 		return;
 	}
 
+	m_doFadeInVol = false;
+	m_doFadeOutVol = false;
+
 	if (currentsong == 0 || currentsong == 7 || (!map.custommode && (currentsong == 0+num_mmmmmm_tracks || currentsong == 7+num_mmmmmm_tracks)))
 	{
 		// Level Complete theme, no fade in or repeat
@@ -211,6 +213,7 @@ void musicclass::play(int t)
 		else
 		{
 			musicVolume = MIX_MAX_VOLUME;
+			Mix_VolumeMusic(musicVolume);
 		}
 	}
 	else
@@ -277,14 +280,45 @@ void musicclass::silencedasmusik(void)
 	musicVolume = 0;
 }
 
-void musicclass::setfadeamount(const int fade_ms)
+struct FadeState
 {
-	if (fade_ms == 0)
+	int start_volume;
+	int end_volume;
+	int duration_ms;
+	int step_ms;
+};
+
+static struct FadeState fade;
+
+enum FadeCode
+{
+	Fade_continue,
+	Fade_finished
+};
+
+static enum FadeCode processmusicfade(struct FadeState* state, int* volume)
+{
+	int range;
+	int new_volume;
+
+	if (state->duration_ms == 0 /* Fast path. */
+	|| state->start_volume == state->end_volume /* Fast path. */
+	|| state->step_ms >= state->duration_ms /* We're finished. */)
 	{
-		FadeVolAmountPerFrame = MIX_MAX_VOLUME;
-		return;
+		*volume = state->end_volume;
+		state->step_ms = 0;
+		return Fade_finished;
 	}
-	FadeVolAmountPerFrame = MIX_MAX_VOLUME / (fade_ms / game.get_timestep());
+
+	range = state->end_volume - state->start_volume;
+	new_volume = range * state->step_ms / state->duration_ms;
+	new_volume += state->start_volume;
+
+	*volume = new_volume;
+
+	state->step_ms += game.get_timestep();
+
+	return Fade_continue;
 }
 
 void musicclass::fadeMusicVolumeIn(int ms)
@@ -298,14 +332,19 @@ void musicclass::fadeMusicVolumeIn(int ms)
 	/* Fix 1-frame glitch */
 	Mix_VolumeMusic(0);
 
-	setfadeamount(ms);
+	fade.duration_ms = ms;
+	fade.start_volume = 0;
+	fade.end_volume = MIX_MAX_VOLUME;
 }
 
 void musicclass::fadeMusicVolumeOut(const int fadeout_ms)
 {
 	m_doFadeInVol = false;
 	m_doFadeOutVol = true;
-	setfadeamount(fadeout_ms);
+
+	fade.duration_ms = fadeout_ms;
+	fade.start_volume = musicVolume;
+	fade.end_volume = 0;
 }
 
 void musicclass::fadeout(const bool quick_fade_ /*= true*/)
@@ -316,8 +355,8 @@ void musicclass::fadeout(const bool quick_fade_ /*= true*/)
 
 void musicclass::processmusicfadein(void)
 {
-	musicVolume += FadeVolAmountPerFrame;
-	if (musicVolume >= MIX_MAX_VOLUME)
+	enum FadeCode fade_code = processmusicfade(&fade, &musicVolume);
+	if (fade_code == Fade_finished)
 	{
 		m_doFadeInVol = false;
 	}
@@ -325,12 +364,12 @@ void musicclass::processmusicfadein(void)
 
 void musicclass::processmusicfadeout(void)
 {
-	musicVolume -= FadeVolAmountPerFrame;
-	if (musicVolume < 0)
+	enum FadeCode fade_code = processmusicfade(&fade, &musicVolume);
+	if (fade_code == Fade_finished)
 	{
 		musicVolume = 0;
 		m_doFadeOutVol = false;
-		pause();
+		haltdasmusik();
 	}
 }
 

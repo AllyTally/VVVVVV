@@ -50,6 +50,8 @@ public:
 
     void updatebgobj(TowerBG& bg_obj);
 
+    void setbgobjlerp(TowerBG& bg_obj);
+
     void updatetowerglow(TowerBG& bg_obj);
 
     void nexttowercolour(void);
@@ -107,8 +109,8 @@ public:
 
     //Special tower stuff
     bool towermode;
-    float ypos;
-    float oldypos;
+    int ypos;
+    int oldypos;
     int cameramode;
     int cameraseek, cameraseekframe;
     int resumedelay;

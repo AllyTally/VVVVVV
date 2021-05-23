@@ -96,6 +96,7 @@ static const char* githubfriends[] = {
     "Brian Callahan",
     "Dav999",
     "Allison Fleischer",
+    "Malte Grimm",
     "Daniel Lee",
     "Fredrik Ljungdahl",
     "MAO3J1m0Op",
@@ -120,6 +121,6 @@ static const int creditmaxposition = 1050 + (10 * (
     SDL_arraysize(superpatrons) + SDL_arraysize(patrons) + SDL_arraysize(githubfriends)
 ));
 
-}; /* namespace Credits */
+} /* namespace Credits */
 
 #endif /* CREDITS_H */
