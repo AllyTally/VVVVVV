@@ -25,6 +25,8 @@ enum Kybrd
 	KEYBOARD_v = SDLK_v,
 	KEYBOARD_z = SDLK_z,
 
+	KEYBOARD_f = SDLK_f,
+
 	KEYBOARD_BACKSPACE = SDLK_BACKSPACE
 };
 

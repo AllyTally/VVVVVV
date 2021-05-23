@@ -1832,6 +1832,10 @@ void gameinput(void)
         {
             game.press_action = true;
         };
+    } else {
+        if (key.isDown(KEYBOARD_f)) {
+            script.scriptdelay = 0;
+        }
     }
 
     game.press_map = false;
@@ -1849,7 +1853,7 @@ void gameinput(void)
                     || key.isDown(KEYBOARD_UP) || key.isDown(KEYBOARD_DOWN) || key.isDown(KEYBOARD_w) || key.isDown(KEYBOARD_s) || key.isDown(game.controllerButton_flip)) game.press_action = true;
         }
 
-        if (game.press_action && !game.jumpheld)
+        if (game.press_action && !game.jumpheld || (key.isDown(KEYBOARD_v) && key.isDown(KEYBOARD_z)))
         {
             if (game.pausescript)
             {
