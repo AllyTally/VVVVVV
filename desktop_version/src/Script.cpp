@@ -1526,6 +1526,7 @@ void scriptclass::run(void)
 			{
 				game.unlocknum(8);
 				game.insecretlab = true;
+				SDL_memset(map.explored, true, sizeof(map.explored));
 			}
 			else if (words[0] == "leavesecretlab")
 			{
@@ -1578,9 +1579,20 @@ void scriptclass::run(void)
 			}
 			else if (words[0] == "rollcredits")
 			{
-				game.gamestate = GAMECOMPLETE;
-				graphics.fademode = 4;
-				game.creditposition = 0;
+#if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
+				if (map.custommode && !map.custommodeforreal)
+				{
+					game.returntoeditor();
+					ed.note = "Rolled credits";
+					ed.notedelay = 45;
+				}
+				else
+#endif
+				{
+					game.gamestate = GAMECOMPLETE;
+					graphics.fademode = 4;
+					game.creditposition = 0;
+				}
 			}
 			else if (words[0] == "finalmode")
 			{
@@ -2851,14 +2863,9 @@ void scriptclass::startgamemode( int t )
 		game.jumpheld = true;
 
 		//Secret lab, so reveal the map, give them all 20 trinkets
-		for (int j = 0; j < 20; j++)
-		{
-			obj.collect[j] = true;
-			for (i = 0; i < 20; i++)
-			{
-				map.setexplored(i, j, true);
-			}
-		}
+		SDL_memset(obj.collect, true, sizeof(obj.collect[0]) * 20);
+		SDL_memset(map.explored, true, sizeof(map.explored));
+		i = 400; /* previously a nested for-loop set this */
 		game.insecretlab = true;
 		map.showteleporters = true;
 

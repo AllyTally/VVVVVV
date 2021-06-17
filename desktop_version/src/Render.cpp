@@ -6,6 +6,7 @@
 #include "Enums.h"
 #include "FileSystemUtils.h"
 #include "Graphics.h"
+#include "GraphicsUtil.h"
 #include "KeyPoll.h"
 #include "MakeAndPlay.h"
 #include "Map.h"
@@ -715,18 +716,27 @@ static void menurender(void)
             }
             break;
         case OFFSET+4:
+        {
+            const char* text;
+
             graphics.bigprint(-1, 40, "Text Outline", tr, tg, tb, true);
             graphics.Print(-1, 75, "Disables outline on game text.", tr, tg, tb, true);
-            // FIXME: Maybe do an outlined print instead? -flibit
+
+            FillRect(graphics.backBuffer, 0, 84, 320, 10, tr, tg, tb);
+
             if (!graphics.notextoutline)
             {
-                graphics.Print(-1, 85, "Text outlines are ON.", tr, tg, tb, true);
+                text = "Text outlines are ON.";
             }
             else
             {
-                graphics.Print(-1, 85, "Text outlines are OFF.", tr / 2, tg / 2, tb / 2, true);
+                text = "Text outlines are OFF.";
             }
+
+            graphics.bprint(-1, 85, text, 255, 255, 255, true);
             break;
+        }
+
         }
         break;
 
@@ -1844,19 +1854,19 @@ void gamerender(void)
         {
             if (game.timetrialcountdown < 30)
             {
-                if (int(game.timetrialcountdown / 4) % 2 == 0) graphics.bigprint( -1, 100, "Go!", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 4);
+                if (int(game.timetrialcountdown / 4) % 2 == 0) graphics.bigbprint( -1, 100, "Go!", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 4);
             }
             else if (game.timetrialcountdown < 60)
             {
-                graphics.bigprint( -1, 100, "1", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 4);
+                graphics.bigbprint( -1, 100, "1", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 4);
             }
             else if (game.timetrialcountdown < 90)
             {
-                graphics.bigprint( -1, 100, "2", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 4);
+                graphics.bigbprint( -1, 100, "2", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 4);
             }
             else if (game.timetrialcountdown < 120)
             {
-                graphics.bigprint( -1, 100, "3", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 4);
+                graphics.bigbprint( -1, 100, "3", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true, 4);
             }
         }
         else
@@ -1952,7 +1962,7 @@ void maprender(void)
 
 
     //Menubar:
-    graphics.drawtextbox( -10, 212, 42, 3, 65, 185, 207);
+    graphics.drawtextbox( -10, 212, 43, 3, 65, 185, 207);
 
     // Draw the selected page name at the bottom
     // menupage 0 - 3 is the pause screen

@@ -949,6 +949,7 @@ static void menuactionpress(void)
             /* Return */
             game.returnmenu();
             map.nexttowercolour();
+            music.playef(11);
         }
         break;
     case Menu::unlockmenutrials:
@@ -1868,6 +1869,8 @@ void titleinput(void)
                 key.controllerButtonDown()      )
         {
             updatebuttonmappings(game.currentmenuoption);
+            music.playef(11);
+            game.savestatsandsettings_menu();
         }
 
     }
@@ -1979,6 +1982,7 @@ void gameinput(void)
         script.startgamemode(game.timetriallevel + 3);
         game.deathseq = -1;
         game.completestop = false;
+        game.hascontrol = false;
     }
 
     //Returning to editor mode must always be possible

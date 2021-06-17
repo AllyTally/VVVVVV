@@ -332,6 +332,7 @@ void musicclass::fadeMusicVolumeIn(int ms)
 	/* Fix 1-frame glitch */
 	Mix_VolumeMusic(0);
 
+	fade.step_ms = 0;
 	fade.duration_ms = ms;
 	fade.start_volume = 0;
 	fade.end_volume = MIX_MAX_VOLUME;
@@ -342,6 +343,7 @@ void musicclass::fadeMusicVolumeOut(const int fadeout_ms)
 	m_doFadeInVol = false;
 	m_doFadeOutVol = true;
 
+	fade.step_ms = 0;
 	fade.duration_ms = fadeout_ms;
 	fade.start_volume = musicVolume;
 	fade.end_volume = 0;
@@ -349,7 +351,7 @@ void musicclass::fadeMusicVolumeOut(const int fadeout_ms)
 
 void musicclass::fadeout(const bool quick_fade_ /*= true*/)
 {
-	fadeMusicVolumeOut(2000);
+	fadeMusicVolumeOut(quick_fade_ ? 500 : 2000);
 	quick_fade = quick_fade_;
 }
 
