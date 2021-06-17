@@ -82,7 +82,8 @@ namespace Menu
         timetrialcomplete3,
         gamecompletecontinue,
         tweakmenu,
-        tweakmodifying
+        tweakmodifying,
+        tweakinput
     };
 }
 
@@ -485,6 +486,7 @@ public:
     int additional_block;
     bool holding_entity;
     bool inputdelay;
+    bool entering_script_command;
 };
 
 #ifndef GAME_DEFINITION

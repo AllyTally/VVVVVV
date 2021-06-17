@@ -274,6 +274,7 @@ void Game::init(void)
     grabber_offset_x = 0;
     grabber_offset_y = 0;
     first_click = true;
+    entering_script_command = false;
 
     clearcustomlevelstats();
 
@@ -6450,8 +6451,10 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         break;
     case Menu::tweakmenu:
         option("modify entities");
-        option("a");
+        option("enter script command");
         menuyoff = 0;
+        break;
+    case Menu::tweakinput:
         break;
     case Menu::tweakmodifying:
         option("return to tweak menu");

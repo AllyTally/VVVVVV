@@ -1697,11 +1697,23 @@ static void menuactionpress(void)
         map.nexttowercolour();
         break;
     case Menu::tweakmenu:
-        if (game.currentmenuoption == 0) {
-            music.playef(11);
-            game.createmenu(Menu::tweakmodifying);
-            game.inentityeditor = true;
+        switch (game.currentmenuoption) {
+            case 0:
+                music.playef(11);
+                game.createmenu(Menu::tweakmodifying);
+                game.inentityeditor = true;
+                break;
+            case 1:
+                music.playef(11);
+                game.createmenu(Menu::tweakinput);
+                game.entering_script_command = true;
+                key.enabletextentry();
+                break;
         }
+        break;
+    case Menu::tweakinput:
+        music.playef(11);
+        //game.returnmenu();
         break;
     case Menu::tweakmodifying:
         game.inentityeditor = false;
@@ -2253,7 +2265,7 @@ void gameinput(void)
         game.deathseq = 30;
     }
 
-    if (key.isDown(SDLK_F8) && !key.tweakkeyheld) {
+    if (key.isDown(SDLK_c) && !key.tweakkeyheld) {
         game.gamestate = TWEAKMENUMODE;
         game.createmenu(Menu::tweakmenu);
         game.intweakmenu = true;
@@ -2270,7 +2282,7 @@ void gameinput(void)
         game.inentityeditor = true;
     }
 
-    if (!key.isDown(SDLK_F8) && !key.isDown(SDLK_x)) {
+    if (!key.isDown(SDLK_c) && !key.isDown(SDLK_x)) {
         key.tweakkeyheld = false;
     }
 }
@@ -2583,16 +2595,27 @@ static void mapmenuactionpress(void)
 }
 
 void tweakinput(void) {
-    if ((key.isDown(SDLK_F8) || key.isDown(SDLK_x)) && !key.tweakkeyheld) {
-        game.gamestate = GAMEMODE;
-        game.inentityeditor = false;
-        game.intweakmenu = true;
-        key.tweakkeyheld = true;
+    if (game.entering_script_command) {
+        if (key.isDown(KEYBOARD_ENTER)) {
+            game.entering_script_command = false;
+            game.gamestate = GAMEMODE;
+            game.inentityeditor = false;
+            game.intweakmenu = false;
+            key.tweakkeyheld = true;
+            game.mapheld = true;
+        }
+    } else {
+        if ((key.isDown(SDLK_c) || key.isDown(SDLK_x)) && !key.tweakkeyheld) {
+            game.gamestate = GAMEMODE;
+            game.inentityeditor = false;
+            game.intweakmenu = true;
+            key.tweakkeyheld = true;
+        }
+        if (!key.isDown(SDLK_c) && !key.isDown(SDLK_x)) {
+            key.tweakkeyheld = false;
+        }
+        titleinput();
     }
-    if (!key.isDown(SDLK_F8) && !key.isDown(SDLK_x)) {
-        key.tweakkeyheld = false;
-    }
-    titleinput();
 }
 
 void teleporterinput(void)

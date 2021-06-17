@@ -1327,6 +1327,20 @@ static void menurender(void)
     case Menu::errorsavingsettings:
         graphics.Print( -1, 95, "ERROR: Could not save settings file!", tr, tg, tb, true);
         break;
+    case Menu::tweakinput:
+        {
+            std::string display = key.keybuffer;
+            if (game.frames % 20 >= 10)
+            {
+                display += "_";
+            }
+            else
+            {
+                display += " ";
+            }
+            graphics.Print( -1, 120, display, 255, 255, 255, true);
+            break;
+        }
     default:
         break;
     }
@@ -2787,6 +2801,8 @@ void tweakmenurender(void)
     graphics.bprint(-1, 10, "[ PAUSED ]", 196, 196, 255 - help.glow, true);
 
     graphics.drawmenu(196, 196, 255 - help.glow, false);
+
+    menurender();
 
     graphics.renderwithscreeneffects();
 }
