@@ -132,7 +132,7 @@ class editorclass{
 
   void reset(void);
   void getlin(const enum textmode mode, const std::string& prompt, std::string* ptr);
-  const short* loadlevel(int rxi, int ryi);
+  const int* loadlevel(int rxi, int ryi);
 
   int gettileidx(
     const int rx,
@@ -186,10 +186,11 @@ class editorclass{
 
   int backmatch(int x, int y);
 
-  void switch_tileset(const bool reversed = false);
-  void switch_tilecol(const bool reversed = false);
-  void clamp_tilecol(const int rx, const int ry, const bool wrap = false);
-  void switch_enemy(const bool reversed = false);
+  void switch_tileset(const bool reversed);
+  void switch_tilecol(const bool reversed);
+  void clamp_tilecol(const int rx, const int ry, const bool wrap);
+  void switch_enemy(const bool reversed);
+  void switch_warpdir(const bool reversed);
 
   bool load(std::string& _path);
   bool save(std::string& _path);
@@ -216,7 +217,7 @@ class editorclass{
   std::vector<std::string> getLevelDirFileNames( );
   static const int maxwidth = 20, maxheight = 20; //Special; the physical max the engine allows
   static const int numrooms = maxwidth * maxheight;
-  short contents[40 * 30 * numrooms];
+  int contents[40 * 30 * numrooms];
   int vmult[30 * maxheight];
   int numtrinkets(void);
   int numcrewmates(void);

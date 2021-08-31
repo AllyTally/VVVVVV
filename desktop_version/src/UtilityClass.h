@@ -43,7 +43,8 @@ void VVV_fillstring(
     { \
         whine = false; \
         puts(message); \
-    }
+    } \
+    do { } while (false)
 
 /* Don't call this directly; use the VVV_between macro. */
 void _VVV_between(
@@ -67,6 +68,25 @@ void _VVV_between(
         sizeof(middle) \
     )
 
+#ifndef __has_attribute
+#   define __has_attribute(x) 0
+#endif
+
+#if __has_attribute(__fallthrough__)
+#   define VVV_fallthrough __attribute__((__fallthrough__))
+#else
+#   define VVV_fallthrough do { } while (false) /* fallthrough */
+#endif
+
+#define MAYBE_FAIL(expr) \
+    do \
+    { \
+        if (!expr) \
+        { \
+            goto fail; \
+        } \
+    } \
+    while (false)
 
 //helperClass
 class UtilityClass

@@ -2,6 +2,7 @@
 #include <iterator>
 #include <physfs.h>
 #include <SDL.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <string>
 #include <tinyxml2.h>
@@ -24,13 +25,9 @@ int mkdir(char* path, int mode)
 	MultiByteToWideChar(CP_UTF8, 0, path, -1, utf16_path, MAX_PATH);
 	return CreateDirectoryW(utf16_path, NULL);
 }
-#define VNEEDS_MIGRATION (mkdirResult != 0)
-#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__HAIKU__) || defined(__DragonFly__)
-#include <unistd.h>
-#include <dirent.h>
+#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__HAIKU__) || defined(__DragonFly__) || defined(__EMSCRIPTEN__) || defined(__unix__)
 #include <limits.h>
 #include <sys/stat.h>
-#define VNEEDS_MIGRATION (mkdirResult == 0)
 #define MAX_PATH PATH_MAX
 #endif
 
@@ -41,8 +38,6 @@ static char assetDir[MAX_PATH] = {'\0'};
 static char virtualMountPath[MAX_PATH] = {'\0'};
 
 static int PLATFORM_getOSDirectory(char* output, const size_t output_size);
-static void PLATFORM_migrateSaveData(char* output);
-static void PLATFORM_copyFile(const char *oldLocation, const char *newLocation);
 
 static void* bridged_malloc(PHYSFS_uint64 size)
 {
@@ -65,7 +60,6 @@ static const PHYSFS_Allocator allocator = {
 int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 {
 	char output[MAX_PATH];
-	int mkdirResult;
 	int retval;
 	const char* pathSep = PHYSFS_getDirSeparator();
 	char* basePath;
@@ -135,14 +129,8 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
 		"levels",
 		pathSep
 	);
-	mkdirResult = mkdir(levelDir, 0777);
+	mkdir(levelDir, 0777);
 	printf("Level directory: %s\n", levelDir);
-
-	/* We didn't exist until now, migrate files! */
-	if (VNEEDS_MIGRATION)
-	{
-		PLATFORM_migrateSaveData(output);
-	}
 
 	basePath = SDL_GetBasePath();
 
@@ -251,8 +239,8 @@ static void generateBase36(char* string, const size_t string_size)
 	for (i = 0; i < string_size - 1; ++i)
 	{
 		/* a-z0-9 */
-		char randchar = fRandom() * 36;
-		if (randchar <= 26)
+		char randchar = fRandom() * 35;
+		if (randchar < 26)
 		{
 			randchar += 'a';
 		}
@@ -278,6 +266,41 @@ static void generateVirtualMountPath(char* path, const size_t path_size)
 	);
 }
 
+static char levelDirError[256] = {'\0'};
+
+static bool levelDirHasError = false;
+
+bool FILESYSTEM_levelDirHasError(void)
+{
+	return levelDirHasError;
+}
+
+void FILESYSTEM_clearLevelDirError(void)
+{
+	levelDirHasError = false;
+}
+
+const char* FILESYSTEM_getLevelDirError(void)
+{
+	return levelDirError;
+}
+
+static int setLevelDirError(const char* text, ...)
+{
+	va_list list;
+	int retval;
+
+	levelDirHasError = true;
+
+	va_start(list, text);
+	retval = SDL_vsnprintf(levelDirError, sizeof(levelDirError), text, list);
+	va_end(list);
+
+	puts(levelDirError);
+
+	return retval;
+}
+
 static bool FILESYSTEM_mountAssetsFrom(const char *fname)
 {
 	const char* real_dir = PHYSFS_getRealDir(fname);
@@ -285,8 +308,8 @@ static bool FILESYSTEM_mountAssetsFrom(const char *fname)
 
 	if (real_dir == NULL)
 	{
-		printf(
-			"Could not mount %s: real directory doesn't exist\n",
+		setLevelDirError(
+			"Could not mount %s: real directory doesn't exist",
 			fname
 		);
 		return false;
@@ -359,11 +382,13 @@ static bool checkZipStructure(const char* filename)
 {
 	const char* real_dir = PHYSFS_getRealDir(filename);
 	char base_name[MAX_PATH];
+	char base_name_suffixed[MAX_PATH];
 	char real_path[MAX_PATH];
 	char mount_path[MAX_PATH];
 	char check_path[MAX_PATH];
 	char random_str[6 + 1];
 	bool success;
+	bool file_exists;
 	struct ArchiveState zip_state;
 
 	if (real_dir == NULL)
@@ -393,26 +418,33 @@ static bool checkZipStructure(const char* filename)
 	VVV_between(filename, "levels/", base_name, ".zip");
 
 	SDL_snprintf(
-		check_path,
-		sizeof(check_path),
-		"%s%s.vvvvvv",
-		mount_path,
+		base_name_suffixed,
+		sizeof(base_name_suffixed),
+		"%s.vvvvvv",
 		base_name
 	);
 
-	success = PHYSFS_exists(check_path);
+	SDL_snprintf(
+		check_path,
+		sizeof(check_path),
+		"%s%s",
+		mount_path,
+		base_name_suffixed
+	);
+
+	file_exists = PHYSFS_exists(check_path);
+	success = file_exists;
 
 	SDL_zero(zip_state);
-	zip_state.filename = check_path;
+	zip_state.filename = base_name_suffixed;
 
 	PHYSFS_enumerate(mount_path, zipCheckCallback, (void*) &zip_state);
 
 	/* If no .vvvvvv files in zip, don't print warning. */
 	if (!success && zip_state.has_extension)
 	{
-		/* FIXME: How do we print this for non-terminal users? */
-		printf(
-			"%s.zip is not structured correctly! It is missing %s.vvvvvv.\n",
+		setLevelDirError(
+			"%s.zip is not structured correctly! It is missing %s.vvvvvv.",
 			base_name,
 			base_name
 		);
@@ -421,11 +453,11 @@ static bool checkZipStructure(const char* filename)
 	success &= !zip_state.other_level_files;
 
 	/* ...But if other .vvvvvv file(s), do print warning. */
-	if (zip_state.other_level_files)
+	/* This message is redundant if the correct file already DOESN'T exist. */
+	if (file_exists && zip_state.other_level_files)
 	{
-		/* FIXME: How do we print this for non-terminal users? */
-		printf(
-			"%s.zip is not structured correctly! It has .vvvvvv file(s) other than %s.vvvvvv.\n",
+		setLevelDirError(
+			"%s.zip is not structured correctly! It has .vvvvvv file(s) other than %s.vvvvvv.",
 			base_name,
 			base_name
 		);
@@ -462,68 +494,88 @@ void FILESYSTEM_loadZip(const char* filename)
 	}
 }
 
-void FILESYSTEM_mountAssets(const char* path)
+void FILESYSTEM_unmountAssets(void);
+
+bool FILESYSTEM_mountAssets(const char* path)
 {
 	char filename[MAX_PATH];
-	char zip_data[MAX_PATH];
-	const char* zip_normal;
-	char dir[MAX_PATH];
+	char virtual_path[MAX_PATH];
 
 	VVV_between(path, "levels/", filename, ".vvvvvv");
 
+	/* Check for a zipped up pack only containing assets first */
 	SDL_snprintf(
-		zip_data,
-		sizeof(zip_data),
+		virtual_path,
+		sizeof(virtual_path),
 		"levels/%s.data.zip",
 		filename
 	);
-
-	zip_normal = PHYSFS_getRealDir(path);
-
-	SDL_snprintf(
-		dir,
-		sizeof(dir),
-		"levels/%s/",
-		filename
-	);
-
-	if (FILESYSTEM_exists(zip_data))
+	if (FILESYSTEM_exists(virtual_path))
 	{
-		printf("Custom asset directory is .data.zip at %s\n", zip_data);
+		printf("Asset directory is .data.zip at %s\n", virtual_path);
 
-		if (!FILESYSTEM_mountAssetsFrom(zip_data))
+		if (!FILESYSTEM_mountAssetsFrom(virtual_path))
 		{
-			return;
+			return false;
 		}
 
-		graphics.reloadresources();
-	}
-	else if (zip_normal != NULL && endsWith(zip_normal, ".zip"))
-	{
-		printf("Custom asset directory is .zip at %s\n", zip_normal);
-
-		if (!FILESYSTEM_mountAssetsFrom(zip_normal))
-		{
-			return;
-		}
-
-		graphics.reloadresources();
-	}
-	else if (FILESYSTEM_exists(dir))
-	{
-		printf("Custom asset directory exists at %s\n", dir);
-
-		if (!FILESYSTEM_mountAssetsFrom(dir))
-		{
-			return;
-		}
-
-		graphics.reloadresources();
+		MAYBE_FAIL(graphics.reloadresources());
 	}
 	else
 	{
-		puts("Custom asset directory does not exist");
+		SDL_snprintf(
+			virtual_path,
+			sizeof(virtual_path),
+			"levels/%s.zip",
+			filename
+		);
+		if (FILESYSTEM_exists(virtual_path))
+		{
+			/* This is a full zipped-up level including assets */
+			printf("Asset directory is .zip at %s\n", virtual_path);
+
+			if (!FILESYSTEM_mountAssetsFrom(virtual_path))
+			{
+				return false;
+			}
+
+			MAYBE_FAIL(graphics.reloadresources());
+		}
+		else
+		{
+			/* If it's not a level or base zip, look for a level folder */
+			SDL_snprintf(
+				virtual_path,
+				sizeof(virtual_path),
+				"levels/%s/",
+				filename
+			);
+			if (FILESYSTEM_exists(virtual_path))
+			{
+				printf("Asset directory exists at %s\n", virtual_path);
+
+				if (!FILESYSTEM_mountAssetsFrom(virtual_path))
+				{
+					return false;
+				}
+
+				MAYBE_FAIL(graphics.reloadresources());
+			}
+#if 0 /* flibit removed this because it was noisy, maybe keep for debug? */
+			else
+			{
+				/* Wasn't a level zip, base zip, or folder! */
+				puts("Asset directory does not exist");
+			}
+#endif
+		}
 	}
+
+	return true;
+
+fail:
+	FILESYSTEM_unmountAssets();
+	return false;
 }
 
 void FILESYSTEM_unmountAssets(void)
@@ -535,10 +587,12 @@ void FILESYSTEM_unmountAssets(void)
 		assetDir[0] = '\0';
 		graphics.reloadresources();
 	}
+#if 0 /* flibit removed this because it was noisy, maybe keep for debug? */
 	else
 	{
 		printf("Cannot unmount when no asset directory is mounted\n");
 	}
+#endif
 }
 
 static void getMountedPath(
@@ -829,12 +883,18 @@ bool FILESYSTEM_loadTiXml2Document(const char *name, tinyxml2::XMLDocument& doc)
 	return true;
 }
 
+struct CallbackWrapper
+{
+	void (*callback)(const char* filename);
+};
+
 static PHYSFS_EnumerateCallbackResult enumerateCallback(
 	void* data,
 	const char* origdir,
 	const char* filename
 ) {
-	void (*callback)(const char*) = (void (*)(const char*)) data;
+	struct CallbackWrapper* wrapper = (struct CallbackWrapper*) data;
+	void (*callback)(const char*) = wrapper->callback;
 	char builtLocation[MAX_PATH];
 
 	SDL_snprintf(
@@ -853,7 +913,10 @@ static PHYSFS_EnumerateCallbackResult enumerateCallback(
 void FILESYSTEM_enumerateLevelDirFileNames(
 	void (*callback)(const char* filename)
 ) {
-	int success = PHYSFS_enumerate("levels", enumerateCallback, (void*) callback);
+	int success;
+	struct CallbackWrapper wrapper = {callback};
+
+	success = PHYSFS_enumerate("levels", enumerateCallback, (void*) &wrapper);
 
 	if (success == 0)
 	{
@@ -924,173 +987,6 @@ static int PLATFORM_getOSDirectory(char* output, const size_t output_size)
 #endif
 }
 
-static void PLATFORM_migrateSaveData(char* output)
-{
-	char oldLocation[MAX_PATH];
-	char newLocation[MAX_PATH];
-	char oldDirectory[MAX_PATH];
-#if defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__HAIKU__) || defined(__DragonFly__)
-	DIR *dir = NULL;
-	struct dirent *de = NULL;
-	DIR *subDir = NULL;
-	struct dirent *subDe = NULL;
-	char subDirLocation[MAX_PATH];
-	const char *homeDir = SDL_getenv("HOME");
-	if (homeDir == NULL)
-	{
-		/* Uhh, I don't want to get near this. -flibit */
-		return;
-	}
-	const char oldPath[] =
- #if defined(__linux__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__HAIKU__) || defined(__DragonFly__)
-		"/.vvvvvv/";
- #elif defined(__APPLE__)
-		"/Documents/VVVVVV/";
- #endif
-	SDL_snprintf(oldDirectory, sizeof(oldDirectory), "%s%s", homeDir, oldPath);
-	dir = opendir(oldDirectory);
-	if (!dir)
-	{
-		printf("Could not find directory %s\n", oldDirectory);
-		return;
-	}
-
-	printf("Migrating old savedata to new location...\n");
-	for (de = readdir(dir); de != NULL; de = readdir(dir))
-	{
-		if (	SDL_strcmp(de->d_name, "..") == 0 ||
-			SDL_strcmp(de->d_name, ".") == 0	)
-		{
-			continue;
-		}
-		#define COPY_SAVEFILE(name) \
-			else if (SDL_strcmp(de->d_name, name) == 0) \
-			{ \
-				SDL_snprintf(oldLocation, sizeof(oldLocation), "%s%s", oldDirectory, name); \
-				SDL_snprintf(newLocation, sizeof(newLocation), "%ssaves/%s", output, name); \
-				PLATFORM_copyFile(oldLocation, newLocation); \
-			}
-		COPY_SAVEFILE("unlock.vvv")
-		COPY_SAVEFILE("tsave.vvv")
-		COPY_SAVEFILE("qsave.vvv")
-		#undef COPY_SAVEFILE
-		else if (SDL_strstr(de->d_name, ".vvvvvv.vvv") != NULL)
-		{
-			SDL_snprintf(oldLocation, sizeof(oldLocation), "%s%s", oldDirectory, de->d_name);
-			SDL_snprintf(newLocation, sizeof(newLocation), "%ssaves/%s", output, de->d_name);
-			PLATFORM_copyFile(oldLocation, newLocation);
-		}
-		else if (SDL_strstr(de->d_name, ".vvvvvv") != NULL)
-		{
-			SDL_snprintf(oldLocation, sizeof(oldLocation), "%s%s", oldDirectory, de->d_name);
-			SDL_snprintf(newLocation, sizeof(newLocation), "%slevels/%s", output, de->d_name);
-			PLATFORM_copyFile(oldLocation, newLocation);
-		}
-		else if (SDL_strcmp(de->d_name, "Saves") == 0)
-		{
-			SDL_snprintf(subDirLocation, sizeof(subDirLocation), "%sSaves/", oldDirectory);
-			subDir = opendir(subDirLocation);
-			if (!subDir)
-			{
-				printf("Could not open Saves/ subdir!\n");
-				continue;
-			}
-			for (
-				subDe = readdir(subDir);
-				subDe != NULL;
-				subDe = readdir(subDir)
-			) {
-				#define COPY_SAVEFILE(name) \
-					(SDL_strcmp(subDe->d_name, name) == 0) \
-					{ \
-						SDL_snprintf(oldLocation, sizeof(oldLocation), "%s%s", subDirLocation, name); \
-						SDL_snprintf(newLocation, sizeof(newLocation), "%ssaves/%s", output, name); \
-						PLATFORM_copyFile(oldLocation, newLocation); \
-					}
-				if COPY_SAVEFILE("unlock.vvv")
-				else if COPY_SAVEFILE("tsave.vvv")
-				else if COPY_SAVEFILE("qsave.vvv")
-				#undef COPY_SAVEFILE
-			}
-		}
-	}
-#elif defined(_WIN32)
-	WIN32_FIND_DATA findHandle;
-	HANDLE hFind = NULL;
-	char fileSearch[MAX_PATH];
-
-	/* Same place, different layout. */
-	SDL_strlcpy(oldDirectory, output, sizeof(oldDirectory));
-
-	SDL_snprintf(fileSearch, sizeof(fileSearch), "%s\\*.vvvvvv", oldDirectory);
-	hFind = FindFirstFile(fileSearch, &findHandle);
-	if (hFind == INVALID_HANDLE_VALUE)
-	{
-		printf("Could not find directory %s\n", oldDirectory);
-	}
-	else do
-	{
-		if ((findHandle.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
-		{
-			SDL_snprintf(oldLocation, sizeof(oldLocation), "%s%s", oldDirectory, findHandle.cFileName);
-			SDL_snprintf(newLocation, sizeof(newLocation), "%slevels\\%s", output, findHandle.cFileName);
-			PLATFORM_copyFile(oldLocation, newLocation);
-		}
-	} while (FindNextFile(hFind, &findHandle));
-#else
-#error See PLATFORM_migrateSaveData
-#endif
-}
-
-static void PLATFORM_copyFile(const char *oldLocation, const char *newLocation)
-{
-	char *data;
-	size_t length, bytes_read, bytes_written;
-
-	/* Read data */
-	FILE *file = fopen(oldLocation, "rb");
-	if (!file)
-	{
-		printf("Cannot open/copy %s\n", oldLocation);
-		return;
-	}
-	fseek(file, 0, SEEK_END);
-	length = ftell(file);
-	fseek(file, 0, SEEK_SET);
-	data = (char*) SDL_malloc(length);
-	if (data == NULL)
-	{
-		VVV_exit(1);
-	}
-	bytes_read = fread(data, 1, length, file);
-	fclose(file);
-	if (bytes_read != length)
-	{
-		printf("An error occurred when reading from %s\n", oldLocation);
-		SDL_free(data);
-		return;
-	}
-
-	/* Write data */
-	file = fopen(newLocation, "wb");
-	if (!file)
-	{
-		printf("Could not write to %s\n", newLocation);
-		SDL_free(data);
-		return;
-	}
-	bytes_written = fwrite(data, 1, length, file);
-	fclose(file);
-	SDL_free(data);
-
-	/* WTF did we just do */
-	printf("Copied:\n\tOld: %s\n\tNew: %s\n", oldLocation, newLocation);
-	if (bytes_written != length)
-	{
-		printf("Warning: an error occurred when writing to %s\n", newLocation);
-	}
-}
-
 bool FILESYSTEM_openDirectoryEnabled(void)
 {
 	/* This is just a check to see if we're on a desktop or tenfoot setup.
@@ -1100,6 +996,12 @@ bool FILESYSTEM_openDirectoryEnabled(void)
 	return !SDL_GetHintBoolean("SteamTenfoot", SDL_FALSE);
 }
 
+#if defined(__EMSCRIPTEN__)
+bool FILESYSTEM_openDirectory(const char *dname)
+{
+	return false;
+}
+#else
 bool FILESYSTEM_openDirectory(const char *dname)
 {
 	char url[MAX_PATH];
@@ -1111,8 +1013,40 @@ bool FILESYSTEM_openDirectory(const char *dname)
 	}
 	return true;
 }
+#endif
 
 bool FILESYSTEM_delete(const char *name)
 {
 	return PHYSFS_delete(name) != 0;
+}
+
+static void levelSaveCallback(const char* filename)
+{
+	if (endsWith(filename, ".vvvvvv.vvv"))
+	{
+		if (!FILESYSTEM_delete(filename))
+		{
+			printf("Error deleting %s\n", filename);
+		}
+	}
+}
+
+void FILESYSTEM_deleteLevelSaves(void)
+{
+	int success;
+	struct CallbackWrapper wrapper = {levelSaveCallback};
+
+	success = PHYSFS_enumerate(
+		"saves",
+		enumerateCallback,
+		(void*) &wrapper
+	);
+
+	if (success == 0)
+	{
+		printf(
+			"Could not enumerate saves/: %s\n",
+			PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+		);
+	}
 }

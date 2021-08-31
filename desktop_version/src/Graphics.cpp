@@ -152,6 +152,9 @@ void Graphics::init(void)
     tiles2_mounted = false;
     minimap_mounted = false;
 #endif
+
+    SDL_zeroa(error);
+    SDL_zeroa(error_title);
 }
 
 void Graphics::destroy(void)
@@ -264,8 +267,8 @@ int Graphics::font_idx(uint32_t ch)
             iter = font_positions.find('?');
             if (iter == font_positions.end())
             {
-                puts("font.txt missing fallback character!");
-                VVV_exit(1);
+                WHINE_ONCE("font.txt missing fallback character!");
+                return -1;
             }
         }
         return iter->second;
@@ -320,24 +323,15 @@ void Graphics::updatetitlecolours(void)
     else if (grphx.im_##tilesheet->w % tile_square != 0 \
     || grphx.im_##tilesheet->h % tile_square != 0) \
     { \
-        const char* error = "Error: %s.png dimensions not exact multiples of %i!"; \
-        char message[128]; \
-        const char* error_title = "Error with %s.png"; \
-        char message_title[128]; \
+        static const char error_fmt[] = "%s.png dimensions not exact multiples of %i!"; \
+        static const char error_title_fmt[] = "Error with %s.png"; \
         \
-        SDL_snprintf(message, sizeof(message), error, #tilesheet, tile_square); \
-        SDL_snprintf(message_title, sizeof(message_title), error_title, #tilesheet); \
+        SDL_snprintf(error, sizeof(error), error_fmt, #tilesheet, tile_square); \
+        SDL_snprintf(error_title, sizeof(error_title), error_title_fmt, #tilesheet); \
         \
-        puts(message); \
+        puts(error); \
         \
-        SDL_ShowSimpleMessageBox( \
-            SDL_MESSAGEBOX_ERROR, \
-            message_title, \
-            message, \
-            NULL \
-        ); \
-        \
-        VVV_exit(1); \
+        return false; \
     }
 
 #define PROCESS_TILESHEET_RENAME(tilesheet, vector, tile_square, extra_code) \
@@ -369,7 +363,7 @@ void Graphics::updatetitlecolours(void)
 #define PROCESS_TILESHEET(tilesheet, tile_square, extra_code) \
     PROCESS_TILESHEET_RENAME(tilesheet, tilesheet, tile_square, extra_code)
 
-void Graphics::Makebfont(void)
+bool Graphics::Makebfont(void)
 {
     PROCESS_TILESHEET(bfont, 8,
     {
@@ -397,6 +391,8 @@ void Graphics::Makebfont(void)
     {
         font_positions.clear();
     }
+
+    return true;
 }
 
 int Graphics::bfontlen(uint32_t ch)
@@ -411,23 +407,29 @@ int Graphics::bfontlen(uint32_t ch)
     }
 }
 
-void Graphics::MakeTileArray(void)
+bool Graphics::MakeTileArray(void)
 {
     PROCESS_TILESHEET(tiles, 8, {})
     PROCESS_TILESHEET(tiles2, 8, {})
     PROCESS_TILESHEET(tiles3, 8, {})
     PROCESS_TILESHEET(entcolours, 8, {})
+
+    return true;
 }
 
-void Graphics::maketelearray(void)
+bool Graphics::maketelearray(void)
 {
     PROCESS_TILESHEET_RENAME(teleporter, tele, 96, {})
+
+    return true;
 }
 
-void Graphics::MakeSpriteArray(void)
+bool Graphics::MakeSpriteArray(void)
 {
     PROCESS_TILESHEET(sprites, 32, {})
     PROCESS_TILESHEET(flipsprites, 32, {})
+
+    return true;
 }
 
 #undef PROCESS_TILESHEET
@@ -517,6 +519,119 @@ void Graphics::PrintAlpha( int _x, int _y, std::string _s, int r, int g, int b, 
             BlitSurfaceColoured( font[idx], NULL, backBuffer, &fontRect , ct);
         }
         bfontpos+=bfontlen(curr) ;
+    }
+}
+
+bool Graphics::next_wrap(
+    size_t* start,
+    size_t* len,
+    const char* str,
+    const int maxwidth
+) {
+    /* This function is UTF-8 aware. But start/len still are bytes. */
+    size_t idx = 0;
+    size_t lenfromlastspace = 0;
+    size_t lastspace = 0;
+    int linewidth = 0;
+    *len = 0;
+
+    if (str[idx] == '\0')
+    {
+        return false;
+    }
+
+    while (true)
+    {
+        /* FIXME: This only checks one byte, not multiple! */
+        if ((str[idx] & 0xC0) == 0x80)
+        {
+            /* Skip continuation byte. */
+            goto next;
+        }
+
+        linewidth += bfontlen(str[idx]);
+
+        switch (str[idx])
+        {
+        case ' ':
+            lenfromlastspace = idx;
+            lastspace = *start;
+            break;
+        case '\n':
+            *start += 1;
+            VVV_fallthrough;
+        case '\0':
+            return true;
+        }
+
+        if (linewidth > maxwidth)
+        {
+            if (lenfromlastspace != 0)
+            {
+                *len = lenfromlastspace;
+                *start = lastspace + 1;
+            }
+            return true;
+        }
+
+next:
+        idx += 1;
+        *start += 1;
+        *len += 1;
+    }
+}
+
+bool Graphics::next_wrap_s(
+    char buffer[],
+    const size_t buffer_size,
+    size_t* start,
+    const char* str,
+    const int maxwidth
+) {
+    size_t len = 0;
+    const size_t prev_start = *start;
+
+    const bool retval = next_wrap(start, &len, &str[*start], maxwidth);
+
+    if (retval)
+    {
+        /* Like next_split_s(), don't use SDL_strlcpy() here. */
+        const size_t length = VVV_min(buffer_size - 1, len);
+        SDL_memcpy(buffer, &str[prev_start], length);
+        buffer[length] = '\0';
+    }
+
+    return retval;
+}
+
+void Graphics::PrintWrap(
+    const int x,
+    int y,
+    const char* str,
+    const int r,
+    const int g,
+    const int b,
+    const bool cen,
+    const int linespacing,
+    const int maxwidth
+) {
+    /* Screen width is 320 pixels. The shortest a char can be is 6 pixels wide.
+     * 320 / 6 is 54, rounded up. 4 bytes per char. */
+    char buffer[54*4 + 1];
+    size_t start = 0;
+
+    while (next_wrap_s(buffer, sizeof(buffer), &start, str, maxwidth))
+    {
+        Print(x, y, buffer, r, g, b, cen);
+
+        if (flipmode)
+        {
+            y -= linespacing;
+        }
+        else
+        {
+            y += linespacing;
+        }
     }
 }
 
@@ -764,7 +879,7 @@ void Graphics::drawtile( int x, int y, int t )
 {
     if (!INBOUNDS_VEC(t, tiles))
     {
-        WHINE_ONCE("drawtile() out-of-bounds!")
+        WHINE_ONCE("drawtile() out-of-bounds!");
         return;
     }
 
@@ -788,7 +903,7 @@ void Graphics::drawtile2( int x, int y, int t )
 {
     if (!INBOUNDS_VEC(t, tiles2))
     {
-        WHINE_ONCE("drawtile2() out-of-bounds!")
+        WHINE_ONCE("drawtile2() out-of-bounds!");
         return;
     }
 
@@ -814,7 +929,7 @@ void Graphics::drawtile3( int x, int y, int t, int off, int height_subtract /*= 
     t += off * 30;
     if (!INBOUNDS_VEC(t, tiles3))
     {
-        WHINE_ONCE("drawtile3() out-of-bounds!")
+        WHINE_ONCE("drawtile3() out-of-bounds!");
         return;
     }
     SDL_Rect src_rect = { 0, 0, tiles_rect.w, tiles_rect.h - height_subtract };
@@ -826,7 +941,7 @@ void Graphics::drawtowertile( int x, int y, int t )
 {
     if (!INBOUNDS_VEC(t, tiles2))
     {
-        WHINE_ONCE("drawtowertile() out-of-bounds!")
+        WHINE_ONCE("drawtowertile() out-of-bounds!");
         return;
     }
     x += 8;
@@ -841,7 +956,7 @@ void Graphics::drawtowertile3( int x, int y, int t, TowerBG& bg_obj )
     t += bg_obj.colstate*30;
     if (!INBOUNDS_VEC(t, tiles3))
     {
-        WHINE_ONCE("drawtowertile3() out-of-bounds!")
+        WHINE_ONCE("drawtowertile3() out-of-bounds!");
         return;
     }
     x += 8;
@@ -1482,9 +1597,19 @@ void Graphics::drawmenu( int cr, int cg, int cb, bool levelmenu /*= false*/ )
         int x = i*game.menuspacing + game.menuxoff;
         int y = 140 + i*12 + game.menuyoff;
 
+#ifndef NO_CUSTOM_LEVELS
         if (levelmenu)
         {
-            if (game.menuoptions.size() - i <= 3)
+            size_t separator;
+            if (ed.ListOfMetaData.size() > 8)
+            {
+                separator = 3;
+            }
+            else
+            {
+                separator = 1;
+            }
+            if (game.menuoptions.size() - i <= separator)
             {
                 // We're on "next page", "previous page", or "return to menu". Draw them separated by a bit
                 y += 8;
@@ -1495,6 +1620,7 @@ void Graphics::drawmenu( int cr, int cg, int cb, bool levelmenu /*= false*/ )
                 y += 4;
             }
         }
+#endif
 
         char tempstring[MENU_TEXT_BYTES];
         SDL_strlcpy(tempstring, opt.text, sizeof(tempstring));
@@ -2330,7 +2456,7 @@ void Graphics::drawbackground( int t )
 
         for (int i = 10 ; i >= 0; i--)
         {
-            temp = (i << 4) + lerp(backoffset - 1, backoffset);
+            temp = (i << 4) + backoffset;
             setwarprect(160 - temp, 120 - temp, temp * 2, temp * 2);
             if (i % 2 == warpskip)
             {
@@ -2993,9 +3119,9 @@ Uint32 Graphics::bigchunkygetcol(int t)
 	switch (t)
 	{
 	case 1:
-		return getRGB((fRandom() * 64), 10, 10);
+		return getBGR((fRandom() * 64), 10, 10);
 	case 2:
-		return getRGB(int(160- help.glow/2 - (fRandom()*20)),  200- help.glow/2, 220 - help.glow);
+		return getBGR(int(160- help.glow/2 - (fRandom()*20)),  200- help.glow/2, 220 - help.glow);
 	}
 	return 0x00000000;
 }
@@ -3291,7 +3417,7 @@ void Graphics::drawforetile(int x, int y, int t)
 {
 	if (!INBOUNDS_VEC(t, tiles))
 	{
-		WHINE_ONCE("drawforetile() out-of-bounds!")
+		WHINE_ONCE("drawforetile() out-of-bounds!");
 		return;
 	}
 
@@ -3315,7 +3441,7 @@ void Graphics::drawforetile2(int x, int y, int t)
 {
 	if (!INBOUNDS_VEC(t, tiles2))
 	{
-		WHINE_ONCE("drawforetile2() out-of-bounds!")
+		WHINE_ONCE("drawforetile2() out-of-bounds!");
 		return;
 	}
 
@@ -3340,7 +3466,7 @@ void Graphics::drawforetile3(int x, int y, int t, int off)
 	t += off * 30;
 	if (!INBOUNDS_VEC(t, tiles3))
 	{
-		WHINE_ONCE("drawforetile3() out-of-bounds!")
+		WHINE_ONCE("drawforetile3() out-of-bounds!");
 		return;
 	}
 	SDL_Rect rect;
@@ -3378,17 +3504,17 @@ bool Graphics::onscreen(int t)
 	return (t >= -40 && t <= 280);
 }
 
-void Graphics::reloadresources(void)
+bool Graphics::reloadresources(void)
 {
 	grphx.destroy();
 	grphx.init();
 
 	destroy();
 
-	MakeTileArray();
-	MakeSpriteArray();
-	maketelearray();
-	Makebfont();
+	MAYBE_FAIL(MakeTileArray());
+	MAYBE_FAIL(MakeSpriteArray());
+	MAYBE_FAIL(maketelearray());
+	MAYBE_FAIL(Makebfont());
 
 	images.clear();
 
@@ -3420,6 +3546,11 @@ void Graphics::reloadresources(void)
 	tiles2_mounted = FILESYSTEM_isAssetMounted("graphics/tiles2.png");
 	minimap_mounted = FILESYSTEM_isAssetMounted("graphics/minimap.png");
 #endif
+
+	return true;
+
+fail:
+	return false;
 }
 
 Uint32 Graphics::crewcolourreal(int t)

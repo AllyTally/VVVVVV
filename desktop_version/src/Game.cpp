@@ -12,6 +12,7 @@
 #include "Entity.h"
 #include "Enums.h"
 #include "FileSystemUtils.h"
+#include "GlitchrunnerMode.h"
 #include "Graphics.h"
 #include "KeyPoll.h"
 #include "MakeAndPlay.h"
@@ -123,7 +124,6 @@ void Game::init(void)
     teleport = false;
     edteleportent = 0; //Added in the port!
     companion = 0;
-    roomchange = false;
 
 
     quickrestartkludge = false;
@@ -390,7 +390,7 @@ void Game::init(void)
     fadetolabdelay = 0;
 
     over30mode = true;
-    glitchrunnermode = false;
+    showingametimer = false;
 
     ingame_titlemode = false;
 #if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
@@ -400,6 +400,8 @@ void Game::init(void)
     slidermode = SLIDER_NONE;
 
     disablepause = false;
+    disableaudiopause = false;
+    disabletemporaryaudiopause = true;
     inputdelay = false;
 }
 
@@ -463,6 +465,16 @@ void Game::updatecustomlevelstats(std::string clevel, int cscore)
         customlevelstats.push_back(levelstat);
     }
     savecustomlevelstats();
+}
+
+void Game::deletecustomlevelstats(void)
+{
+    customlevelstats.clear();
+
+    if (!FILESYSTEM_delete("saves/levelstats.vvv"))
+    {
+        puts("Error deleting levelstats.vvv");
+    }
 }
 
 #define LOAD_ARRAY_RENAME(ARRAY_NAME, DEST) \
@@ -1964,7 +1976,7 @@ void Game::updatestate(void)
             if(ed.numcrewmates()-crewmates()==0)
             {
                 //Finished level
-                if(ed.numtrinkets()-trinkets()==0)
+                if (trinkets() >= ed.numtrinkets())
                 {
                     //and got all the trinkets!
                     updatecustomlevelstats(customlevelfilename, 3);
@@ -4208,6 +4220,11 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* s
             disablepause = help.Int(pText);
         }
 
+        if (SDL_strcmp(pKey, "disableaudiopause") == 0)
+        {
+            disableaudiopause = help.Int(pText);
+        }
+
         if (SDL_strcmp(pKey, "over30mode") == 0)
         {
             over30mode = help.Int(pText);
@@ -4220,7 +4237,12 @@ void Game::deserializesettings(tinyxml2::XMLElement* dataNode, ScreenSettings* s
 
         if (SDL_strcmp(pKey, "glitchrunnermode") == 0)
         {
-            glitchrunnermode = help.Int(pText);
+            GlitchrunnerMode_set(GlitchrunnerMode_string_to_enum(pText));
+        }
+
+        if (SDL_strcmp(pKey, "showingametimer") == 0)
+        {
+            showingametimer = help.Int(pText);
         }
 
         if (SDL_strcmp(pKey, "vsync") == 0)
@@ -4474,6 +4496,8 @@ void Game::serializesettings(tinyxml2::XMLElement* dataNode, const ScreenSetting
 
     xml::update_tag(dataNode, "disablepause", (int) disablepause);
 
+    xml::update_tag(dataNode, "disableaudiopause", (int) disableaudiopause);
+
     xml::update_tag(dataNode, "notextoutline", (int) graphics.notextoutline);
 
     xml::update_tag(dataNode, "translucentroomname", (int) graphics.translucentroomname);
@@ -4482,7 +4506,13 @@ void Game::serializesettings(tinyxml2::XMLElement* dataNode, const ScreenSetting
 
     xml::update_tag(dataNode, "inputdelay", (int) inputdelay);
 
-    xml::update_tag(dataNode, "glitchrunnermode", (int) glitchrunnermode);
+    xml::update_tag(
+        dataNode,
+        "glitchrunnermode",
+        GlitchrunnerMode_enum_to_string(GlitchrunnerMode_get())
+    );
+
+    xml::update_tag(dataNode, "showingametimer", (int) showingametimer);
 
     xml::update_tag(dataNode, "vsync", (int) screen_settings->useVsync);
 
@@ -5184,6 +5214,14 @@ void Game::customloadquick(std::string savfile)
         {
             map.customshowmm = help.Int(pText);
         }
+        else if (SDL_strcmp(pKey, "disabletemporaryaudiopause") == 0)
+        {
+            disabletemporaryaudiopause = help.Int(pText);
+        }
+        else if (SDL_strcmp(pKey, "showtrinkets") == 0)
+        {
+            map.showtrinkets = help.Int(pText);
+        }
 
     }
 
@@ -5665,6 +5703,10 @@ bool Game::customsavequick(std::string savfile)
 
     xml::update_tag(msgs, "showminimap", (int) map.customshowmm);
 
+    xml::update_tag(msgs, "disabletemporaryaudiopause", (int) disabletemporaryaudiopause);
+
+    xml::update_tag(msgs, "showtrinkets", (int) map.showtrinkets);
+
     std::string summary = savearea + ", " + timestring();
     xml::update_tag(msgs, "summary", summary.c_str());
 
@@ -5980,21 +6022,24 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
                     option(text);
                 }
             }
-            if((size_t) ((levelpage*8)+8) <ed.ListOfMetaData.size())
+            if (ed.ListOfMetaData.size() > 8)
             {
-                option("next page");
-            }
-            else
-            {
-                option("first page");
-            }
-            if (levelpage == 0)
-            {
-                option("last page");
-            }
-            else
-            {
-                option("previous page");
+                if((size_t) ((levelpage*8)+8) <ed.ListOfMetaData.size())
+                {
+                    option("next page");
+                }
+                else
+                {
+                    option("first page");
+                }
+                if (levelpage == 0)
+                {
+                    option("last page");
+                }
+                else
+                {
+                    option("previous page");
+                }
             }
             option("return to menu");
 
@@ -6008,8 +6053,14 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
     case Menu::quickloadlevel:
         option("continue from save");
         option("start from beginning");
+        option("delete save");
         option("back to levels");
         menuyoff = -30;
+        break;
+    case Menu::deletequicklevel:
+        option("no! don't delete");
+        option("yes, delete save");
+        menuyoff = 64;
         break;
     case Menu::youwannaquit:
         option("yes, quit");
@@ -6030,7 +6081,8 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("toggle fps");
         option("speedrun options");
         option("advanced options");
-        option("clear data");
+        option("clear main game data");
+        option("clear custom level data");
         option("return");
         menuyoff = -10;
         maxspacing = 15;
@@ -6098,12 +6150,26 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("input delay");
         option("interact button");
         option("fake load screen");
+        option("toggle in-game timer");
         option("return");
         menuyoff = 0;
         maxspacing = 15;
         break;
+    case Menu::setglitchrunner:
+    {
+        int i;
+
+        option("none");
+
+        for (i = 1; i < GlitchrunnerNumVersions; ++i)
+        {
+            option(GlitchrunnerMode_enum_to_string((enum GlitchrunnerMode) i));
+        }
+        break;
+    }
     case Menu::advancedoptions:
         option("unfocus pause");
+        option("unfocus audio pause");
         option("room name background");
         option("return");
         menuyoff = 0;
@@ -6145,6 +6211,7 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         maxspacing = 10;
         break;
     case Menu::cleardatamenu:
+    case Menu::clearcustomdatamenu:
         option("no! don't delete");
         option("yes, delete everything");
         menuyoff = 64;
@@ -6465,6 +6532,11 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("silence");
         menuyoff = 10;
         break;
+    case Menu::errorloadinglevel:
+    case Menu::warninglevellist:
+        option("ok");
+        menuyoff = 50;
+        break;
     }
 
     // Automatically center the menu. We must check the width of the menu with the initial horizontal spacing.
@@ -6502,6 +6574,16 @@ void Game::deletetele(void)
         puts("Error deleting saves/tsave.vvv");
     else
         telesummary = "";
+}
+
+void Game::customdeletequick(const std::string& file)
+{
+    const std::string path = "saves/" + file.substr(7) + ".vvv";
+
+    if (!FILESYSTEM_delete(path.c_str()))
+    {
+        printf("Error deleting %s\n", path.c_str());
+    }
 }
 
 void Game::swnpenalty(void)
@@ -6901,4 +6983,9 @@ bool Game::incompetitive(void)
 bool Game::nocompetitive(void)
 {
     return slowdown < 30 || map.invincibility;
+}
+
+bool Game::isingamecompletescreen()
+{
+    return (state >= 3501 && state <= 3518) || (state >= 3520 && state <= 3522);
 }

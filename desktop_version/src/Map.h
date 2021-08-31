@@ -55,6 +55,7 @@ public:
     void updatetowerglow(TowerBG& bg_obj);
 
     void nexttowercolour(void);
+    bool nexttowercolour_set;
 
     void settowercolour(int t);
 
@@ -90,7 +91,7 @@ public:
     int roomdeaths[20 * 20];
     int roomdeathsfinal[20 * 20];
     static const int areamap[20 * 20];
-    short contents[40 * 30];
+    int contents[40 * 30];
     bool explored[20 * 20];
     int vmult[30];
 

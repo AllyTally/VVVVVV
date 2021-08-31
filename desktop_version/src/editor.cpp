@@ -229,6 +229,8 @@ void editorclass::getDirectoryData(void)
 
     ListOfMetaData.clear();
 
+    FILESYSTEM_clearLevelDirError();
+
     loadZips();
 
     FILESYSTEM_enumerateLevelDirFileNames(levelMetaDataCallback);
@@ -537,7 +539,7 @@ void editorclass::getlin(const enum textmode mode, const std::string& prompt, st
     oldenttext = key.keybuffer;
 }
 
-const short* editorclass::loadlevel( int rxi, int ryi )
+const int* editorclass::loadlevel( int rxi, int ryi )
 {
     //Set up our buffer array to be picked up by mapclass
     rxi -= 100;
@@ -547,7 +549,7 @@ const short* editorclass::loadlevel( int rxi, int ryi )
     if(rxi>=mapwidth)rxi-=mapwidth;
     if(ryi>=mapheight)ryi-=mapheight;
 
-    static short result[1200];
+    static int result[1200];
 
     for (int j = 0; j < 30; j++)
     {
@@ -1628,7 +1630,7 @@ int editorclass::findwarptoken(int t)
     return 0;
 }
 
-void editorclass::switch_tileset(const bool reversed /*= false*/)
+void editorclass::switch_tileset(const bool reversed)
 {
     const char* tilesets[] = {"Space Station", "Outside", "Lab", "Warp Zone", "Ship"};
 
@@ -1647,7 +1649,7 @@ void editorclass::switch_tileset(const bool reversed /*= false*/)
     tiles = (tiles % modulus + modulus) % modulus;
     setroomtileset(levx, levy, tiles);
 
-    clamp_tilecol(levx, levy);
+    clamp_tilecol(levx, levy, false);
 
     char buffer[64];
     SDL_snprintf(buffer, sizeof(buffer), "Now using %s Tileset", tilesets[tiles]);
@@ -1657,7 +1659,7 @@ void editorclass::switch_tileset(const bool reversed /*= false*/)
     updatetiles = true;
 }
 
-void editorclass::switch_tilecol(const bool reversed /*= false*/)
+void editorclass::switch_tilecol(const bool reversed)
 {
     int tilecol = getroomprop(levx, levy)->tilecol;
 
@@ -1679,7 +1681,7 @@ void editorclass::switch_tilecol(const bool reversed /*= false*/)
     updatetiles = true;
 }
 
-void editorclass::clamp_tilecol(const int rx, const int ry, const bool wrap /*= false*/)
+void editorclass::clamp_tilecol(const int rx, const int ry, const bool wrap)
 {
     const edlevelclass* const room = getroomprop(rx, ry);
     const int tileset = room->tileset;
@@ -1702,6 +1704,12 @@ void editorclass::clamp_tilecol(const int rx, const int ry, const bool wrap /*= 
     case 1:
         maxcol = 7;
         break;
+    case 2:
+        if (room->directmode)
+        {
+            maxcol = 6;
+        }
+        break;
     case 3:
         maxcol = 6;
         break;
@@ -1723,7 +1731,7 @@ void editorclass::clamp_tilecol(const int rx, const int ry, const bool wrap /*= 
     setroomtilecol(rx, ry, tilecol);
 }
 
-void editorclass::switch_enemy(const bool reversed /*= false*/)
+void editorclass::switch_enemy(const bool reversed)
 {
     const edlevelclass* const room = getroomprop(levx, levy);
 
@@ -1746,8 +1754,51 @@ void editorclass::switch_enemy(const bool reversed /*= false*/)
     notedelay = 45;
 }
 
+void editorclass::switch_warpdir(const bool reversed)
+{
+    static const int modulus = 4;
+    const edlevelclass* const room = getroomprop(levx, levy);
+
+    int warpdir = room->warpdir;
+
+    if (reversed)
+    {
+        --warpdir;
+    }
+    else
+    {
+        ++warpdir;
+    }
+
+    warpdir = (warpdir % modulus + modulus) % modulus;
+    setroomwarpdir(levx, levy, warpdir);
+
+    switch (warpdir)
+    {
+    default:
+        note = "Room warping disabled";
+        break;
+    case 1:
+        note = "Room warps horizontally";
+        break;
+    case 2:
+        note = "Room warps vertically";
+        break;
+    case 3:
+        note = "Room warps in all directions";
+        break;
+    }
+
+    notedelay = 45;
+}
+
 bool editorclass::load(std::string& _path)
 {
+    tinyxml2::XMLDocument doc;
+    tinyxml2::XMLHandle hDoc(&doc);
+    tinyxml2::XMLElement* pElem;
+    tinyxml2::XMLHandle hRoot(NULL);
+
     reset();
 
     static const char *levelDir = "levels/";
@@ -1759,14 +1810,13 @@ bool editorclass::load(std::string& _path)
     FILESYSTEM_unmountAssets();
     if (game.cliplaytest && game.playassets != "")
     {
-        FILESYSTEM_mountAssets(game.playassets.c_str());
+        MAYBE_FAIL(FILESYSTEM_mountAssets(game.playassets.c_str()));
     }
     else
     {
-        FILESYSTEM_mountAssets(_path.c_str());
+        MAYBE_FAIL(FILESYSTEM_mountAssets(_path.c_str()));
     }
 
-    tinyxml2::XMLDocument doc;
     if (!FILESYSTEM_loadTiXml2Document(_path.c_str(), doc))
     {
         printf("No level %s to load :(\n", _path.c_str());
@@ -1775,9 +1825,6 @@ bool editorclass::load(std::string& _path)
 
     loaded_filepath = _path;
 
-    tinyxml2::XMLHandle hDoc(&doc);
-    tinyxml2::XMLElement* pElem;
-    tinyxml2::XMLHandle hRoot(NULL);
     version = 0;
 
     {
@@ -2036,10 +2083,52 @@ next:
         }
     }
 
+    if (mapwidth < maxwidth)
+    {
+        /* Unscramble platv, since it was stored incorrectly
+         * in 2.2 and previous... */
+        size_t i;
+        int x = 0;
+        int y = 0;
+        int temp_platv[numrooms];
+
+        for (i = 0; i < numrooms; ++i)
+        {
+            temp_platv[i] = level[i].platv;
+        }
+
+        for (i = 0; i < numrooms; ++i)
+        {
+            if (x < mapwidth)
+            {
+                const int platv_idx = x + y * mapwidth;
+                if (INBOUNDS_ARR(platv_idx, temp_platv))
+                {
+                    level[i].platv = temp_platv[platv_idx];
+                }
+            }
+            else
+            {
+                level[i].platv = 4; /* default */
+            }
+
+            ++x;
+
+            if (x >= maxwidth)
+            {
+                x = 0;
+                ++y;
+            }
+        }
+    }
+
     gethooks();
     version=2;
 
     return true;
+
+fail:
+    return false;
 }
 
 bool editorclass::save(std::string& _path)
@@ -2141,6 +2230,40 @@ bool editorclass::save(std::string& _path)
     }
 
     msg = xml::update_element_delete_contents(data, "levelMetaData");
+
+    int temp_platv[numrooms];
+    SDL_memset(temp_platv, 4 /* default */, sizeof(temp_platv));
+
+    if (mapwidth < maxwidth)
+    {
+        /* Re-scramble platv, since it was stored incorrectly
+         * in 2.2 and previous... */
+        size_t i;
+        int x = 0;
+        int y = 0;
+        for (i = 0; i < numrooms; ++i)
+        {
+            if (x < mapwidth)
+            {
+                const int platv_idx = x + y * mapwidth;
+                if (INBOUNDS_ARR(platv_idx, temp_platv))
+                {
+                    temp_platv[platv_idx] = level[i].platv;
+                }
+            }
+
+            ++x;
+
+            if (x >= mapwidth)
+            {
+                /* Skip to next actual row. */
+                i += maxwidth - mapwidth;
+                x = 0;
+                ++y;
+            }
+        }
+    }
+
     for(size_t i = 0; i < SDL_arraysize(level); i++)
     {
         tinyxml2::XMLElement *edlevelclassElement = doc.NewElement( "edLevelClass" );
@@ -2150,7 +2273,7 @@ bool editorclass::save(std::string& _path)
         edlevelclassElement->SetAttribute(  "platy1", level[i].platy1);
         edlevelclassElement->SetAttribute(  "platx2", level[i].platx2);
         edlevelclassElement->SetAttribute( "platy2", level[i].platy2);
-        edlevelclassElement->SetAttribute( "platv", level[i].platv);
+        edlevelclassElement->SetAttribute( "platv", temp_platv[i]);
         edlevelclassElement->SetAttribute(  "enemyx1", level[i].enemyx1);
         edlevelclassElement->SetAttribute(  "enemyy1", level[i].enemyy1);
         edlevelclassElement->SetAttribute(  "enemyx2", level[i].enemyx2);
@@ -2953,8 +3076,8 @@ void editorrender(void)
     else
     {
         //Draw boundaries
-        if(room->enemyx1!=0 && room->enemyy1!=0
-                && room->enemyx2!=320 && room->enemyy2!=240)
+        if(room->enemyx1!=0 || room->enemyy1!=0
+                || room->enemyx2!=320 || room->enemyy2!=240)
         {
             fillboxabs( room->enemyx1, room->enemyy1,
                        room->enemyx2-room->enemyx1,
@@ -2962,8 +3085,8 @@ void editorrender(void)
                        graphics.getBGR(255-(help.glow/2),64,64));
         }
 
-        if(room->platx1!=0 && room->platy1!=0
-                && room->platx2!=320 && room->platy2!=240)
+        if(room->platx1!=0 || room->platy1!=0
+                || room->platx2!=320 || room->platy2!=240)
         {
             fillboxabs( room->platx1, room->platy1,
                        room->platx2-room->platx1,
@@ -3085,24 +3208,28 @@ void editorrender(void)
             FillRect(graphics.backBuffer, 0,-t2+40,320,2, graphics.getRGB(255,255,255));
             if(room->tileset==0)
             {
+                const int numtiles = (((int) graphics.tiles.size()) / 40) * 40;
+
                 for(int i=0; i<40; i++)
                 {
-                    graphics.drawtile(i*8,0-t2,(temp+1200+i)%1200);
-                    graphics.drawtile(i*8,8-t2,(temp+1200+40+i)%1200);
-                    graphics.drawtile(i*8,16-t2,(temp+1200+80+i)%1200);
-                    graphics.drawtile(i*8,24-t2,(temp+1200+120+i)%1200);
-                    graphics.drawtile(i*8,32-t2,(temp+1200+160+i)%1200);
+                    graphics.drawtile(i*8,0-t2,(temp+numtiles+i)%numtiles);
+                    graphics.drawtile(i*8,8-t2,(temp+numtiles+40+i)%numtiles);
+                    graphics.drawtile(i*8,16-t2,(temp+numtiles+80+i)%numtiles);
+                    graphics.drawtile(i*8,24-t2,(temp+numtiles+120+i)%numtiles);
+                    graphics.drawtile(i*8,32-t2,(temp+numtiles+160+i)%numtiles);
                 }
             }
             else
             {
+                const int numtiles = (((int) graphics.tiles2.size()) / 40) * 40;
+
                 for(int i=0; i<40; i++)
                 {
-                    graphics.drawtile2(i*8,0-t2,(temp+1200+i)%1200);
-                    graphics.drawtile2(i*8,8-t2,(temp+1200+40+i)%1200);
-                    graphics.drawtile2(i*8,16-t2,(temp+1200+80+i)%1200);
-                    graphics.drawtile2(i*8,24-t2,(temp+1200+120+i)%1200);
-                    graphics.drawtile2(i*8,32-t2,(temp+1200+160+i)%1200);
+                    graphics.drawtile2(i*8,0-t2,(temp+numtiles+i)%numtiles);
+                    graphics.drawtile2(i*8,8-t2,(temp+numtiles+40+i)%numtiles);
+                    graphics.drawtile2(i*8,16-t2,(temp+numtiles+80+i)%numtiles);
+                    graphics.drawtile2(i*8,24-t2,(temp+numtiles+120+i)%numtiles);
+                    graphics.drawtile2(i*8,32-t2,(temp+numtiles+160+i)%numtiles);
                 }
             }
             //Highlight our little block
@@ -3974,6 +4101,10 @@ static void editormenuactionpress(void)
 void editorinput(void)
 {
     extern editorclass ed;
+    if (graphics.fademode == 3 /* fading out */)
+    {
+        return;
+    }
     game.mx = (float) key.mx;
     game.my = (float) key.my;
     ed.tilex=(game.mx - (game.mx%8))/8;
@@ -4194,6 +4325,7 @@ void editorinput(void)
                     }
                     key.keybuffer=ed.sb[ed.pagey+ed.sby];
                     ed.sbx = utf8::unchecked::distance(ed.sb[ed.pagey+ed.sby].begin(), ed.sb[ed.pagey+ed.sby].end());
+                    music.playef(11);
                 }
             }
         }
@@ -4546,32 +4678,41 @@ void editorinput(void)
         else if (key.keymap[SDLK_LCTRL] || key.keymap[SDLK_RCTRL])
         {
             // Ctrl modifiers
+            int numtiles;
+            if (ed.getroomprop(ed.levx, ed.levy)->tileset == 0)
+            {
+                numtiles = (((int) graphics.tiles.size()) / 40) * 40;
+            }
+            else
+            {
+                numtiles = (((int) graphics.tiles2.size()) / 40) * 40;
+            }
             ed.dmtileeditor=10;
             if(left_pressed)
             {
                 ed.dmtile--;
                 ed.keydelay=3;
-                if(ed.dmtile<0) ed.dmtile+=1200;
+                if(ed.dmtile<0) ed.dmtile+=numtiles;
             }
             else if(right_pressed)
             {
                 ed.dmtile++;
                 ed.keydelay=3;
 
-                if(ed.dmtile>=1200) ed.dmtile-=1200;
+                if(ed.dmtile>=numtiles) ed.dmtile-=numtiles;
             }
             if(up_pressed)
             {
                 ed.dmtile-=40;
                 ed.keydelay=3;
-                if(ed.dmtile<0) ed.dmtile+=1200;
+                if(ed.dmtile<0) ed.dmtile+=numtiles;
             }
             else if(down_pressed)
             {
                 ed.dmtile+=40;
                 ed.keydelay=3;
 
-                if(ed.dmtile>=1200) ed.dmtile-=1200;
+                if(ed.dmtile>=numtiles) ed.dmtile-=numtiles;
             }
         }
         else if (key.keymap[SDLK_LSHIFT] || key.keymap[SDLK_RSHIFT])
@@ -4593,6 +4734,12 @@ void editorinput(void)
             {
                 ed.switch_enemy(true);
                 ed.keydelay=6;
+            }
+            if (key.keymap[SDLK_w])
+            {
+                ed.switch_warpdir(true);
+                graphics.backgrounddrawn = false;
+                ed.keydelay = 6;
             }
 
             if (up_pressed || down_pressed || left_pressed || right_pressed)
@@ -4642,19 +4789,19 @@ void editorinput(void)
             ed.shiftkey=false;
             if(key.keymap[SDLK_F1])
             {
-                ed.switch_tileset();
+                ed.switch_tileset(false);
                 graphics.backgrounddrawn = false;
                 ed.keydelay = 6;
             }
             if(key.keymap[SDLK_F2])
             {
-                ed.switch_tilecol();
+                ed.switch_tilecol(false);
                 graphics.backgrounddrawn = false;
                 ed.keydelay = 6;
             }
             if(key.keymap[SDLK_F3])
             {
-                ed.switch_enemy();
+                ed.switch_enemy(false);
                 ed.keydelay=6;
             }
             if(key.keymap[SDLK_F4])
@@ -4675,6 +4822,12 @@ void editorinput(void)
                 {
                     ed.setroomdirectmode(ed.levx, ed.levy, 0);
                     ed.note="Direct Mode Disabled";
+                    /* Kludge fix for rainbow BG here... */
+                    if (ed.getroomprop(ed.levx, ed.levy)->tileset == 2
+                    && ed.getroomprop(ed.levx, ed.levy)->tilecol == 6)
+                    {
+                        ed.setroomtilecol(ed.levx, ed.levy, 0);
+                    }
                 }
                 else
                 {
@@ -4707,32 +4860,9 @@ void editorinput(void)
 
             if(key.keymap[SDLK_w])
             {
-                ed.setroomwarpdir(ed.levx, ed.levy, (ed.getroomprop(ed.levx, ed.levy)->warpdir+1)%4);
-                if(ed.getroomprop(ed.levx, ed.levy)->warpdir==0)
-                {
-                    ed.note="Room warping disabled";
-                    ed.notedelay=45;
-                    graphics.backgrounddrawn=false;
-                }
-                else if(ed.getroomprop(ed.levx, ed.levy)->warpdir==1)
-                {
-                    ed.note="Room warps horizontally";
-                    ed.notedelay=45;
-                    graphics.backgrounddrawn=false;
-                }
-                else if(ed.getroomprop(ed.levx, ed.levy)->warpdir==2)
-                {
-                    ed.note="Room warps vertically";
-                    ed.notedelay=45;
-                    graphics.backgrounddrawn=false;
-                }
-                else if(ed.getroomprop(ed.levx, ed.levy)->warpdir==3)
-                {
-                    ed.note="Room warps in all directions";
-                    ed.notedelay=45;
-                    graphics.backgrounddrawn=false;
-                }
-                ed.keydelay=6;
+                ed.switch_warpdir(false);
+                graphics.backgrounddrawn = false;
+                ed.keydelay = 6;
             }
             if(key.keymap[SDLK_e])
             {

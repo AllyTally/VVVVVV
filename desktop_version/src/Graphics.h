@@ -26,7 +26,7 @@ public:
 	int bfontlen(uint32_t ch);
 	int font_idx(uint32_t ch);
 
-	void Makebfont(void);
+	bool Makebfont(void);
 
 	void drawhuetile(int x, int y, int t);
 	void huetilesetcol(int t);
@@ -34,11 +34,11 @@ public:
 
 	void drawgravityline(int t);
 
-	void MakeTileArray(void);
+	bool MakeTileArray(void);
 
-	void MakeSpriteArray(void);
+	bool MakeSpriteArray(void);
 
-	void maketelearray(void);
+	bool maketelearray(void);
 
 	void drawcoloredtile(int x, int y, int t, int r, int g, int b);
 
@@ -136,6 +136,12 @@ public:
 
 	void PrintAlpha(int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen = false);
 
+	bool next_wrap(size_t* start, size_t* len, const char* str, int maxwidth);
+
+	bool next_wrap_s(char buffer[], size_t buffer_size, size_t* start, const char* str, int maxwidth);
+
+	void PrintWrap(int x, int y, const char* str, int r, int g, int b, bool cen, int linespacing, int maxwidth);
+
 	void PrintOffAlpha(int _x, int _y, std::string _s, int r, int g, int b, int a, bool cen = false);
 
 	void bprint(int x, int y, std::string t, int r, int g, int b, bool cen = false);
@@ -216,7 +222,7 @@ public:
 
 	bool onscreen(int t);
 
-	void reloadresources(void);
+	bool reloadresources(void);
 #ifndef NO_CUSTOM_LEVELS
 	bool tiles1_mounted;
 	bool tiles2_mounted;
@@ -353,6 +359,9 @@ public:
 	bool kludgeswnlinewidth;
 
 	Uint32 crewcolourreal(int t);
+
+	char error[128];
+	char error_title[128]; /* for SDL_ShowSimpleMessageBox */
 };
 
 #ifndef GRAPHICS_DEFINITION

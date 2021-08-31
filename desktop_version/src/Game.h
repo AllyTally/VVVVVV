@@ -32,9 +32,12 @@ namespace Menu
         playerworlds,
         levellist,
         quickloadlevel,
+        deletequicklevel,
         youwannaquit,
         errornostart,
         errorsavingsettings,
+        errorloadinglevel,
+        warninglevellist,
         graphicoptions,
         ed_settings,
         ed_desc,
@@ -43,11 +46,13 @@ namespace Menu
         options,
         gameplayoptions,
         speedrunneroptions,
+        setglitchrunner,
         advancedoptions,
         audiooptions,
         accessibility,
         controller,
         cleardatamenu,
+        clearcustomdatamenu,
         setinvincibility,
         setslowdown,
         unlockmenu,
@@ -197,6 +202,8 @@ public:
     void customloadquick(std::string savfile);
     void loadquick(void);
 
+    void customdeletequick(const std::string& file);
+
     void loadsummary(void);
 
     void readmaingamesave(tinyxml2::XMLDocument& doc);
@@ -211,7 +218,7 @@ public:
     int door_right;
     int door_up;
     int door_down;
-    int roomx, roomy, roomchangedir;
+    int roomx, roomy;
     int prevroomx, prevroomy;
 
     int savex, savey, saverx, savery;
@@ -231,6 +238,7 @@ public:
     bool hascontrol, jumpheld;
     int jumppressed;
     int gravitycontrol;
+    bool isingamecompletescreen();
 
     bool muted;
     int mutebutton;
@@ -379,7 +387,6 @@ public:
     float inertia;
 
     int companion;
-    bool roomchange;
     SDL_Rect teleblock;
     bool activetele;
     int readytotele;
@@ -419,6 +426,7 @@ public:
     void loadcustomlevelstats(void);
     void savecustomlevelstats(void);
     void updatecustomlevelstats(std::string clevel, int cscore);
+    void deletecustomlevelstats(void);
 
     std::vector<CustomLevelStat> customlevelstats;
 
@@ -462,7 +470,7 @@ public:
     bool nocompetitive(void);
 
     bool over30mode;
-    bool glitchrunnermode; // Have fun speedrunners! <3 Misa
+    bool showingametimer;
 
     bool ingame_titlemode;
 #if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
@@ -485,6 +493,8 @@ public:
     bool holding_both;
     int additional_block;
     bool holding_entity;
+    bool disableaudiopause;
+    bool disabletemporaryaudiopause;
     bool inputdelay;
     bool entering_script_command;
 };

@@ -19,7 +19,7 @@ bool FILESYSTEM_isFile(const char* filename);
 bool FILESYSTEM_isMounted(const char* filename);
 
 void FILESYSTEM_loadZip(const char* filename);
-void FILESYSTEM_mountAssets(const char *path);
+bool FILESYSTEM_mountAssets(const char *path);
 void FILESYSTEM_unmountAssets(void);
 bool FILESYSTEM_isAssetMounted(const char* filename);
 
@@ -40,9 +40,14 @@ bool FILESYSTEM_loadTiXml2Document(const char *name, tinyxml2::XMLDocument& doc)
 
 void FILESYSTEM_enumerateLevelDirFileNames(void (*callback)(const char* filename));
 
+bool FILESYSTEM_levelDirHasError(void);
+void FILESYSTEM_clearLevelDirError(void);
+const char* FILESYSTEM_getLevelDirError(void);
+
 bool FILESYSTEM_openDirectoryEnabled(void);
 bool FILESYSTEM_openDirectory(const char *dname);
 
 bool FILESYSTEM_delete(const char *name);
+void FILESYSTEM_deleteLevelSaves(void);
 
 #endif /* FILESYSTEMUTILS_H */

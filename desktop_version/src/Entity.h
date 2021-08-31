@@ -52,7 +52,7 @@ public:
 
     void generateswnwave(int t);
 
-    void createblock(int t, int xp, int yp, int w, int h, int trig = 0, const std::string& script = "");
+    void createblock(int t, int xp, int yp, int w, int h, int trig = 0, const std::string& script = "", bool custom = false);
 
     bool disableentity(int t);
 
@@ -66,9 +66,9 @@ public:
 
     void removetrigger(int t);
 
-    void copylinecross(int t);
+    void copylinecross(std::vector<entclass>& linecrosskludge, int t);
 
-    void revertlinecross(int t, int s);
+    void revertlinecross(std::vector<entclass>& linecrosskludge, int t, int s);
 
     bool gridmatch(int p1, int p2, int p3, int p4, int p11, int p21, int p31, int p41);
 
@@ -87,6 +87,8 @@ public:
     bool updateentities(int i);
 
     void animateentities(int i);
+
+    void animatehumanoidcollision(const int i);
 
     int getcompanion(void);
 
@@ -163,8 +165,6 @@ public:
 
     std::vector<entclass> entities;
 
-    std::vector<entclass> linecrosskludge;
-
     int k;
 
 
@@ -193,6 +193,8 @@ public:
     bool customwarpmode, customwarpmodevon, customwarpmodehon;
     std::string customscript;
     bool customcrewmoods[Game::numcrew];
+    std::string customactivitycolour;
+    std::string customactivitytext;
 };
 
 #ifndef OBJ_DEFINITION

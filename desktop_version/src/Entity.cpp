@@ -5,11 +5,13 @@
 
 #include "editor.h"
 #include "Game.h"
+#include "GlitchrunnerMode.h"
 #include "Graphics.h"
 #include "Map.h"
 #include "Music.h"
 #include "Script.h"
 #include "UtilityClass.h"
+#include "Xoshiro.h"
 
 bool entityclass::checktowerspikes(int t)
 {
@@ -65,9 +67,11 @@ void entityclass::init(void)
     upsetmode = false;
     upset = 0;
 
-    customenemy=0;
-    customwarpmode=false; customwarpmodevon=false; customwarpmodehon=false;
-    trophytext = 0 ;
+    customenemy = 0;
+    customwarpmode = false; customwarpmodevon = false; customwarpmodehon = false;
+    customactivitycolour = "";
+    customactivitytext = "";
+    trophytext = 0;
     oldtrophytext = 0;
     trophytype = 0;
     altstates = 0;
@@ -209,7 +213,7 @@ void entityclass::generateswnwave( int t )
                 if (game.deathcounts - game.swndeaths > 25) game.swndelay += 4;
                 break;
             case 1:
-                createentity(-150, 58 + (int(fRandom() * 6) * 20), 23, 0, 0);
+                createentity(-150, 58 + (int(xoshiro_rand() * 6) * 20), 23, 0, 0);
                 game.swnstate = 0;
                 game.swndelay = 0; //return to decision state
                 break;
@@ -237,13 +241,13 @@ void entityclass::generateswnwave( int t )
                 game.swndelay = 0; //return to decision state
                 break;
             case 3:
-                createentity(320+150, 58 + (int(fRandom() * 6) * 20), 23, 1, 0);
+                createentity(320+150, 58 + (int(xoshiro_rand() * 6) * 20), 23, 1, 0);
                 game.swnstate = 0;
                 game.swndelay = 0; //return to decision state
                 break;
             case 4:
                 //left and right compliments
-                game.swnstate2 = int(fRandom() * 6);
+                game.swnstate2 = int(xoshiro_rand() * 6);
                 createentity(-150, 58 + (game.swnstate2  * 20), 23, 0, 0);
                 createentity(320+150, 58 + ((5-game.swnstate2) * 20), 23, 1, 0);
                 game.swnstate = 0;
@@ -318,7 +322,7 @@ void entityclass::generateswnwave( int t )
                 game.swnstate3 = 0;
                 game.swnstate4 = 0;
 
-                game.swnstate2 = int(fRandom() * 100);
+                game.swnstate2 = int(xoshiro_rand() * 100);
                 if (game.swnstate2 < 25)
                 {
                     //simple
@@ -335,7 +339,7 @@ void entityclass::generateswnwave( int t )
                 break;
             case 1:
                 //complex chain
-                game.swnstate2 = int(fRandom() * 8);
+                game.swnstate2 = int(xoshiro_rand() * 8);
                 if (game.swnstate2 == 0)
                 {
                     game.swnstate = 10;
@@ -381,7 +385,7 @@ void entityclass::generateswnwave( int t )
                 break;
             case 2:
                 //simple chain
-                game.swnstate2 = int(fRandom() * 6);
+                game.swnstate2 = int(xoshiro_rand() * 6);
                 if (game.swnstate2 == 0)
                 {
                     game.swnstate = 23;
@@ -417,7 +421,7 @@ void entityclass::generateswnwave( int t )
                 break;
             case 3:
                 //Choose a major action
-                game.swnstate2 = int(fRandom() * 100);
+                game.swnstate2 = int(xoshiro_rand() * 100);
                 game.swnstate4 = 0;
                 if (game.swnstate2 < 25)
                 {
@@ -434,7 +438,7 @@ void entityclass::generateswnwave( int t )
                 break;
             case 4:
                 //filler chain
-                game.swnstate2 = int(fRandom() * 6);
+                game.swnstate2 = int(xoshiro_rand() * 6);
                 if (game.swnstate2 == 0)
                 {
                     game.swnstate = 28;
@@ -623,7 +627,7 @@ void entityclass::generateswnwave( int t )
             case 22:
                 game.swnstate4++;
                 //left and right compliments
-                game.swnstate2 = int(fRandom() * 6);
+                game.swnstate2 = int(xoshiro_rand() * 6);
                 createentity(-150, 58 + (game.swnstate2  * 20), 23, 0, 0);
                 createentity(320 + 150, 58 + ((5 - game.swnstate2) * 20), 23, 1, 0);
                 if(game.swnstate4<=12)
@@ -684,7 +688,7 @@ void entityclass::generateswnwave( int t )
                 break;
             case 28:
                 game.swnstate4++;
-                game.swnstate2 = int(fRandom() * 6);
+                game.swnstate2 = int(xoshiro_rand() * 6);
                 createentity(-150, 58 + (game.swnstate2  * 20), 23, 0, 0);
                 if(game.swnstate4<=6)
                 {
@@ -700,7 +704,7 @@ void entityclass::generateswnwave( int t )
                 break;
             case 29:
                 game.swnstate4++;
-                game.swnstate2 = int(fRandom() * 6);
+                game.swnstate2 = int(xoshiro_rand() * 6);
                 gravcreate(game.swnstate2, 1);
                 if(game.swnstate4<=6)
                 {
@@ -716,7 +720,7 @@ void entityclass::generateswnwave( int t )
                 break;
             case 30:
                 game.swnstate4++;
-                game.swnstate2 = int(fRandom() * 3);
+                game.swnstate2 = int(xoshiro_rand() * 3);
                 gravcreate(game.swnstate2, 0);
                 gravcreate(5-game.swnstate2, 0);
                 if(game.swnstate4<=2)
@@ -733,7 +737,7 @@ void entityclass::generateswnwave( int t )
                 break;
             case 31:
                 game.swnstate4++;
-                game.swnstate2 = int(fRandom() * 3);
+                game.swnstate2 = int(xoshiro_rand() * 3);
                 gravcreate(game.swnstate2, 1);
                 gravcreate(5-game.swnstate2, 1);
                 if(game.swnstate4<=2)
@@ -757,7 +761,7 @@ void entityclass::generateswnwave( int t )
     }
 }
 
-void entityclass::createblock( int t, int xp, int yp, int w, int h, int trig /*= 0*/, const std::string& script /*= ""*/ )
+void entityclass::createblock( int t, int xp, int yp, int w, int h, int trig /*= 0*/, const std::string& script /*= ""*/, bool custom /*= false*/)
 {
     k = blocks.size();
 
@@ -1049,13 +1053,32 @@ void entityclass::createblock( int t, int xp, int yp, int w, int h, int trig /*=
             trig=0;
             break;
         case 35:
-            block.prompt = "Press %s to activate terminal";
+            if (custom)
+            {
+                block.prompt = "Press %s to interact";
+            }
+            else
+            {
+                block.prompt = "Press %s to activate terminal";
+            }
             block.script = "custom_"+customscript;
             block.setblockcolour("orange");
             trig=0;
             break;
         }
         break;
+    }
+
+    if (customactivitytext != "")
+    {
+        block.prompt = customactivitytext;
+        customactivitytext = "";
+    }
+
+    if (customactivitycolour != "")
+    {
+        block.setblockcolour(customactivitycolour);
+        customactivitycolour = "";
     }
 
     if (!reuse)
@@ -1146,7 +1169,7 @@ void entityclass::removetrigger( int t )
     }
 }
 
-void entityclass::copylinecross( int t )
+void entityclass::copylinecross(std::vector<entclass>& linecrosskludge, int t)
 {
     if (!INBOUNDS_VEC(t, entities))
     {
@@ -1157,7 +1180,7 @@ void entityclass::copylinecross( int t )
     linecrosskludge.push_back(entities[t]);
 }
 
-void entityclass::revertlinecross( int t, int s )
+void entityclass::revertlinecross(std::vector<entclass>& linecrosskludge, int t, int s)
 {
     if (!INBOUNDS_VEC(t, entities) || !INBOUNDS_VEC(s, linecrosskludge))
     {
@@ -1201,6 +1224,15 @@ int entityclass::crewcolour( int t )
         break;
     }
     return 0;
+}
+
+static void entityclonefix(entclass* entity)
+{
+    if (entity->behave == 10 || entity->behave == 12)
+    {
+        /* Fix memory leak */
+        entity->behave = -1;
+    }
 }
 
 void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int p1, int p2, int p3, int p4)
@@ -1323,6 +1355,7 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
         else
         {
             entity.setenemyroom(game.roomx, game.roomy);
+            entityclonefix(&entity);
         }
         break;
     case 2: //A moving platform
@@ -2093,6 +2126,7 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
           entity.colour = 18;
         }
 
+        entityclonefix(&entity);
         break;
     }
 
@@ -2594,6 +2628,7 @@ bool entityclass::updateentities( int i )
             if (entities[i].state == 1)
             {
                 game.gravitycontrol = (game.gravitycontrol + 1) % 2;
+                ++game.totalflips;
                 return disableentity(i);
 
             }
@@ -2642,6 +2677,7 @@ bool entityclass::updateentities( int i )
                     if (game.trinkets() > game.stat_trinkets && !map.custommode)
                     {
                         game.stat_trinkets = game.trinkets();
+                        game.savestatsandsettings();
                     }
                 }
 
@@ -3748,6 +3784,102 @@ void entityclass::animateentities( int _i )
     }
 }
 
+void entityclass::animatehumanoidcollision(const int i)
+{
+    /* For some awful reason, drawframe is used for actual collision.
+     * And removing the input delay changes collision drawframe
+     * because vx is checked in animateentities().
+     * So we need to separate the collision drawframe from the visual drawframe
+     * and update it separately in gamelogic.
+     * Hence this function.
+     */
+    entclass* entity;
+
+    if (!INBOUNDS_VEC(i, entities))
+    {
+        puts("animatehumanoidcollision() out-of-bounds!");
+        return;
+    }
+
+    entity = &entities[i];
+
+    if (!entity->ishumanoid())
+    {
+        return;
+    }
+
+    if (entity->statedelay > 0)
+    {
+        return;
+    }
+
+    --entity->collisionframedelay;
+
+    if (entity->dir == 1)
+    {
+        entity->collisiondrawframe = entity->tile;
+    }
+    else
+    {
+        entity->collisiondrawframe = entity->tile + 3;
+    }
+
+    if (entity->visualonground > 0 || entity->visualonroof > 0)
+    {
+        if (entity->vx > 0.0f || entity->vx < -0.0f)
+        {
+            /* Walking */
+            if (entity->collisionframedelay <= 1)
+            {
+                entity->collisionframedelay = 4;
+                ++entity->collisionwalkingframe;
+            }
+
+            if (entity->collisionwalkingframe >= 2)
+            {
+                entity->collisionwalkingframe = 0;
+            }
+
+            entity->collisiondrawframe += entity->collisionwalkingframe + 1;
+        }
+
+        if (entity->visualonroof > 0)
+        {
+            entity->collisiondrawframe += 6;
+        }
+    }
+    else
+    {
+        ++entity->collisiondrawframe;
+
+        if (entity->type == 0 && game.gravitycontrol == 1)
+        {
+            entity->collisiondrawframe += 6;
+        }
+    }
+
+    /* deathseq shouldn't matter, but handling it anyway just in case */
+    if (game.deathseq > -1)
+    {
+        entity->collisiondrawframe = 13;
+
+        if (entity->dir == 1)
+        {
+            entity->collisiondrawframe = 12;
+        }
+
+        if ((entity->type == 0 && game.gravitycontrol == 1)
+        || (entity->type != 0 && entity->rule == 7))
+        {
+            entity->collisiondrawframe += 2;
+        }
+    }
+
+    entity->framedelay = entity->collisionframedelay;
+    entity->drawframe = entity->collisiondrawframe;
+    entity->walkingframe = entity->collisionwalkingframe;
+}
+
 int entityclass::getcompanion(void)
 {
     //Returns the index of the companion with rule t
@@ -4653,7 +4785,7 @@ void entityclass::collisioncheck(int i, int j, bool scm /*= false*/)
                 point colpoint2;
                 colpoint2.x = entities[j].xp;
                 colpoint2.y = entities[j].yp;
-                int drawframe1 = entities[i].drawframe;
+                int drawframe1 = entities[i].collisiondrawframe;
                 int drawframe2 = entities[j].drawframe;
                 std::vector<SDL_Surface*>& spritesvec = graphics.flipmode ? graphics.flipsprites : graphics.sprites;
                 if (INBOUNDS_VEC(drawframe1, spritesvec) && INBOUNDS_VEC(drawframe2, spritesvec)
@@ -4748,7 +4880,7 @@ void entityclass::collisioncheck(int i, int j, bool scm /*= false*/)
         }
         break;
     case 7: // Person versus horizontal warp line, pre-2.1
-        if (game.glitchrunnermode
+        if (GlitchrunnerMode_less_than_or_equal(Glitchrunner2_0)
         && game.deathseq == -1
         && entities[j].onentity > 0
         && entityhlinecollide(i, j))

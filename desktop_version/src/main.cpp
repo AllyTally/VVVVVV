@@ -23,6 +23,11 @@
 #include "SoundSystem.h"
 #include "UtilityClass.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <emscripten/html5.h>
+#endif
+
 scriptclass script;
 
 #if !defined(NO_CUSTOM_LEVELS)
@@ -54,8 +59,11 @@ static std::string playtestname;
 static volatile Uint32 time_ = 0;
 static volatile Uint32 timePrev = 0;
 static volatile Uint32 accumulator = 0;
+
+#ifndef __EMSCRIPTEN__
 static volatile Uint32 f_time = 0;
 static volatile Uint32 f_timePrev = 0;
+#endif
 
 enum FuncType
 {
@@ -351,6 +359,15 @@ static void inline deltaloop(void);
 
 static void cleanup(void);
 
+#ifdef __EMSCRIPTEN__
+void emscriptenloop(void)
+{
+    timePrev = time_;
+    time_ = SDL_GetTicks();
+    deltaloop();
+}
+#endif
+
 int main(int argc, char *argv[])
 {
     char* baseDir = NULL;
@@ -495,7 +512,19 @@ int main(int argc, char *argv[])
     game.init();
 
     // This loads music too...
-    graphics.reloadresources();
+    if (!graphics.reloadresources())
+    {
+        /* Something wrong with the default assets? We can't use them to
+         * display the error message, and we have to bail. */
+        SDL_ShowSimpleMessageBox(
+            SDL_MESSAGEBOX_ERROR,
+            graphics.error_title,
+            graphics.error,
+            NULL
+        );
+
+        VVV_exit(1);
+    }
 
     game.gamestate = PRELOADER;
 
@@ -611,6 +640,9 @@ int main(int argc, char *argv[])
     gamestate_funcs = get_gamestate_funcs(game.gamestate, &num_gamestate_funcs);
     loop_assign_active_funcs();
 
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop(emscriptenloop, 0, 0);
+#else
     while (true)
     {
         f_time = SDL_GetTicks();
@@ -632,6 +664,8 @@ int main(int argc, char *argv[])
     }
 
     cleanup();
+#endif
+
     return 0;
 }
 
@@ -731,12 +765,14 @@ static void unfocused_run(void)
     graphics.render();
     gameScreen.FlipScreen();
     //We are minimised, so lets put a bit of a delay to save CPU
+#ifndef __EMSCRIPTEN__
     SDL_Delay(100);
+#endif
 }
 
 static void focused_begin(void)
 {
-    /* no-op. */
+    map.nexttowercolour_set = false;
 }
 
 static void focused_end(void)

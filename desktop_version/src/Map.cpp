@@ -4,6 +4,7 @@
 #include "editor.h"
 #include "Entity.h"
 #include "Game.h"
+#include "GlitchrunnerMode.h"
 #include "Graphics.h"
 #include "MakeAndPlay.h"
 #include "Music.h"
@@ -81,6 +82,8 @@ mapclass::mapclass(void)
 	cameraseek = 0;
 	minitowermode = false;
 	roomtexton = false;
+
+	nexttowercolour_set = false;
 }
 
 //Areamap starts at 100,100 and extends 20x20
@@ -472,11 +475,29 @@ int mapclass::finalat(int x, int y)
 		//Special case: animated tiles
 		if (final_mapcol == 1)
 		{
-			return 737 + (int(fRandom() * 11) * 40);
+			int offset;
+			if (game.noflashingmode)
+			{
+				offset = 0;
+			}
+			else
+			{
+				offset = int(fRandom() * 11) * 40;
+			}
+			return 737 + offset;
 		}
 		else
 		{
-			return contents[x + vmult[y]] - (final_mapcol * 3) + (final_aniframe * 40);
+			int offset;
+			if (game.noflashingmode)
+			{
+				offset = 0;
+			}
+			else
+			{
+				offset = final_aniframe * 40;
+			}
+			return contents[x + vmult[y]] - (final_mapcol * 3) + offset;
 		}
 	}
 	else if (contents[x + vmult[y]] >= 80)
@@ -630,6 +651,13 @@ void mapclass::updatetowerglow(TowerBG& bg_obj)
 
 void mapclass::nexttowercolour(void)
 {
+	/* Prevent cycling title BG more than once per frame. */
+	if (nexttowercolour_set)
+	{
+		return;
+	}
+	nexttowercolour_set = true;
+
 	graphics.titlebg.colstate+=5;
 	if (graphics.titlebg.colstate >= 30) graphics.titlebg.colstate = 0;
 
@@ -815,7 +843,7 @@ void mapclass::resetplayer(const bool player_died)
 		{
 			obj.entities[i].invis = false;
 		}
-		if (!game.glitchrunnermode)
+		if (!GlitchrunnerMode_less_than_or_equal(Glitchrunner2_2))
 		{
 			obj.entities[i].size = 0;
 			obj.entities[i].cx = 6;
@@ -875,6 +903,9 @@ void mapclass::warpto(int rx, int ry , int t, int tx, int ty)
 
 void mapclass::gotoroom(int rx, int ry)
 {
+	int roomchangedir;
+	std::vector<entclass> linecrosskludge;
+
 	//First, destroy the current room
 	obj.removeallblocks();
 	game.activetele = false;
@@ -882,7 +913,6 @@ void mapclass::gotoroom(int rx, int ry)
 	game.oldreadytotele = 0;
 
 	//Ok, let's save the position of all lines on the screen
-	obj.linecrosskludge.clear();
 	for (size_t i = 0; i < obj.entities.size(); i++)
 	{
 		if (obj.entities[i].type == 9)
@@ -891,7 +921,7 @@ void mapclass::gotoroom(int rx, int ry)
 			if (obj.entities[i].xp <= 0 || (obj.entities[i].xp + obj.entities[i].w) >= 312)
 			{
 				//it's on a screen edge
-				obj.copylinecross(i);
+				obj.copylinecross(linecrosskludge, i);
 			}
 		}
 	}
@@ -925,11 +955,11 @@ void mapclass::gotoroom(int rx, int ry)
 
 	if (rx < game.roomx)
 	{
-		game.roomchangedir = 0;
+		roomchangedir = 0;
 	}
 	else
 	{
-		game.roomchangedir = 1;
+		roomchangedir = 1;
 	}
 
 	if (finalmode)
@@ -937,7 +967,6 @@ void mapclass::gotoroom(int rx, int ry)
 		//Ok, what way are we moving?
 		game.roomx = rx;
 		game.roomy = ry;
-		game.roomchange = true;
 
 		if (game.roomy < 10)
 		{
@@ -964,7 +993,6 @@ void mapclass::gotoroom(int rx, int ry)
 	{
 		game.roomx = rx;
 		game.roomy = ry;
-		game.roomchange = true;
 		if (game.roomx < 100) game.roomx = 100 + ed.mapwidth-1;
 		if (game.roomy < 100) game.roomy = 100 + ed.mapheight-1;
 		if (game.roomx > 100 + ed.mapwidth-1) game.roomx = 100;
@@ -975,7 +1003,6 @@ void mapclass::gotoroom(int rx, int ry)
 	{
 		game.roomx = rx;
 		game.roomy = ry;
-		game.roomchange = true;
 		if (game.roomx < 100) game.roomx = 119;
 		if (game.roomy < 100) game.roomy = 119;
 		if (game.roomx > 119) game.roomx = 100;
@@ -984,65 +1011,7 @@ void mapclass::gotoroom(int rx, int ry)
 		game.currentroomdeaths = roomdeaths[game.roomx - 100 + (20 * (game.roomy - 100))];
 
 		//Alright, change music depending on where we are:
-		//Tower
-		if (game.roomx == 107 && game.roomy == 106) music.niceplay(4);
-		if (game.roomx == 107 && game.roomy == 107) music.niceplay(4);
-		if (game.roomx == 107 && game.roomy == 108) music.niceplay(4);
-		if (game.roomx == 107 && game.roomy == 109) music.niceplay(4);
-		if (game.roomx == 108 && game.roomy == 109)
-		{
-			if (graphics.setflipmode)
-			{
-				music.niceplay(9);
-			}
-			else
-			{
-				music.niceplay(2);
-			}
-		}
-		if (game.roomx == 109)
-		{
-			if (graphics.setflipmode)
-			{
-				music.niceplay(9);
-			}
-			else
-			{
-				music.niceplay(2);
-			}
-		}
-		//Warp Zone
-		if (game.roomx == 112 && game.roomy == 101) music.niceplay(4);
-		if (game.roomx == 113 && game.roomy == 101) music.niceplay(4);
-		if (game.roomx == 113 && game.roomy == 102) music.niceplay(4);
-		if (game.roomx == 114 && game.roomy == 101) music.niceplay(12);
-		if (game.roomx == 115 && game.roomy == 101) music.niceplay(12);
-		if (game.roomx == 115 && game.roomy == 102) music.niceplay(12);
-		//Lab
-		if (game.roomx == 101 && game.roomy == 115) music.niceplay(4);
-		if (game.roomx == 100 && game.roomy == 115) music.niceplay(4);
-		if (game.roomx == 101 && game.roomy == 116) music.niceplay(4);
-		if (game.roomx == 100 && game.roomy == 116) music.niceplay(4);
-		if (game.roomx == 102 && game.roomy == 116) music.niceplay(3);
-		if (game.roomx == 102 && game.roomy == 117) music.niceplay(3);
-		if (game.roomx == 101 && game.roomy == 117) music.niceplay(3);
-		//Space Station
-		if (game.intimetrial)
-		{
-			if (game.roomx == 111 && game.roomy == 112) music.niceplay(1);
-			if (game.roomx == 111 && game.roomy == 113) music.niceplay(1);
-			if (game.roomx == 112 && game.roomy == 114) music.niceplay(1);
-			if (game.roomx == 112 && game.roomy == 115) music.niceplay(1);
-		}
-		else
-		{
-			if (game.roomx == 111 && game.roomy == 112) music.niceplay(1);
-			if (game.roomx == 111 && game.roomy == 113) music.niceplay(1);
-			if (game.roomx == 112 && game.roomy == 114) music.niceplay(4);
-			if (game.roomx == 112 && game.roomy == 115) music.niceplay(4);
-		}
-		//Leaving the Ship
-		if (game.roomx == 104 && game.roomy == 112) music.niceplay(4);
+		music.changemusicarea(game.roomx - 100, game.roomy - 100);
 	}
 	int temp = rx + (ry * 100);
 	loadlevel(game.roomx, game.roomy);
@@ -1097,24 +1066,24 @@ void mapclass::gotoroom(int rx, int ry)
 			if (obj.entities[i].xp <= 0 || obj.entities[i].xp + obj.entities[i].w >= 312)
 			{
 				//it's on a screen edge
-				for (size_t j = 0; j < obj.linecrosskludge.size(); j++)
+				for (size_t j = 0; j < linecrosskludge.size(); j++)
 				{
-					if (obj.entities[i].yp == obj.linecrosskludge[j].yp)
+					if (obj.entities[i].yp == linecrosskludge[j].yp)
 					{
 						//y's match, how about x's?
 						//we're moving left:
-						if (game.roomchangedir == 0)
+						if (roomchangedir == 0)
 						{
-							if (obj.entities[i].xp + obj.entities[i].w >= 312 && obj.linecrosskludge[j].xp <= 0)
+							if (obj.entities[i].xp + obj.entities[i].w >= 312 && linecrosskludge[j].xp <= 0)
 							{
-								obj.revertlinecross(i, j);
+								obj.revertlinecross(linecrosskludge, i, j);
 							}
 						}
 						else
 						{
-							if (obj.entities[i].xp <= 0 && obj.linecrosskludge[j].xp + obj.linecrosskludge[j].w >= 312)
+							if (obj.entities[i].xp <= 0 && linecrosskludge[j].xp + linecrosskludge[j].w >= 312)
 							{
-								obj.revertlinecross(i, j);
+								obj.revertlinecross(linecrosskludge, i, j);
 							}
 						}
 					}
@@ -1166,6 +1135,15 @@ std::string mapclass::currentarea(int t)
 		break;
 	}
 	return "???";
+}
+
+static void copy_short_to_int(int* dest, const short* src, const size_t size)
+{
+	size_t i;
+	for (i = 0; i < size; ++i)
+	{
+		dest[i] = src[i];
+	}
 }
 
 void mapclass::loadlevel(int rx, int ry)
@@ -1319,25 +1297,16 @@ void mapclass::loadlevel(int rx, int ry)
 		tileset = 1;
 		extrarow = 1;
 		const short* tmap = otherlevel.loadlevel(rx, ry);
-		SDL_memcpy(contents, tmap, sizeof(contents));
+		copy_short_to_int(contents, tmap, SDL_arraysize(contents));
 		roomname = otherlevel.roomname;
+		hiddenname = otherlevel.hiddenname;
 		tileset = otherlevel.roomtileset;
-		//do the appear/remove roomname here
-
-		if (game.roomx >= 102 && game.roomx <= 104 && game.roomy >= 110 && game.roomy <= 111)
-		{
-			hiddenname = "The Ship";
-		}
-		else
-		{
-			hiddenname = "Dimension VVVVVV";
-		}
 		break;
 	}
 	case 2: //The Lab
 	{
 		const short* tmap = lablevel.loadlevel(rx, ry);
-		SDL_memcpy(contents, tmap, sizeof(contents));
+		copy_short_to_int(contents, tmap, SDL_arraysize(contents));
 		roomname = lablevel.roomname;
 		tileset = 1;
 		background = 2;
@@ -1384,7 +1353,7 @@ void mapclass::loadlevel(int rx, int ry)
 	case 4: //The Warpzone
 	{
 		const short* tmap = warplevel.loadlevel(rx, ry);
-		SDL_memcpy(contents, tmap, sizeof(contents));
+		copy_short_to_int(contents, tmap, SDL_arraysize(contents));
 		roomname = warplevel.roomname;
 		tileset = 1;
 		background = 3;
@@ -1402,7 +1371,7 @@ void mapclass::loadlevel(int rx, int ry)
 	case 5: //Space station
 	{
 		const short* tmap = spacestation2.loadlevel(rx, ry);
-		SDL_memcpy(contents, tmap, sizeof(contents));
+		copy_short_to_int(contents, tmap, SDL_arraysize(contents));
 		roomname = spacestation2.roomname;
 		tileset = 0;
 		break;
@@ -1410,7 +1379,7 @@ void mapclass::loadlevel(int rx, int ry)
 	case 6: //final level
 	{
 		const short* tmap = finallevel.loadlevel(rx, ry);
-		SDL_memcpy(contents, tmap, sizeof(contents));
+		copy_short_to_int(contents, tmap, SDL_arraysize(contents));
 		roomname = finallevel.roomname;
 		tileset = 1;
 		background = 3;
@@ -1569,7 +1538,7 @@ void mapclass::loadlevel(int rx, int ry)
 	case 11: //Tower Hallways //Content is held in final level routine
 	{
 		const short* tmap = finallevel.loadlevel(rx, ry);
-		SDL_memcpy(contents, tmap, sizeof(contents));
+		copy_short_to_int(contents, tmap, SDL_arraysize(contents));
 		roomname = finallevel.roomname;
 		tileset = 2;
 		if (rx == 108)
@@ -1655,7 +1624,7 @@ void mapclass::loadlevel(int rx, int ry)
 
 		roomname = room->roomname;
 		extrarow = 1;
-		const short* tmap = ed.loadlevel(rx, ry);
+		const int* tmap = ed.loadlevel(rx, ry);
 		SDL_memcpy(contents, tmap, sizeof(contents));
 
 
@@ -2056,7 +2025,7 @@ void mapclass::twoframedelayfix(void)
 	// and when the script gets loaded script.run() has already ran for that frame, too.
 	// A bit kludge-y, but it's the least we can do without changing the frame ordering.
 
-	if (game.glitchrunnermode
+	if (GlitchrunnerMode_less_than_or_equal(Glitchrunner2_2)
 	|| !custommode
 	|| game.deathseq != -1)
 		return;
