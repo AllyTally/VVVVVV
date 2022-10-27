@@ -110,6 +110,7 @@ set(VVV_SRC
     src/Xoshiro.c
     ../third_party/physfs/extras/physfsrwops.c
 )
+
 if(NOT CUSTOM_LEVEL_SUPPORT STREQUAL "DISABLED")
     list(APPEND VVV_SRC src/CustomLevels.cpp)
     if(NOT CUSTOM_LEVEL_SUPPORT STREQUAL "NO_EDITOR")
@@ -301,7 +302,7 @@ target_compile_definitions(lodepng-static PRIVATE
 )
 
 if(BUNDLE_DEPENDENCIES)
-    list(APPEND STATIC_LIBRARIES physfs-static tinyxml2-static lodepng-static faudio-static)
+    list(APPEND STATIC_LIBRARIES physfs-static tinyxml2-static lodepng-static faudio-static )
 else()
     list(APPEND STATIC_LIBRARIES lodepng-static)
 endif()
@@ -324,9 +325,11 @@ if(BUNDLE_DEPENDENCIES)
 else()
     find_package(utf8cpp CONFIG)
 
-    target_link_libraries(VVVVVV ${STATIC_LIBRARIES} physfs tinyxml2 utf8cpp FAudio)
+    target_link_libraries(VVVVVV ${STATIC_LIBRARIES} physfs tinyxml2 utf8cpp FAudio )
 endif()
 
+find_package(CURL REQUIRED)
+target_link_libraries(VVVVVV CURL::libcurl)
 
 if(MSVC)
     # Statically link Microsoft's runtime library so end users don't have to install it

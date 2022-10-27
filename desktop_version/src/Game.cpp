@@ -267,6 +267,8 @@ void Game::init(void)
     menuyoff = 0;
     menucountdown = 0;
     levelpage=0;
+    selected_online_level = 0;
+    max_online_pages = 0;
     playcustomlevel=0;
     createmenu(Menu::mainmenu);
 
@@ -5942,6 +5944,7 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
 #if !defined(NO_CUSTOM_LEVELS)
     case Menu::playerworlds:
         option("play a level");
+        option("download levels");
  #if !defined(NO_EDITOR)
         option("level editor");
  #endif
@@ -5950,6 +5953,42 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         option("back to menu");
         menuyoff = -40;
         maxspacing = 15;
+        break;
+    case Menu::onlinelevellist:
+        for (int i = 0; i < (int)cl.onlineLevelList.size(); i++)
+        {
+            option(("    " + cl.onlineLevelList[i].title).c_str());
+        }
+        if ((size_t)((levelpage * 8) + 8) < cl.onlineLevelList.size()) {
+            option("first page");
+        }
+        else
+        {
+            option("next page");
+        }
+        if (levelpage == 0) {
+            option("last page");
+        }
+        else
+        {
+            option("previous page");
+        }
+        option("return to menu");
+        menuxoff = 20;
+        menuyoff = 70 - (menuoptions.size() * 10);
+        menuspacing = 5;
+        return; // no automatic centering
+        break;
+    case Menu::downloadlevelconfirm:
+        option("yes, download");
+        option("return to menu");
+        menuyoff = 40;
+        break;
+    case Menu::downloading:
+        break;
+    case Menu::finisheddownload:
+        menuyoff = -20;
+        option("ok");
         break;
     case Menu::confirmshowlevelspath:
         option("no, don't show me");

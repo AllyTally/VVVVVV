@@ -483,6 +483,72 @@ static void menuactionpress(void)
         }
         break;
     }
+    case Menu::onlinelevellist:
+        if (game.currentmenuoption == (int)game.menuoptions.size() - 1) {
+            //go back to menu
+            music.playef(11);
+            game.returnmenu();
+            map.nexttowercolour();
+        }
+        else if (game.currentmenuoption == (int)game.menuoptions.size() - 2) {
+            //previous page
+            music.playef(11);
+			if (game.levelpage == 0) {
+				game.levelpage = (cl.onlineLevelList.size() - 1) / 8;
+			}
+			else {
+				game.levelpage--;
+			}
+            cl.loadOnlineLevels();
+            game.createmenu(Menu::onlinelevellist, true);
+            game.currentmenuoption = game.menuoptions.size() - 2;
+            map.nexttowercolour();
+        }
+        else if (game.currentmenuoption == (int)game.menuoptions.size() - 3) {
+            //next page
+            music.playef(11);
+			if ((size_t)((game.levelpage * 8) + 8) >= cl.onlineLevelList.size()) {
+				game.levelpage = 0;
+			}
+			else {
+				game.levelpage++;
+			}
+            cl.loadOnlineLevels();
+            game.createmenu(Menu::onlinelevellist, true);
+            game.currentmenuoption = game.menuoptions.size() - 3;
+            map.nexttowercolour();
+        }
+        else {
+            // dl the level
+            game.selected_online_level = game.currentmenuoption;
+            music.playef(11);
+            game.createmenu(Menu::downloadlevelconfirm);
+            map.nexttowercolour();
+        }
+        break;
+    case Menu::downloadlevelconfirm:
+        if (game.currentmenuoption == 0) {
+            // download
+            std::string filename = "levels/" + cl.onlineLevelList[game.selected_online_level].filename;
+            FILESYSTEM_downloadFile(filename.c_str(), cl.onlineLevelList[game.selected_online_level].url.c_str());
+            game.createmenu(Menu::downloading);
+            music.playef(11);
+            map.nexttowercolour();
+        }
+        else {
+            // return to menu
+            music.playef(11);
+            game.returnmenu();
+            map.nexttowercolour();
+        }
+        break;
+    case Menu::finisheddownload:
+        music.playef(11);
+        game.returnmenu();
+        game.returnmenu();
+        game.returnmenu();
+        map.nexttowercolour();
+        break;
 #endif
     case Menu::quickloadlevel:
         switch (game.currentmenuoption)
@@ -546,15 +612,28 @@ static void menuactionpress(void)
             }
             map.nexttowercolour();
             break;
- #if !defined(NO_EDITOR)
         case 1:
+            music.playef(11);
+            game.levelpage = 1;
+            game.max_online_pages = 1;
+            if (cl.loadOnlineLevels()) {
+                game.createmenu(Menu::onlinelevellist);
+            }
+            else
+            {
+                puts("Something went wrong getting levels. Check your internet, maybe?");
+            }
+            map.nexttowercolour();
+            break;
+ #if !defined(NO_EDITOR)
+        case 2:
             //LEVEL EDITOR HOOK
             music.playef(11);
             startmode(20);
             ed.filename="";
             break;
  #endif
-        case OFFSET+2:
+        case OFFSET+3:
             //"OPENFOLDERHOOK"
             if (FILESYSTEM_openDirectoryEnabled()
             && FILESYSTEM_openDirectory(FILESYSTEM_getUserLevelDirectory()))
@@ -567,12 +646,12 @@ static void menuactionpress(void)
                 music.playef(2);
             }
             break;
-        case OFFSET+3:
+        case OFFSET+4:
             music.playef(11);
             game.createmenu(Menu::confirmshowlevelspath);
             map.nexttowercolour();
             break;
-        case OFFSET+4:
+        case OFFSET+5:
             //back
             music.playef(11);
             game.returnmenu();

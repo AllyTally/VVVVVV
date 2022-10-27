@@ -60,6 +60,20 @@ struct LevelMetaData
     int version;
 };
 
+struct OnlineLevelData
+{
+    std::string title;
+    std::string creator;
+    std::string Desc1;
+    std::string Desc2;
+    std::string Desc3;
+    std::string website;
+    std::string filename;
+    std::string url;
+
+    int version;
+};
+
 struct CliPlaytestArgs
 {
     int x;
@@ -88,6 +102,7 @@ public:
     std::string website;
 
     std::vector<LevelMetaData> ListOfMetaData;
+    std::vector<OnlineLevelData> onlineLevelList;
 
     void loadZips(void);
     void getDirectoryData(void);
@@ -148,6 +163,7 @@ public:
     int contents[40 * 30 * numrooms];
     int numtrinkets(void);
     int numcrewmates(void);
+    bool loadOnlineLevels(void);
     RoomProperty roomproperties[numrooms]; //Maxwidth*maxheight
 
     int levmusic;

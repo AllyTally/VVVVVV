@@ -3,6 +3,7 @@
 #define CL_DEFINITION
 #include "CustomLevels.h"
 
+#include <curl/curl.h>
 #include <physfs.h>
 #include <stdio.h>
 #include <string>
@@ -18,6 +19,7 @@
 #include "GraphicsUtil.h"
 #include "KeyPoll.h"
 #include "Map.h"
+#include "ReleaseVersion.h"
 #include "Script.h"
 #include "UtilityClass.h"
 #include "Vlogging.h"
@@ -1812,6 +1814,109 @@ int customlevelclass::numcrewmates(void)
         }
     }
     return temp;
+}
+
+static size_t fileWriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
+{
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
+}
+
+bool customlevelclass::loadOnlineLevels(void)
+{
+    onlineLevelList.clear();
+
+    CURL* curl;
+    CURLcode res;
+    char errbuf[CURL_ERROR_SIZE];
+    std::string returned_xml;
+    curl = curl_easy_init();
+    if (!curl) return false;
+
+    char buffer[1024];
+
+    SDL_snprintf(buffer, sizeof(buffer), "http://127.0.0.1:8000/api/levels?page=%i&order=newest", game.levelpage);
+
+    curl_easy_setopt(curl, CURLOPT_URL, buffer);
+
+    // Provide a buffer to store errors in
+    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+    errbuf[0] = 0;
+
+    // Make sure it works with https
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+    // It should timeout eventually... 6 seconds should be good enough.
+    // This is a blocking function anyway; we shouldn't freeze the game for too long.
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 6L);
+
+    // Write the data to an std::string once we get it
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fileWriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &returned_xml);
+
+    // We should follow redirects; maybe levels?page=1 will redirect to levels/?page=1
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5);
+
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "VVVVVV/" RELEASE_VERSION);
+
+    // Perform the request, res will get the return code
+    res = curl_easy_perform(curl);
+    // cleanup
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK) {
+        size_t len = strlen(errbuf);
+        fprintf(stderr, "\nlibcurl: (%d) ", res);
+        if (len) {
+            (stderr, "%s%s", errbuf,
+                ((errbuf[len - 1] != '\n') ? "\n" : ""));
+        }
+        else {
+            fprintf(stderr, "%s\n", curl_easy_strerror(res));
+        }
+        return false;
+    }
+
+    tinyxml2::XMLDocument doc;
+    doc.Parse(returned_xml.c_str());
+
+    tinyxml2::XMLHandle hDoc(&doc);
+    tinyxml2::XMLElement* pElem;
+    tinyxml2::XMLHandle hRoot(NULL);
+
+    pElem = hDoc.FirstChildElement().ToElement();
+    if (!pElem)
+    {
+        printf(returned_xml.c_str());
+        printf("\n");
+        printf("Received corrupted file: No XML Root.\n");
+        return false;
+    }
+
+    hRoot = tinyxml2::XMLHandle(pElem);
+    for (pElem = hRoot.FirstChildElement("Levels").FirstChild().ToElement(); pElem; pElem = pElem->NextSiblingElement())
+    {
+        std::string pKey(pElem->Value());
+        const char* pText = pElem->GetText();
+        if (pKey == "Level")
+        {
+            OnlineLevelData loaded;
+            loaded.title = (std::string)pText;
+            loaded.creator = (std::string)pElem->Attribute("author");
+            loaded.Desc1 = (std::string)pElem->Attribute("desc1");
+            loaded.Desc2 = (std::string)pElem->Attribute("desc2");
+            loaded.Desc3 = (std::string)pElem->Attribute("desc3");
+            loaded.website = (std::string)pElem->Attribute("website");
+            loaded.url = (std::string)pElem->Attribute("url");
+            loaded.filename = (std::string)pElem->Attribute("filename");
+            onlineLevelList.push_back(loaded);
+        }
+    }
+    pElem = hRoot.FirstChildElement("Pages").ToElement();
+    game.max_online_pages = pElem->IntAttribute("total");
+    return true;
 }
 
 #endif /* NO_CUSTOM_LEVELS */

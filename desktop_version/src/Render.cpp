@@ -178,6 +178,25 @@ static void menurender(void)
       }
       break;
     }
+    case Menu::onlinelevellist:
+    {
+      int tmp = game.currentmenuoption+(game.levelpage*8);
+      if(INBOUNDS_VEC(tmp, cl.onlineLevelList)){
+        const bool nextlastoptions = cl.onlineLevelList.size() > 8;
+        //Don't show next/previous page or return to menu options here!
+        if(nextlastoptions && game.menuoptions.size() - game.currentmenuoption<=3){
+
+        }else{
+          graphics.bigprint( -1, 15, cl.onlineLevelList[tmp].title, tr, tg, tb, true);
+          graphics.Print( -1, 40, "by " + cl.onlineLevelList[tmp].creator, tr, tg, tb, true);
+          graphics.Print( -1, 50, cl.onlineLevelList[tmp].website, tr, tg, tb, true);
+          graphics.Print( -1, 70, cl.onlineLevelList[tmp].Desc1, tr, tg, tb, true);
+          graphics.Print( -1, 80, cl.onlineLevelList[tmp].Desc2, tr, tg, tb, true);
+          graphics.Print( -1, 90, cl.onlineLevelList[tmp].Desc3, tr, tg, tb, true);
+        }
+      }
+      break;
+    }
 #endif
     case Menu::errornostart:
         graphics.Print( -1, 65, "ERROR: This level has", tr, tg, tb, true);
@@ -1451,7 +1470,7 @@ void titlerender(void)
         if(tg>255) tg=255;
         if (tb < 0) tb = 0;
         if(tb>255) tb=255;
-        graphics.drawmenu(tr, tg, tb, game.currentmenuname == Menu::levellist);
+        graphics.drawmenu(tr, tg, tb, ((game.currentmenuname == Menu::levellist) || (game.currentmenuname == Menu::onlinelevellist)));
     }
 
     graphics.drawfade();

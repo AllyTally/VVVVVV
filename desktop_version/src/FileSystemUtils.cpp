@@ -3,11 +3,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <tinyxml2.h>
+#include <curl/curl.h>
 
 #include "BinaryBlob.h"
 #include "Exit.h"
 #include "Graphics.h"
 #include "Maths.h"
+#include "ReleaseVersion.h"
 #include "Screen.h"
 #include "Unused.h"
 #include "UtilityClass.h"
@@ -34,6 +36,8 @@ static int mkdir(char* path, int mode)
 #include <sys/stat.h>
 #define MAX_PATH PATH_MAX
 #endif
+
+SDL_atomic_t downloadProgress;
 
 static bool isInit = false;
 
@@ -983,4 +987,75 @@ void FILESYSTEM_deleteLevelSaves(void)
             PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
         );
     }
+}
+
+static size_t writeBytes(void* ptr, size_t size, size_t nmemb, PHYSFS_File* stream)
+{
+    return PHYSFS_writeBytes(stream, ptr, size * nmemb);
+}
+
+int FILESYSTEM_getDownloadProgress(void)
+{
+    return SDL_AtomicGet(&downloadProgress);
+}
+
+static int downloadProgressCallback(void* ptr, double downloadTotal, double currentDownload, double uploadTotal, double currentUpload)
+{
+    SDL_AtomicSet(&downloadProgress, SDL_max(0, (currentDownload / downloadTotal) * 100));
+    return 0;
+}
+
+static int downloadThread(void* data)
+{
+	void** args = (void**)data;
+    CURL* curl = (CURL*)args[0];
+	PHYSFS_File* file = (PHYSFS_File*)args[1];
+    free(data);
+    curl_easy_perform(curl);
+	curl_easy_cleanup(curl);
+	PHYSFS_close(file);
+	SDL_AtomicSet(&downloadProgress, 100);
+	return 0;
+}
+
+bool FILESYSTEM_downloadFile(const char* name, const char* url)
+{
+    SDL_AtomicSet(&downloadProgress, 0);
+
+    CURL* curl = curl_easy_init();
+
+    if (!curl)
+        return false;
+
+    PHYSFS_File* file = PHYSFS_openWrite(name);
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeBytes);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+    curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, downloadProgressCallback);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "VVVVVV/" RELEASE_VERSION);
+
+    void** args = (void**)malloc(sizeof(void*) * 2);
+    if (args == NULL) {
+		PHYSFS_close(file);
+		curl_easy_cleanup(curl);
+        vlog_error("Failed to allocate memory in FILESYSTEM_downloadFile");
+		return false;
+    }
+    args[0] = curl;
+    args[1] = file;
+    SDL_Thread* thread = SDL_CreateThread(downloadThread, "download", (void*)args);
+    if (!thread)
+    {
+        curl_easy_cleanup(curl);
+        PHYSFS_close(file);
+        vlog_error(
+            "SDL_CreateThread failed: %s",
+            SDL_GetError()
+        );
+        return false;
+    }
+    return true;
 }

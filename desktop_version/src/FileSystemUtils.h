@@ -51,4 +51,7 @@ bool FILESYSTEM_openDirectory(const char *dname);
 bool FILESYSTEM_delete(const char *name);
 void FILESYSTEM_deleteLevelSaves(void);
 
+int FILESYSTEM_getDownloadProgress(void);
+bool FILESYSTEM_downloadFile(const char* name, const char* url);
+
 #endif /* FILESYSTEMUTILS_H */
