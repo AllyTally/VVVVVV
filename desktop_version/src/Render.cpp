@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <sstream>
 
 #include "Constants.h"
 #include "Credits.h"
@@ -197,6 +198,47 @@ static void menurender(void)
       }
       break;
     }
+    case Menu::downloadlevelconfirm:
+    {
+        graphics.Print(-1, 40, "Are you sure you want to", tr, tg, tb, true);
+        graphics.Print(-1, 50, "download this level?", tr, tg, tb, true);
+        graphics.Print(-1, 70, cl.onlineLevelList[game.selected_online_level].title, tr, tg, tb, true);
+        graphics.Print(-1, 80, "by " + cl.onlineLevelList[game.selected_online_level].creator, tr, tg, tb, true);
+        break;
+    }
+    case Menu::finisheddownload:
+    {
+        graphics.Print(-1, 40, "Downloaded level as", tr, tg, tb, true);
+        graphics.Print(-1, 70, cl.onlineLevelList[game.selected_online_level].filename, tr, tg, tb, true);
+        break;
+    }
+    case Menu::downloading:
+    {
+        int progress = FILESYSTEM_getDownloadProgress();
+        if (progress == 100)
+        {
+            game.createmenu(Menu::finisheddownload);
+        }
+        else
+        {
+            int progress_counter = 0;
+            std::stringstream progress_bar;
+            progress_bar << "[";
+            for (; progress_counter < (int)((float)progress / 100 * 20); progress_counter++)
+            {
+                progress_bar << "#";
+            }
+            for (; progress_counter < 20; progress_counter++)
+            {
+                progress_bar << " ";
+            }
+            progress_bar << "] ";
+            if (progress < 10) progress_bar << "0";
+            progress_bar << progress << "%";
+            graphics.Print(-1, 240 / 2 - 4, progress_bar.str(), tr, tg, tb, true);
+        }
+    }
+    break;
 #endif
     case Menu::errornostart:
         graphics.Print( -1, 65, "ERROR: This level has", tr, tg, tb, true);
