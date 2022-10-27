@@ -181,7 +181,7 @@ static void menurender(void)
     }
     case Menu::onlinelevellist:
     {
-      int tmp = game.currentmenuoption+(game.levelpage*8);
+      int tmp = game.currentmenuoption+((game.levelpage - 1) * 8);
       if(INBOUNDS_VEC(tmp, cl.onlineLevelList)){
         const bool nextlastoptions = cl.onlineLevelList.size() > 8;
         //Don't show next/previous page or return to menu options here!

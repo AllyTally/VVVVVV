@@ -1001,7 +1001,10 @@ int FILESYSTEM_getDownloadProgress(void)
 
 static int downloadProgressCallback(void* ptr, double downloadTotal, double currentDownload, double uploadTotal, double currentUpload)
 {
-    SDL_AtomicSet(&downloadProgress, SDL_max(0, (currentDownload / downloadTotal) * 100));
+    if (downloadTotal > 0)
+    {
+        SDL_AtomicSet(&downloadProgress, SDL_max(0, (currentDownload / downloadTotal) * 100));
+    }
     return 0;
 }
 

@@ -1835,7 +1835,7 @@ bool customlevelclass::loadOnlineLevels(void)
 
     char buffer[1024];
 
-    SDL_snprintf(buffer, sizeof(buffer), "http://127.0.0.1:8000/api/levels?page=%i&order=newest", game.levelpage);
+    SDL_snprintf(buffer, sizeof(buffer), "https://levelstest.vsix.dev/api/levels?page=%i&order=newest", game.levelpage);
 
     curl_easy_setopt(curl, CURLOPT_URL, buffer);
 
