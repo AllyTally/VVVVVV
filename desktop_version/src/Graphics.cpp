@@ -10,6 +10,7 @@
 #include "Exit.h"
 #include "FileSystemUtils.h"
 #include "GraphicsUtil.h"
+#include "KeyPoll.h"
 #include "Map.h"
 #include "Music.h"
 #include "Screen.h"
@@ -1277,6 +1278,49 @@ void Graphics::drawcrewman( int x, int y, int t, bool act, bool noshift /*=false
 
         if (flipmode) crewframe -= 6;
     }
+}
+
+void Graphics::drawbutton(const std::string &text, int x, int y, int w, int h, const int r, const int g, const int b)
+{
+    SDL_Rect button = getbuttonarea(text, x, y, w, h);
+
+    bool pressed = key.isUsingTouch() && (key.leftbutton == 1) && (key.mx >= button.x && key.mx <= button.x + button.w && key.my >= button.y && key.my <= button.y + button.h);
+
+    float shadow = pressed ? 2.0 : 3.0;
+    float border = pressed ? 1.0 : 1.2;
+    float inner = pressed ? 1.5 : 1.75;
+
+    FillRect(backBuffer, button.x + 4, button.y + 4, button.w, button.h, r / shadow, g / shadow, b / shadow);
+
+    FillRect(backBuffer, button.x, button.y, button.w, button.h, r / border, g / border, b / border);
+    FillRect(backBuffer, button.x + 2, button.y + 2, button.w - 4, button.h - 4, r / inner, g / inner, b / inner);
+
+    Print(button.x + (button.w / 2) - (len(text) / 2), button.y + (button.h / 2) - 4, text, 255, 255, 255);
+}
+
+void Graphics::drawbutton(const std::string& text, int x, int y, const int r, const int g, const int b)
+{
+    drawbutton(text, x, y, -1, -1, r, g, b);
+}
+
+SDL_Rect Graphics::getbuttonarea(const std::string& text, int x, int y)
+{
+    return getbuttonarea(text, x, y, -1, -1);
+}
+
+SDL_Rect Graphics::getbuttonarea(const std::string& text, int x, int y, int w, int h)
+{
+    if (w < 0) w = len(text) + 24;
+    if (h < 0) h = 26;
+    if (x < 0) x = (320 / 2) - (w / 2);
+    if (y < 0) y = (240 / 2) - (h / 2);
+
+    SDL_Rect rect;
+    rect.x = x;
+    rect.y = y;
+    rect.w = w;
+    rect.h = h;
+    return rect;
 }
 
 void Graphics::drawpixeltextbox(

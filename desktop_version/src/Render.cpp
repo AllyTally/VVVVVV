@@ -23,6 +23,7 @@
 static int tr;
 static int tg;
 static int tb;
+static bool nomenu;
 
 struct MapRenderData
 {
@@ -163,6 +164,14 @@ static void menurender(void)
         if(music.mmmmmm){
             graphics.Print( 10, 230, "[MMMMMM Mod Installed]", tr/2, tg/2, tb/2);
         }
+
+        if (key.isUsingTouch())
+        {
+            nomenu = true;
+            graphics.drawbutton("play", -1, -1, 140, 52, tr, tg, tb);
+            graphics.drawbutton("player worlds", -1, 164, 140, 26, tr, tg, tb);
+        }
+
         break;
 #if !defined(NO_CUSTOM_LEVELS)
     case Menu::levellist:
@@ -1449,6 +1458,7 @@ void titlerender(void)
         tg = graphics.col_tg;
         tb = graphics.col_tb;
 
+        nomenu = false;
         menurender();
 
         tr = int(tr * .8f);
@@ -1460,7 +1470,11 @@ void titlerender(void)
         if(tg>255) tg=255;
         if (tb < 0) tb = 0;
         if(tb>255) tb=255;
-        graphics.drawmenu(tr, tg, tb, game.currentmenuname == Menu::levellist);
+
+        if (!nomenu)
+        {
+            graphics.drawmenu(tr, tg, tb, game.currentmenuname == Menu::levellist);
+        }
     }
 
     graphics.drawfade();

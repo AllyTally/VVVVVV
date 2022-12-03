@@ -52,6 +52,8 @@ public:
 
     void Poll(void);
 
+    bool isUsingTouch(void);
+
     bool isDown(SDL_Keycode key);
 
     bool isDown(std::vector<SDL_GameControllerButton> buttons);
@@ -68,6 +70,9 @@ public:
     std::string keybuffer;
 
     bool linealreadyemptykludge;
+
+    bool usingTouch;
+    bool wasPressed;
 
 private:
     std::map<SDL_JoystickID, SDL_GameController*> controllers;

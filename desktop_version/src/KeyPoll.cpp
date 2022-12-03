@@ -48,6 +48,9 @@ KeyPoll::KeyPoll(void)
     linealreadyemptykludge = false;
 
     isActive = true;
+
+    usingTouch = true;
+    wasPressed = false;
 }
 
 void KeyPoll::enabletextentry(void)
@@ -306,6 +309,19 @@ void KeyPoll::Poll(void)
             break;
         }
 
+        /* Touch Events */
+        case SDL_FINGERDOWN:
+        case SDL_FINGERMOTION:
+            mx = (int)(evt.tfinger.x * 320);
+            my = (int)(evt.tfinger.y * 240);
+            leftbutton = 1;
+            break;
+        case SDL_FINGERUP:
+            mx = (int)(evt.tfinger.x * 320);
+            my = (int)(evt.tfinger.y * 240);
+            leftbutton = 0;
+            break;
+
         /* Window Events */
         case SDL_WINDOWEVENT:
             switch (evt.window.event)
@@ -413,6 +429,11 @@ void KeyPoll::Poll(void)
     {
         toggleFullscreen();
     }
+}
+
+bool KeyPoll::isUsingTouch()
+{
+    return usingTouch;
 }
 
 bool KeyPoll::isDown(SDL_Keycode key)

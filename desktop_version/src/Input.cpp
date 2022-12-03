@@ -359,6 +359,40 @@ static void slidermodeinput(void)
     *user_changing_volume = SDL_clamp(*user_changing_volume, 0, USER_VOLUME_MAX);
 }
 
+static bool buttonclicked(const std::string& text, int x, int y)
+{
+    SDL_Rect button = graphics.getbuttonarea(text, x, y);
+    return (key.leftbutton == 0 && key.wasPressed) && (key.mx >= button.x && key.mx <= button.x + button.w && key.my >= button.y && key.my <= button.y + button.h);
+}
+
+static bool buttonclicked(const std::string& text, int x, int y, int w, int h)
+{
+    SDL_Rect button = graphics.getbuttonarea(text, x, y, w, h);
+    return (key.leftbutton == 0 && key.wasPressed) && (key.mx >= button.x && key.mx <= button.x + button.w && key.my >= button.y && key.my <= button.y + button.h);
+}
+
+static void menubuttonclick(void)
+{
+    switch (game.currentmenuname)
+    {
+    case Menu::mainmenu:
+    
+        if (buttonclicked("play", -1, -1, 140, 52))
+        {
+            music.playef(11);
+            key.wasPressed = false;
+            map.nexttowercolour();
+        }
+        if (buttonclicked("player worlds", -1, 164, 140, 26))
+        {
+            music.playef(11);
+            key.wasPressed = false;
+            map.nexttowercolour();
+        }
+        break;
+    }
+}
+
 static void menuactionpress(void)
 {
     switch (game.currentmenuname)
@@ -1880,6 +1914,11 @@ void titleinput(void)
     if (!game.press_action && !game.press_left && !game.press_right && !key.isDown(27) && !key.isDown(game.controllerButton_esc)) game.jumpheld = false;
     if (!game.press_map) game.mapheld = false;
 
+    if (graphics.fademode == FADE_NONE && key.isUsingTouch())
+    {
+        menubuttonclick();
+    }
+
     if (!game.jumpheld && graphics.fademode == FADE_NONE)
     {
         if (game.press_action || game.press_left || game.press_right || game.press_map || key.isDown(27) || key.isDown(game.controllerButton_esc))
@@ -1985,6 +2024,8 @@ void titleinput(void)
     {
         handlefadetomode();
     }
+
+    key.wasPressed = (key.leftbutton == 1);
 }
 
 void gameinput(void)
@@ -2417,6 +2458,8 @@ void gameinput(void)
     {
         game.deathseq = 30;
     }
+
+    key.wasPressed = (key.leftbutton == 1);
 }
 
 static void mapmenuactionpress(bool version2_2);
@@ -2605,6 +2648,8 @@ void mapinput(void)
         if (game.menupage == 29) game.menupage = 32;
         if (game.menupage == 33) game.menupage = 30;
     }
+
+    key.wasPressed = (key.leftbutton == 1);
 }
 
 static void mapmenuactionpress(const bool version2_2)
@@ -2871,6 +2916,7 @@ void teleporterinput(void)
             }
         }
     }
+    key.wasPressed = (key.leftbutton == 1);
 }
 
 void gamecompleteinput(void)
