@@ -1286,16 +1286,18 @@ void Graphics::drawbutton(const std::string &text, int x, int y, int w, int h, c
 
     bool pressed = key.isUsingTouch() && (key.leftbutton == 1) && (key.mx >= button.x && key.mx <= button.x + button.w && key.my >= button.y && key.my <= button.y + button.h);
 
-    float shadow = pressed ? 2.0 : 3.0;
+    float shadow = pressed ? 4.0: 6.0;
     float border = pressed ? 1.0 : 1.2;
-    float inner = pressed ? 1.5 : 1.75;
+    float inner = pressed ? 3.0: 3.5;
 
     FillRect(backBuffer, button.x + 4, button.y + 4, button.w, button.h, r / shadow, g / shadow, b / shadow);
 
     FillRect(backBuffer, button.x, button.y, button.w, button.h, r / border, g / border, b / border);
     FillRect(backBuffer, button.x + 2, button.y + 2, button.w - 4, button.h - 4, r / inner, g / inner, b / inner);
 
-    Print(button.x + (button.w / 2) - (len(text) / 2), button.y + (button.h / 2) - 4, text, 255, 255, 255);
+    // On the old mobile version, this text was white. It felt out of place, so it was decided that the "main" color might be better.
+
+    Print(button.x + (button.w / 2) - (len(text) / 2), button.y + (button.h / 2) - 4, text, r / border, g / border, b / border);
 }
 
 void Graphics::drawbutton(const std::string& text, int x, int y, const int r, const int g, const int b)

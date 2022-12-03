@@ -379,14 +379,26 @@ static void menubuttonclick(void)
     
         if (buttonclicked("play", -1, -1, 140, 52))
         {
-            music.playef(11);
             key.wasPressed = false;
-            map.nexttowercolour();
+            music.playef(11);
+            if (!game.save_exists() && !game.anything_unlocked())
+            {
+                //No saves exist, just start a new game
+                startmode(0);
+            }
+            else
+            {
+                //Bring you to the normal playmenu
+                game.createmenu(Menu::play);
+                map.nexttowercolour();
+            }
+            break;
         }
         if (buttonclicked("player worlds", -1, 164, 140, 26))
         {
-            music.playef(11);
             key.wasPressed = false;
+            music.playef(11);
+            game.createmenu(Menu::playerworlds);
             map.nexttowercolour();
         }
         break;
@@ -1914,7 +1926,7 @@ void titleinput(void)
     if (!game.press_action && !game.press_left && !game.press_right && !key.isDown(27) && !key.isDown(game.controllerButton_esc)) game.jumpheld = false;
     if (!game.press_map) game.mapheld = false;
 
-    if (graphics.fademode == FADE_NONE && key.isUsingTouch())
+    if (graphics.fademode == FADE_NONE && key.isUsingTouch() && game.menustart)
     {
         menubuttonclick();
     }
@@ -1993,17 +2005,18 @@ void titleinput(void)
         if (game.currentmenuoption < 0) game.currentmenuoption = game.menuoptions.size()-1;
         if (game.currentmenuoption >= (int) game.menuoptions.size() ) game.currentmenuoption = 0;
 
-        if (game.press_action)
+        if (game.press_action || key.leftbutton)
         {
             if (!game.menustart)
             {
                 game.menustart = true;
+                key.wasPressed = false;
                 music.play(6);
                 music.playef(18);
                 game.screenshake = 10;
                 game.flashlight = 5;
             }
-            else
+            else if (game.press_action)
             {
                 menuactionpress();
             }

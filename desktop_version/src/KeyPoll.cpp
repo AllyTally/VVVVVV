@@ -147,6 +147,7 @@ void KeyPoll::Poll(void)
         /* Keyboard Input */
         case SDL_KEYDOWN:
         {
+            usingTouch = false;
             keymap[evt.key.keysym.sym] = true;
 
             if (evt.key.keysym.sym == SDLK_BACKSPACE)
@@ -193,6 +194,7 @@ void KeyPoll::Poll(void)
             break;
         }
         case SDL_KEYUP:
+            usingTouch = false;
             keymap[evt.key.keysym.sym] = false;
             if (evt.key.keysym.sym == SDLK_BACKSPACE)
             {
@@ -212,6 +214,7 @@ void KeyPoll::Poll(void)
             my = evt.motion.y;
             break;
         case SDL_MOUSEBUTTONDOWN:
+            usingTouch = true; // Debug!
             switch (evt.button.button)
             {
             case SDL_BUTTON_LEFT:
@@ -312,11 +315,13 @@ void KeyPoll::Poll(void)
         /* Touch Events */
         case SDL_FINGERDOWN:
         case SDL_FINGERMOTION:
+            usingTouch = true;
             mx = (int)(evt.tfinger.x * 320);
             my = (int)(evt.tfinger.y * 240);
             leftbutton = 1;
             break;
         case SDL_FINGERUP:
+            usingTouch = true;
             mx = (int)(evt.tfinger.x * 320);
             my = (int)(evt.tfinger.y * 240);
             leftbutton = 0;
@@ -402,6 +407,7 @@ void KeyPoll::Poll(void)
         switch (evt.type)
         {
         case SDL_KEYDOWN:
+            usingTouch = false;
             if (evt.key.repeat == 0)
             {
                 hidemouse = true;
