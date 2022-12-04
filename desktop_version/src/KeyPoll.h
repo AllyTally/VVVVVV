@@ -29,6 +29,12 @@ enum Kybrd
     KEYBOARD_BACKSPACE = SDLK_BACKSPACE
 };
 
+class VVV_Finger : public SDL_Finger
+{
+public:
+    bool pressed;
+};
+
 class KeyPoll
 {
 public:
@@ -75,6 +81,11 @@ public:
     bool wasPressed;
     int lastmx;
     int lastdir;
+
+    std::map<SDL_FingerID, VVV_Finger*> fingers;
+
+    SDL_FingerID movementFinger;
+    SDL_FingerID flipFinger;
 
 private:
     std::map<SDL_JoystickID, SDL_GameController*> controllers;

@@ -360,9 +360,14 @@ static void slidermodeinput(void)
 }
 
 
+static bool pointinarea(int px, int py, int x, int y, int x2, int y2)
+{
+    return (px >= x && px <= x2 && py >= y && py <= y2);
+}
+
 static bool mouseinarea(int x, int y, int x2, int y2)
 {
-    return (key.mx >= x && key.mx <= x2 && key.my >= y && key.my <= y2);
+    return pointinarea(key.mx, key.my, x, y, x2, y2);
 }
 
 static bool buttonclicked(const std::string& text, int x, int y)
@@ -386,6 +391,26 @@ static bool areaclicked(int x, int y, int x2, int y2)
     bool clicked = (key.leftbutton == 1 && !key.wasPressed) && mouseinarea(x, y, x2, y2);
     key.wasPressed = true;
     return clicked;
+}
+
+static VVV_Finger* areatouched(int x, int y, int x2, int y2)
+{
+    std::map<SDL_FingerID, VVV_Finger*>::iterator it;
+
+    for (it = key.fingers.begin(); it != key.fingers.end(); it++)
+    {
+        if (it->second->pressed && pointinarea(it->second->x * 320, it->second->y * 240, x, y, x2, y2))
+        {
+            return it->second;
+        }
+    }
+    return NULL;
+}
+
+static bool fingerinarea(SDL_FingerID fingerID, int x, int y, int x2, int y2)
+{
+    VVV_Finger* finger = key.fingers[fingerID];
+    return pointinarea(finger->x * 320, finger->y * 240, x, y, x2, y2);
 }
 
 static bool clicked()
@@ -2088,30 +2113,29 @@ void gameinput(void)
             game.press_right = true;
         }
 
-        if (areaclicked(320 / 2, 0, 319, 239))
+        VVV_Finger* touched = areatouched(320 / 2, 0, 319, 239);
+        if (touched != NULL)
         {
             // We're trying to flip!
             game.press_action = true;
+            key.flipFinger = touched->id;
         }
-        else
+
+        touched = areatouched(0, 0, (320 / 2) - 1, 239);
+        if (touched != NULL)
         {
-            // Okay, so we're trying to move
-            if ((key.lastmx - key.mx) != 0)
-            {
-                key.lastdir = key.lastmx - key.mx;
-            }
+            // We're trying to move!
+            key.movementFinger = touched->id;
+        }
 
-            if (key.leftbutton == 0)
-            {
-                key.lastdir = 0;
-            }
-
-            if (key.lastdir > 0 && key.leftbutton == 1)
+        if (key.fingers.count(key.movementFinger) > 0)
+        {
+            VVV_Finger* finger = key.fingers[key.movementFinger];
+            if (finger->x < 0.25)
             {
                 game.press_left = true;
             }
-
-            if (key.lastdir < 0 && key.leftbutton == 1)
+            else if (finger->x >= 0.25)
             {
                 game.press_right = true;
             }

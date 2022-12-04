@@ -141,6 +141,15 @@ void KeyPoll::Poll(void)
     bool hidemouse = false;
     bool altpressed = false;
     bool fullscreenkeybind = false;
+
+    // Reset the pressed status of all fingers
+    std::map<SDL_FingerID, VVV_Finger*>::iterator it;
+
+    for (it = fingers.begin(); it != fingers.end(); it++)
+    {
+        it->second->pressed = false;
+    }
+
     SDL_Event evt;
     while (SDL_PollEvent(&evt))
     {
@@ -316,18 +325,36 @@ void KeyPoll::Poll(void)
 
         /* Touch Events */
         case SDL_FINGERDOWN:
+        {
+
+            VVV_Finger* finger = (VVV_Finger*)SDL_GetTouchFinger(evt.tfinger.touchId, 0);
+            finger->pressed = true;
+            fingers[evt.tfinger.fingerId] = finger;
+
+            usingTouch = true;
+            mx = (int)(evt.tfinger.x * 320);
+            my = (int)(evt.tfinger.y * 240);
+            leftbutton = 1;
+        }
         case SDL_FINGERMOTION:
+        {
+            VVV_Finger* finger = (VVV_Finger *) SDL_GetTouchFinger(evt.tfinger.touchId, 0);
+            fingers[evt.tfinger.fingerId] = finger;
             usingTouch = true;
             mx = (int)(evt.tfinger.x * 320);
             my = (int)(evt.tfinger.y * 240);
             leftbutton = 1;
             break;
+        }
         case SDL_FINGERUP:
+        {
+            fingers.erase(evt.tfinger.fingerId);
             usingTouch = true;
             mx = (int)(evt.tfinger.x * 320);
             my = (int)(evt.tfinger.y * 240);
             leftbutton = 0;
             break;
+        }
 
         /* Window Events */
         case SDL_WINDOWEVENT:
