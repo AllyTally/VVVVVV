@@ -475,6 +475,19 @@ void Graphics::map_option(int opt, int num_opts, const std::string& text, bool s
     }
 }
 
+void Graphics::fillboxabs(int x, int y, int x2, int y2, int r, int g, int b)
+{
+    FillRect(backBuffer, x, y, x2 - x, 1, r, g, b);
+    FillRect(backBuffer, x, y2 - 1, x2 - x, 1, r, g, b);
+    FillRect(backBuffer, x, y, 1, y2 - y, r, g, b);
+    FillRect(backBuffer, x2 - 1, y, 1, y2 - y, r, g, b);
+}
+
+void Graphics::fillbox(int x, int y, int w, int h, int r, int g, int b)
+{
+    fillboxabs(x, y, x + w, y + h, r, g, b);
+}
+
 static void print_char(
     SDL_Surface* const buffer,
     SDL_Surface* const font,
@@ -1158,6 +1171,34 @@ void Graphics::drawimage( int t, int xp, int yp, bool cent/*=false*/ )
         trect.h= images[t]->h;
 
         BlitSurfaceStandard(images[t], NULL, backBuffer, &trect);
+    }
+}
+
+void Graphics::drawmobileimage(int t, int xp, int yp, bool cent/*=false*/)
+{
+    if (!INBOUNDS_VEC(t, mobileimages) || mobileimages[t] == NULL)
+    {
+        return;
+    }
+
+    SDL_Rect trect;
+    if (cent)
+    {
+        trect.x = 160 - int(mobileimages[t]->w / 2);
+        trect.y = yp;
+        trect.w = mobileimages[t]->w;
+        trect.h = mobileimages[t]->h;
+        BlitSurfaceStandard(mobileimages[t], NULL, backBuffer, &trect);
+    }
+    else
+    {
+
+        trect.x = xp;
+        trect.y = yp;
+        trect.w = mobileimages[t]->w;
+        trect.h = mobileimages[t]->h;
+
+        BlitSurfaceStandard(mobileimages[t], NULL, backBuffer, &trect);
     }
 }
 
@@ -3453,6 +3494,18 @@ bool Graphics::reloadresources(void)
     images.push_back(grphx.im_image10);
     images.push_back(grphx.im_image11);
     images.push_back(grphx.im_image12);
+
+    mobileimages.clear();
+
+    mobileimages.push_back(grphx.im_mobileimage0);
+    mobileimages.push_back(grphx.im_mobileimage1);
+    mobileimages.push_back(grphx.im_mobileimage2);
+    mobileimages.push_back(grphx.im_mobileimage3);
+    mobileimages.push_back(grphx.im_mobileimage4);
+    mobileimages.push_back(grphx.im_mobileimage5);
+    mobileimages.push_back(grphx.im_mobileimage6);
+    mobileimages.push_back(grphx.im_mobileimage7);
+    mobileimages.push_back(grphx.im_mobileimage8);
 
     gameScreen.LoadIcon();
 

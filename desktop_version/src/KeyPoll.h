@@ -73,6 +73,8 @@ public:
 
     bool usingTouch;
     bool wasPressed;
+    int lastmx;
+    int lastdir;
 
 private:
     std::map<SDL_JoystickID, SDL_GameController*> controllers;

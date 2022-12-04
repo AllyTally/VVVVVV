@@ -190,6 +190,13 @@ static const inline struct ImplFunc* get_gamestate_funcs(
         {Func_delta, preloaderrender},
     FUNC_LIST_END
 
+    FUNC_LIST_BEGIN(CONTROLTUTORIALMODE)
+        {Func_input, controltutorialinput},
+        {Func_fixed, controltutorialrenderfixed},
+        {Func_delta, controltutorialrender},
+        {Func_fixed, controltutoriallogic},
+    FUNC_LIST_END
+
 #undef FUNC_LIST_END
 #undef FUNC_LIST_BEGIN
 

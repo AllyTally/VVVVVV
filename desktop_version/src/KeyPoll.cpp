@@ -51,6 +51,8 @@ KeyPoll::KeyPoll(void)
 
     usingTouch = true;
     wasPressed = false;
+    lastmx = 0;
+    lastdir = 0;
 }
 
 void KeyPoll::enabletextentry(void)

@@ -9,6 +9,8 @@ void maprender(void);
 
 void teleporterrender(void);
 
+void controltutorialrender(void);
+
 void gamecompleterender(void);
 
 void gamecompleterender2(void);

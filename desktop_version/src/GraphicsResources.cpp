@@ -77,28 +77,38 @@ SDL_Surface* LoadImage(const char *filename)
 
 void GraphicsResources::init(void)
 {
-    im_tiles =        LoadImage("graphics/tiles.png");
-    im_tiles2 =        LoadImage("graphics/tiles2.png");
-    im_tiles3 =        LoadImage("graphics/tiles3.png");
-    im_entcolours =        LoadImage("graphics/entcolours.png");
-    im_sprites =        LoadImage("graphics/sprites.png");
-    im_flipsprites =    LoadImage("graphics/flipsprites.png");
-    im_bfont =        LoadImage("graphics/font.png");
-    im_teleporter =        LoadImage("graphics/teleporter.png");
+    im_tiles       = LoadImage("graphics/tiles.png");
+    im_tiles2      = LoadImage("graphics/tiles2.png");
+    im_tiles3      = LoadImage("graphics/tiles3.png");
+    im_entcolours  = LoadImage("graphics/entcolours.png");
+    im_sprites     = LoadImage("graphics/sprites.png");
+    im_flipsprites = LoadImage("graphics/flipsprites.png");
+    im_bfont       = LoadImage("graphics/font.png");
+    im_teleporter  = LoadImage("graphics/teleporter.png");
 
-    im_image0 =        LoadImage("graphics/levelcomplete.png");
-    im_image1 =        LoadImage("graphics/minimap.png");
-    im_image2 =        LoadImage("graphics/covered.png");
-    im_image3 =        LoadImage("graphics/elephant.png");
-    im_image4 =        LoadImage("graphics/gamecomplete.png");
-    im_image5 =        LoadImage("graphics/fliplevelcomplete.png");
-    im_image6 =        LoadImage("graphics/flipgamecomplete.png");
-    im_image7 =        LoadImage("graphics/site.png");
-    im_image8 =        LoadImage("graphics/site2.png");
-    im_image9 =        LoadImage("graphics/site3.png");
-    im_image10 =        LoadImage("graphics/ending.png");
-    im_image11 =        LoadImage("graphics/site4.png");
-    im_image12 =        LoadImage("graphics/minimap.png");
+    im_image0  = LoadImage("graphics/levelcomplete.png");
+    im_image1  = LoadImage("graphics/minimap.png");
+    im_image2  = LoadImage("graphics/covered.png");
+    im_image3  = LoadImage("graphics/elephant.png");
+    im_image4  = LoadImage("graphics/gamecomplete.png");
+    im_image5  = LoadImage("graphics/fliplevelcomplete.png");
+    im_image6  = LoadImage("graphics/flipgamecomplete.png");
+    im_image7  = LoadImage("graphics/site.png");
+    im_image8  = LoadImage("graphics/site2.png");
+    im_image9  = LoadImage("graphics/site3.png");
+    im_image10 = LoadImage("graphics/ending.png");
+    im_image11 = LoadImage("graphics/site4.png");
+    im_image12 = LoadImage("graphics/minimap.png");
+
+    im_mobileimage0 = LoadImage("graphics/controls/touchscreen.png");
+    im_mobileimage1 = LoadImage("graphics/controls/lefthand_off.png");
+    im_mobileimage2 = LoadImage("graphics/controls/lefthand_near.png");
+    im_mobileimage3 = LoadImage("graphics/controls/lefthand_far.png");
+    im_mobileimage4 = LoadImage("graphics/controls/righthand_off.png");
+    im_mobileimage5 = LoadImage("graphics/controls/righthand_near.png");
+    im_mobileimage6 = LoadImage("graphics/controls/righthand_far.png");
+    im_mobileimage7 = LoadImage("graphics/controls/arrowleft.png");
+    im_mobileimage8 = LoadImage("graphics/controls/arrowright.png");
 }
 
 
@@ -130,5 +140,16 @@ void GraphicsResources::destroy(void)
     CLEAR(im_image10);
     CLEAR(im_image11);
     CLEAR(im_image12);
+
+    CLEAR(im_mobileimage0);
+    CLEAR(im_mobileimage1);
+    CLEAR(im_mobileimage2);
+    CLEAR(im_mobileimage3);
+    CLEAR(im_mobileimage4);
+    CLEAR(im_mobileimage5);
+    CLEAR(im_mobileimage6);
+    CLEAR(im_mobileimage7);
+    CLEAR(im_mobileimage8);
+
 #undef CLEAR
 }

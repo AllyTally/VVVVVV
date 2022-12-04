@@ -489,6 +489,23 @@ public:
     bool disableaudiopause;
     bool disabletemporaryaudiopause;
     bool inputdelay;
+
+    //Control types!
+    //0 is swipe, 1 is both sides, 2 is d-pad
+    
+    int controlstyle;
+    int last_left;
+    int last_right;
+    int last_action;
+    int controlsensitivity;
+
+    //Mobile menu options
+    bool mobilemenu;
+    int controltutorialstate;
+    int controltutorialstatedelay;
+    int controllerp1;
+    int controllerp2;
+    int controllerp3;
 };
 
 #ifndef GAME_DEFINITION

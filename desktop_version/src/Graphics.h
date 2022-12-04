@@ -131,6 +131,8 @@ public:
 
     void drawimage(int t, int xp, int yp, bool cent=false);
 
+    void drawmobileimage(int t, int xp, int yp, bool cent);
+
     void drawimagecol(int t, int xp, int yp, bool cent= false);
 
     void updatetextboxes(void);
@@ -148,6 +150,10 @@ public:
     void map_tab(int opt, const std::string& text, bool selected = false);
 
     void map_option(int opt, int num_opts, const std::string& text, bool selected = false);
+
+    void fillboxabs(int x, int y, int x2, int y2, int r, int g, int b);
+
+    void fillbox(int x, int y, int w, int h, int r, int g, int b);
 
     void do_print(int x, int y, const std::string& text, int r, int g, int b, int a, int scale);
 
@@ -260,6 +266,7 @@ public:
     int m;
 
     std::vector <SDL_Surface*> images;
+    std::vector <SDL_Surface*> mobileimages;
 
     std::vector <SDL_Surface*> tele;
     std::vector <SDL_Surface*> tiles;

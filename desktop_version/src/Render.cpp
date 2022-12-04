@@ -19,6 +19,7 @@
 #include "Screen.h"
 #include "Script.h"
 #include "UtilityClass.h"
+#include "Render.h"
 
 static int tr;
 static int tg;
@@ -2764,4 +2765,135 @@ void teleporterrender(void)
     {
         graphics.render();
     }
+}
+
+void controltutorialrender(void)
+{
+    // what does this mean:
+    // dwgfx.drawbutton(game, help);
+
+    FillRect(graphics.backBuffer, 0, 0, 320, 240, 10, 24, 26);
+
+    graphics.drawentities();
+    
+    graphics.drawtextbox(160 - 120, 2, 30, 3, 174, 174, 174);
+    graphics.Print(5, 10, "-= TOUCHSCREEN CONTROLS =-", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true);
+
+    if (game.controltutorialstate >= 3 && game.controltutorialstate <= 6)
+    {
+        graphics.Print(5, 195 + 8, "Swipe and hold on the left side", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true);
+        graphics.Print(5, 205 + 8, "of the screen to move", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true);
+    }
+
+    if (game.controltutorialstate >= 7 && game.controltutorialstate <= 11)
+    {
+        graphics.Print(5, 200 + 8, "Tap on the right to flip", 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true);
+    }
+
+    if (game.controltutorialstate >= 13)
+    {
+        /*if (help.slowsine % 8 > 4)
+        {
+            graphics.drawbutton("START", 160 + 4 - 24, 210, 8 * 7, -1, 65, 185, 207);
+        }
+        else
+        {
+            graphics.drawbutton("START", 160 + 4 - 24, 210, 8 * 7, -1, 65 * 1.2, 185 * 1.2, 207 * 1.2);
+        }*/
+
+        // Buttons render slightly differently now, so no flashy!
+        graphics.drawbutton("START", 160 + 4 - 24, 210, 8 * 7, -1, 65 * 1.2, 185 * 1.2, 207 * 1.2);
+    }
+
+     graphics.drawmobileimage(0, 0, 70 + ((100 - game.controllerp1) * 3), true);
+
+    //Draw touchpoints
+    if (!game.press_left && !game.press_right)
+    {
+        //- 1 Left hand off
+        graphics.drawmobileimage(1, 56, 106 + ((100 - game.controllerp1) * 3), false);
+    }
+    else if (game.press_left)
+    {
+        //- 2 Left hand moving left
+        if (game.controllerp3 <= 8)
+        {
+            if (help.slowsine % 16 > 8)
+            {
+                graphics.fillbox(116, 120, 16, 16, 255, 255, 255);
+            }
+            else
+            {
+                graphics.fillbox(116+2, 120+2, 16-4, 16-4, 255, 255, 255);
+            }
+            graphics.drawmobileimage(3, 56, 106, false);
+            graphics.drawmobileimage(7, 136, 120, false);
+        }
+        else
+        {
+            if (help.slowsine % 16 > 8)
+            {
+                graphics.fillbox(104, 118, 16, 16, 255, 255, 255);
+            }
+            else
+            {
+                graphics.fillbox(104+2, 118+2, 16-4, 16-4, 255, 255, 255);
+            }
+            graphics.drawmobileimage(2, 56, 106, false);
+            graphics.drawmobileimage(7, 124, 120, false);
+        }
+    }
+    else if(game.press_right)
+    {
+        //- 3 Left hand moving right
+        if (game.controllerp3 <= 8)
+        {
+            if (help.slowsine % 16 > 8)
+            {
+                graphics.fillbox(104, 118, 16, 16, 255, 255, 255);
+            }
+            else
+            {
+                graphics.fillbox(104+2, 118+2, 16-4, 16-4, 255, 255, 255);
+            }
+            graphics.drawmobileimage(2, 56, 106, false);
+            graphics.drawmobileimage(8, 84, 120, false);
+        }
+        else
+        {
+            if (help.slowsine % 16 > 8)
+            {
+                graphics.fillbox(116, 120, 16, 16, 255, 255, 255);
+            }
+            else
+            {
+                graphics.fillbox(116+2, 120+2, 16-4, 16-4, 255, 255, 255);
+            }
+            graphics.drawmobileimage(3, 56, 106, false);
+            graphics.drawmobileimage(8, 96, 120, false);
+        }
+    }
+
+    if (game.controltutorialstate >= 7)
+    {
+        if (game.controllerp2 > 0)
+        {
+            if (help.slowsine % 16 > 8)
+            {
+                graphics.fillbox(188, 120, 16, 16, 255, 255, 255);
+            }
+            else
+            {
+                graphics.fillbox(188+2, 120+2, 16-4, 16-4, 255, 255, 255);
+            }
+            graphics.drawmobileimage(6, 193, 106, false);
+        }
+        else
+        {
+            graphics.drawmobileimage(4, 193, 106 + ((100 - game.controllerp1) * 3), false);
+        }
+    }
+
+    graphics.render();
+    ClearSurface(graphics.backBuffer); // So the blackout() resumes normally
 }

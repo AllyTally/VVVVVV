@@ -369,6 +369,19 @@ void Game::init(void)
     disableaudiopause = false;
     disabletemporaryaudiopause = true;
     inputdelay = false;
+
+    controlstyle = 0;
+    last_left = 0;
+    last_right = 0;
+    last_action = 0;
+    controlsensitivity = 50;
+
+    mobilemenu = true;
+    controltutorialstate = 0;
+    controltutorialstatedelay = 0;
+    controllerp1 = 0;
+    controllerp2 = 0;
+    controllerp3 = 0;
 }
 
 void Game::lifesequence(void)
@@ -759,7 +772,14 @@ void Game::updatestate(void)
             break;
         case 4:
             //End of opening cutscene for now
-            graphics.createtextbox("  Press arrow keys or WASD to move  ", -1, 195, 174, 174, 174);
+            if (key.isUsingTouch())
+            {
+                graphics.createtextbox("  Swipe on the left side to move  ", -1, 195, 174, 174, 174);
+            }
+            else
+            {
+                graphics.createtextbox("  Press arrow keys or WASD to move  ", -1, 195, 174, 174, 174);
+            }
             graphics.textboxtimer(60);
             state = 0;
             break;
@@ -977,9 +997,12 @@ void Game::updatestate(void)
         case 17:
             //Arrow key tutorial
             obj.removetrigger(17);
-            graphics.createtextbox(" If you prefer, you can press UP or ", -1, 195, 174, 174, 174);
-            graphics.addline("   DOWN instead of ACTION to flip.");
-            graphics.textboxtimer(100);
+            if (!key.isUsingTouch())
+            {
+                graphics.createtextbox(" If you prefer, you can press UP or ", -1, 195, 174, 174, 174);
+                graphics.addline("   DOWN instead of ACTION to flip.");
+                graphics.textboxtimer(100);
+            }
             state = 0;
             break;
 
@@ -1007,7 +1030,14 @@ void Game::updatestate(void)
                 graphics.textboxremovefast();
                 obj.flags[3] = true;
                 state = 0;
-                graphics.createtextbox("  Press ACTION to flip  ", -1, 25, 174, 174, 174);
+                if (key.isUsingTouch())
+                {
+                    graphics.createtextbox("  Tap on the right side to flip  ", -1, 25, 174, 174, 174);
+                }
+                else
+                {
+                    graphics.createtextbox("  Press ACTION to flip  ", -1, 25, 174, 174, 174);
+                }
                 graphics.textboxtimer(60);
             }
             obj.removetrigger(22);

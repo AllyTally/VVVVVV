@@ -11,4 +11,6 @@ void teleporterrenderfixed(void);
 
 void gamecompleterenderfixed(void);
 
+void controltutorialrenderfixed(void);
+
 #endif /* RENDERFIXED_H */

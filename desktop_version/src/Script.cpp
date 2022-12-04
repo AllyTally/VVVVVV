@@ -1138,6 +1138,39 @@ void scriptclass::run(void)
                     graphics.resumegamemode = true;
                     game.prevgamestate = GAMEMODE;
                 }
+                else if (words[1] == "controls")
+                {
+                    // 
+                    // We need to save stats here...
+                    game.gamestate = CONTROLTUTORIALMODE;
+                    game.controltutorialstate = 0;
+                    game.controltutorialstatedelay = 0;
+                    game.controllerp1 = 0;
+                    game.controllerp2 = 0;
+                    game.controllerp3 = 0;
+
+                    map.contents[25 + 8 * 40] = 495;
+                    map.contents[26 + 8 * 40] = 495;
+                    map.contents[34 + 8 * 40] = 495;
+                    map.contents[35 + 8 * 40] = 495;
+
+                    map.contents[36 + 4 * 40] = 0;
+                    map.contents[37 + 4 * 40] = 0;
+                    map.contents[38 + 4 * 40] = 0;
+                    map.contents[39 + 4 * 40] = 0;
+                    map.contents[36 + 5 * 40] = 0;
+                    map.contents[37 + 5 * 40] = 0;
+                    map.contents[38 + 5 * 40] = 0;
+                    map.contents[39 + 5 * 40] = 0;
+                    map.contents[36 + 6 * 40] = 0;
+                    map.contents[37 + 6 * 40] = 0;
+                    map.contents[38 + 6 * 40] = 0;
+                    map.contents[39 + 6 * 40] = 0;
+                    map.contents[36 + 7 * 40] = 0;
+                    map.contents[37 + 7 * 40] = 0;
+                    map.contents[38 + 7 * 40] = 0;
+                    map.contents[39 + 7 * 40] = 0;
+                }
             }
             else if (words[0] == "ifexplored")
             {

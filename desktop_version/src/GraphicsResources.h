@@ -30,6 +30,15 @@ public:
     SDL_Surface* im_image10;
     SDL_Surface* im_image11;
     SDL_Surface* im_image12;
+    SDL_Surface* im_mobileimage0;
+    SDL_Surface* im_mobileimage1;
+    SDL_Surface* im_mobileimage2;
+    SDL_Surface* im_mobileimage3;
+    SDL_Surface* im_mobileimage4;
+    SDL_Surface* im_mobileimage5;
+    SDL_Surface* im_mobileimage6;
+    SDL_Surface* im_mobileimage7;
+    SDL_Surface* im_mobileimage8;
 };
 
 #endif /* GRAPHICSRESOURCES_H */

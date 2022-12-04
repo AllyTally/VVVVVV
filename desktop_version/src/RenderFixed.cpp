@@ -7,6 +7,7 @@
 #include "Map.h"
 #include "Script.h"
 #include "UtilityClass.h"
+#include "RenderFixed.h"
 
 static inline void titleupdatetextcol(void)
 {
@@ -263,4 +264,46 @@ void gamecompleterenderfixed(void)
     graphics.updatetitlecolours();
 
     titleupdatetextcol();
+}
+
+
+void controltutorialrenderfixed(void)
+{
+    if (!game.completestop)
+    {
+        for (size_t i = 0; i < obj.entities.size(); i++)
+        {
+            if (obj.entitycollidefloor(i))
+            {
+                obj.entities[i].visualonground = 2;
+            }
+            else
+            {
+                --obj.entities[i].visualonground;
+            }
+
+            if (obj.entitycollideroof(i))
+            {
+                obj.entities[i].visualonroof = 2;
+            }
+            else
+            {
+                --obj.entities[i].visualonroof;
+            }
+
+            //Animate the entities
+            obj.animateentities(i);
+        }
+    }
+
+    graphics.trinketcolset = false;
+    for (int i = obj.entities.size() - 1; i >= 0; i--)
+    {
+        if (obj.entities[i].invis)
+        {
+            continue;
+        }
+
+        obj.entities[i].updatecolour();
+    }
 }

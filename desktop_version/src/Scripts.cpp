@@ -187,7 +187,22 @@ void scriptclass::load(const std::string& name)
         "changemood(player,0)",
         "changedir(player,1)",
 
-        "delay(100)",
+        //Mobile controls tutorial begins here!
+        "delay(5)",
+        "gotoroom(7,10)",
+        "gotoposition(148,32,0)",
+        "warpdir(8,11,3)", // Make player wrapping render correctly
+        "delay(50)",
+        "changemood(player,0)",
+        "changedir(player,0)",
+        "gamemode(controls)",
+        "delay(45)", // We're going to do 45 instead of 50, so it's 100 frames instead of 105. Thank me later, speedrunners
+
+        // The mobile control stuff above replaces the following line:
+        //"delay(100)",
+
+        // We're done with mobile controls!
+
         "blackon()",
         "shake(20)",
         "playef(10)",
@@ -195,6 +210,8 @@ void scriptclass::load(const std::string& name)
         //Finally, appear at the start of the game:
         "gotoroom(13,5)",
         "gotoposition(80,96,0)",
+        "hidecoordinates(7,10)", // Hide coordinates where the touch tutorial took place
+        "warpdir(8,11,0)",
         "walk(right,20)",
         //"delay(45)",
 

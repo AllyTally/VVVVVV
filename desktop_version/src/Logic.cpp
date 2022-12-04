@@ -10,6 +10,7 @@
 #include "Network.h"
 #include "Script.h"
 #include "UtilityClass.h"
+#include "Logic.h"
 
 void titlelogic(void)
 {
@@ -1461,4 +1462,338 @@ void gamelogic(void)
 
 #undef gotoroom
 #undef GOTOROOM
+}
+
+
+void controltutoriallogic(void)
+{
+    game.press_right = false;
+    game.press_left = false;
+    game.press_action = false;
+    game.press_map = false;
+
+    /* Update old lerp positions of entities */
+    {size_t i; for (i = 0; i < obj.entities.size(); ++i)
+    {
+        obj.entities[i].lerpoldxp = obj.entities[i].xp;
+        obj.entities[i].lerpoldyp = obj.entities[i].yp;
+    }}
+
+    if (!game.blackout && !game.completestop)
+    {
+        size_t i;
+        for (i = 0; i < obj.entities.size(); ++i)
+        {
+            /* Is this entity on the ground? (needed for jumping) */
+            if (obj.entitycollidefloor(i))
+            {
+                obj.entities[i].onground = 2;
+            }
+            else
+            {
+                --obj.entities[i].onground;
+            }
+
+            if (obj.entitycollideroof(i))
+            {
+                obj.entities[i].onroof = 2;
+            }
+            else
+            {
+                --obj.entities[i].onroof;
+            }
+
+            obj.animatehumanoidcollision(i);
+        }
+    }
+
+    help.updateglow();
+
+    if (game.controllerp2 > 0)
+    {
+        game.controllerp2--;
+    }
+ 
+
+    switch (game.controltutorialstate)
+    {
+    case 0:
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay > 10)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate = 1;
+        }
+        break;
+    case 1:
+        game.controllerp1 += 5;
+        if (game.controllerp1 >= 100)
+        {
+            game.controllerp1 = 100;
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate = 2;
+        }
+        break;
+    case 2:
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay > 30)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate = 3;
+        }
+        break;
+    case 3:
+        game.press_right = true;
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay > 60)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate++;
+        }
+        break;
+    case 4:
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay > 30)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate++;
+        }
+        break;
+    case 5:
+        game.press_left = true;
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay > 60)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate++;
+        }
+        break;
+    case 6:
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay > 30)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate++;
+        }
+        break;
+    case 7:
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay > 5)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate++;
+        }
+        break;
+    case 8:
+        game.jumppressed = 5;
+        game.jumpheld = true;
+        game.controllerp2 = 10;
+        game.controltutorialstate++;
+        break;
+    case 9:
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay > 45)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate++;
+        }
+        break;
+    case 10:
+        game.jumppressed = 5;
+        game.jumpheld = true;
+        game.controllerp2 = 10;
+        game.controltutorialstate++;
+        break;
+    case 11:
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay > 45)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate++;
+        }
+        break;
+        //Case 14 on is loopable
+    case 12:
+        game.press_right = true;
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay > 28)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate++;
+        }
+        break;
+    case 13:
+        game.press_left = true;
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay == 30)
+        {
+            game.jumppressed = 5;
+            game.jumpheld = true;
+            game.controllerp2 = 10;
+        }
+        if (game.controltutorialstatedelay > 45)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate++;
+        }
+        break;
+    case 14:
+        game.press_right = true;
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay == 30)
+        {
+            if (fRandom() * 100 > 50)
+            {
+                game.jumppressed = 5;
+                game.jumpheld = true;
+                game.controllerp2 = 10;
+            }
+        }
+        if (game.controltutorialstatedelay > 45)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate++;
+        }
+        break;
+    case 15:
+        game.press_left = true;
+        game.controltutorialstatedelay++;
+        if (game.controltutorialstatedelay == 30)
+        {
+            if (fRandom() * 100 > 50)
+            {
+                game.jumppressed = 5;
+                game.jumpheld = true;
+                game.controllerp2 = 10;
+            }
+        }
+        if (game.controltutorialstatedelay > 45)
+        {
+            game.controltutorialstatedelay = 0;
+            game.controltutorialstate = 14;
+        }
+        break;
+    }
+
+    // Copy-pasted player logic...
+    // This needs slight tweaks from what's in Input.cpp,
+    // so it's probably best that it's seperate.
+
+    for (size_t ie = 0; ie < obj.entities.size(); ++ie)
+    {
+        if (obj.entities[ie].rule == 0)
+        {
+            if (game.press_left)
+            {
+                game.tapleft++;
+                game.controllerp3++;
+            }
+            else
+            {
+                if (game.tapleft <= 4 && game.tapleft > 0)
+                {
+                    if (obj.entities[ie].rule == 0)
+                    {
+                        if (obj.entities[ie].vx < 0.0f)
+                        {
+                            obj.entities[ie].vx = 0.0f;
+                        }
+                    }
+                }
+                game.tapleft = 0;
+            }
+
+            if (game.press_right)
+            {
+                game.tapright++;
+                game.controllerp3++;
+            }
+            else
+            {
+                if (game.tapright <= 4 && game.tapright > 0)
+                {
+                    if (obj.entities[ie].rule == 0)
+                    {
+                        if (obj.entities[ie].vx > 0.0f)
+                        {
+                            obj.entities[ie].vx = 0.0f;
+                        }
+                    }
+                }
+                game.tapright = 0;
+            }
+
+            if (game.press_left)
+            {
+                if (game.controllerp3 >= 8)
+                {
+                    obj.entities[ie].ax = -3;
+                    obj.entities[ie].dir = 0;
+                }
+            }
+            else if (game.press_right)
+            {
+                if (game.controllerp3 >= 8)
+                {
+                    obj.entities[ie].ax = 3;
+                    obj.entities[ie].dir = 1;
+                }
+            }
+            else
+            {
+                game.controllerp3 = 0;
+            }
+
+            if (game.jumppressed > 0)
+            {
+                game.jumppressed--;
+                if (game.gravitycontrol == 0)
+                {
+                    game.gravitycontrol = 1;
+                    obj.entities[ie].vy = -4;
+                    obj.entities[ie].ay = -3;
+                    music.playef(0);
+                    game.jumppressed = 0;
+                }
+                else if (game.gravitycontrol == 1)
+                {
+                    game.gravitycontrol = 0;
+                    obj.entities[ie].vy = 4;
+                    obj.entities[ie].ay = 3;
+                    music.playef(1);
+                    game.jumppressed = 0;
+                }
+            }
+        }
+    }
+
+    for (int ie = obj.entities.size() - 1; ie >= 0; ie--)
+    {
+        if (obj.entities[ie].isplatform)
+        {
+            continue;
+        }
+
+        bool entitygone = obj.updateentities(ie);          // Behavioral logic
+        if (entitygone) continue;
+        obj.updateentitylogic(ie);       // Basic Physics
+        obj.entitymapcollision(ie);      // Collisions with walls
+    }
+
+    obj.entitycollisioncheck();         // Check ent v ent collisions, update states
+
+    // Wrap around X axis!
+    for (size_t i = 0; i < obj.entities.size(); ++i)
+    {
+        if (obj.entities[i].xp <= -10)
+        {
+            obj.entities[i].xp += 320;
+            obj.entities[i].lerpoldxp += 320;
+        }
+        else if (obj.entities[i].xp > 310)
+        {
+            obj.entities[i].xp -= 320;
+            obj.entities[i].lerpoldxp -= 320;
+        }
+    }
 }

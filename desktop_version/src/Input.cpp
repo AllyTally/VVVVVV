@@ -359,16 +359,40 @@ static void slidermodeinput(void)
     *user_changing_volume = SDL_clamp(*user_changing_volume, 0, USER_VOLUME_MAX);
 }
 
+
+static bool mouseinarea(int x, int y, int x2, int y2)
+{
+    return (key.mx >= x && key.mx <= x2 && key.my >= y && key.my <= y2);
+}
+
 static bool buttonclicked(const std::string& text, int x, int y)
 {
     SDL_Rect button = graphics.getbuttonarea(text, x, y);
-    return (key.leftbutton == 0 && key.wasPressed) && (key.mx >= button.x && key.mx <= button.x + button.w && key.my >= button.y && key.my <= button.y + button.h);
+    bool clicked = (key.leftbutton == 0 && key.wasPressed) && mouseinarea(button.x, button.y, button.x + button.w, button.y + button.h);
+    key.wasPressed = false;
+    return clicked;
 }
 
 static bool buttonclicked(const std::string& text, int x, int y, int w, int h)
 {
     SDL_Rect button = graphics.getbuttonarea(text, x, y, w, h);
-    return (key.leftbutton == 0 && key.wasPressed) && (key.mx >= button.x && key.mx <= button.x + button.w && key.my >= button.y && key.my <= button.y + button.h);
+    bool clicked = (key.leftbutton == 0 && key.wasPressed) && mouseinarea(button.x, button.y, button.x + button.w, button.y + button.h);
+    key.wasPressed = false;
+    return clicked;
+}
+
+static bool areaclicked(int x, int y, int x2, int y2)
+{
+    bool clicked = (key.leftbutton == 1 && !key.wasPressed) && mouseinarea(x, y, x2, y2);
+    key.wasPressed = true;
+    return clicked;
+}
+
+static bool clicked()
+{
+    bool clicked = (key.leftbutton == 1 && !key.wasPressed);
+    key.wasPressed = true;
+    return clicked;
 }
 
 static void menubuttonclick(void)
@@ -2005,12 +2029,13 @@ void titleinput(void)
         if (game.currentmenuoption < 0) game.currentmenuoption = game.menuoptions.size()-1;
         if (game.currentmenuoption >= (int) game.menuoptions.size() ) game.currentmenuoption = 0;
 
-        if (game.press_action || key.leftbutton)
+        if (game.press_action || clicked())
         {
             if (!game.menustart)
             {
                 game.menustart = true;
                 key.wasPressed = false;
+                key.leftbutton = 0;
                 music.play(6);
                 music.playef(18);
                 game.screenshake = 10;
@@ -2062,6 +2087,36 @@ void gameinput(void)
         {
             game.press_right = true;
         }
+
+        if (areaclicked(320 / 2, 0, 319, 239))
+        {
+            // We're trying to flip!
+            game.press_action = true;
+        }
+        else
+        {
+            // Okay, so we're trying to move
+            if ((key.lastmx - key.mx) != 0)
+            {
+                key.lastdir = key.lastmx - key.mx;
+            }
+
+            if (key.leftbutton == 0)
+            {
+                key.lastdir = 0;
+            }
+
+            if (key.lastdir > 0 && key.leftbutton == 1)
+            {
+                game.press_left = true;
+            }
+
+            if (key.lastdir < 0 && key.leftbutton == 1)
+            {
+                game.press_right = true;
+            }
+        }
+
         if (key.isDown(KEYBOARD_z) || key.isDown(KEYBOARD_SPACE) || key.isDown(KEYBOARD_v)
                 || key.isDown(KEYBOARD_UP) || key.isDown(KEYBOARD_DOWN) || key.isDown(KEYBOARD_w) || key.isDown(KEYBOARD_s)|| key.isDown(game.controllerButton_flip))
         {
@@ -2473,6 +2528,8 @@ void gameinput(void)
     }
 
     key.wasPressed = (key.leftbutton == 1);
+
+    key.lastmx = key.mx;
 }
 
 static void mapmenuactionpress(bool version2_2);
@@ -3021,4 +3078,27 @@ void gamecompleteinput2(void)
             }
         }
     }
+}
+
+void controltutorialinput(void)
+{
+    if (game.controltutorialstate >= 13) {
+        if (key.isDown(KEYBOARD_z) || key.isDown(KEYBOARD_v) || key.isDown(KEYBOARD_ENTER) || key.isDown(KEYBOARD_UP) || key.isDown(KEYBOARD_DOWN))
+        {
+            game.press_action = true;
+        }
+
+        if (buttonclicked("START", 160 + 4 - 24, 210, 8 * 7, -1))
+        {
+            game.press_action = true;
+        }
+
+        if (game.press_action) {
+            key.wasPressed = false;
+            music.playef(11);
+            game.gamestate = GAMEMODE;
+        }
+    }
+
+    key.wasPressed = (key.leftbutton == 1);
 }

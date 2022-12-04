@@ -11,4 +11,6 @@ void gamecompletelogic2(void);
 
 void gamelogic(void);
 
+void controltutoriallogic(void);
+
 #endif /* LOGIC_H */
