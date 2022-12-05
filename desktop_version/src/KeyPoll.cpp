@@ -143,11 +143,13 @@ void KeyPoll::Poll(void)
     bool fullscreenkeybind = false;
 
     // Reset the pressed status of all fingers
-    std::map<SDL_FingerID, VVV_Finger*>::iterator it;
+    std::map<SDL_FingerID, VVV_Finger>::iterator it;
 
     for (it = fingers.begin(); it != fingers.end(); it++)
     {
-        it->second->pressed = false;
+        it->second.pressed = false;
+        it->second.lastX = it->second.x;
+        it->second.lastY = it->second.y;
     }
 
     SDL_Event evt;
@@ -326,9 +328,17 @@ void KeyPoll::Poll(void)
         /* Touch Events */
         case SDL_FINGERDOWN:
         {
-
-            VVV_Finger* finger = (VVV_Finger*)SDL_GetTouchFinger(evt.tfinger.touchId, 0);
-            finger->pressed = true;
+            // Get the SDL_Finger
+            //SDL_Touch* inTouch = SDL_GetTouch(evt.tfinger.touchId);
+            //SDL_Finger* finger = evt.tfinger.
+            VVV_Finger finger;
+            finger.pressed = true;
+            finger.x = evt.tfinger.x;
+            finger.y = evt.tfinger.y;
+            finger.lastX = evt.tfinger.x;
+            finger.lastY = evt.tfinger.y;
+            finger.lastDir = 0;
+            finger.id = evt.tfinger.fingerId;
             fingers[evt.tfinger.fingerId] = finger;
 
             usingTouch = true;
@@ -338,17 +348,33 @@ void KeyPoll::Poll(void)
         }
         case SDL_FINGERMOTION:
         {
-            VVV_Finger* finger = (VVV_Finger *) SDL_GetTouchFinger(evt.tfinger.touchId, 0);
+            VVV_Finger finger;
+            finger.pressed = false;
+            finger.lastX = evt.tfinger.x;
+            finger.lastY = evt.tfinger.y;
+            finger.lastDir = 0;
+            if (fingers.count(evt.tfinger.fingerId) > 0)
+            {
+                finger.pressed = fingers[evt.tfinger.fingerId].pressed;
+                finger.lastX = fingers[evt.tfinger.fingerId].lastX;
+                finger.lastY = fingers[evt.tfinger.fingerId].lastY;
+                finger.lastDir = fingers[evt.tfinger.fingerId].lastDir;
+            }
+            finger.x = evt.tfinger.x;
+            finger.y = evt.tfinger.y;
+            finger.id = evt.tfinger.fingerId;
             fingers[evt.tfinger.fingerId] = finger;
+
             usingTouch = true;
             mx = (int)(evt.tfinger.x * 320);
             my = (int)(evt.tfinger.y * 240);
-            leftbutton = 1;
             break;
         }
         case SDL_FINGERUP:
         {
             fingers.erase(evt.tfinger.fingerId);
+            if (movementFinger == evt.tfinger.fingerId) movementFinger = NULL;
+            if (flipFinger == evt.tfinger.fingerId) flipFinger = NULL;
             usingTouch = true;
             mx = (int)(evt.tfinger.x * 320);
             my = (int)(evt.tfinger.y * 240);

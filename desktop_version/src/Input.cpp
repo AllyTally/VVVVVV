@@ -395,13 +395,13 @@ static bool areaclicked(int x, int y, int x2, int y2)
 
 static VVV_Finger* areatouched(int x, int y, int x2, int y2)
 {
-    std::map<SDL_FingerID, VVV_Finger*>::iterator it;
+    std::map<SDL_FingerID, VVV_Finger>::iterator it;
 
     for (it = key.fingers.begin(); it != key.fingers.end(); it++)
     {
-        if (it->second->pressed && pointinarea(it->second->x * 320, it->second->y * 240, x, y, x2, y2))
+        if (it->second.pressed && pointinarea(it->second.x * 320, it->second.y * 240, x, y, x2, y2))
         {
-            return it->second;
+            return &(it->second);
         }
     }
     return NULL;
@@ -409,8 +409,8 @@ static VVV_Finger* areatouched(int x, int y, int x2, int y2)
 
 static bool fingerinarea(SDL_FingerID fingerID, int x, int y, int x2, int y2)
 {
-    VVV_Finger* finger = key.fingers[fingerID];
-    return pointinarea(finger->x * 320, finger->y * 240, x, y, x2, y2);
+    VVV_Finger finger = key.fingers[fingerID];
+    return pointinarea(finger.x * 320, finger.y * 240, x, y, x2, y2);
 }
 
 static bool clicked()
@@ -2130,12 +2130,18 @@ void gameinput(void)
 
         if (key.fingers.count(key.movementFinger) > 0)
         {
-            VVV_Finger* finger = key.fingers[key.movementFinger];
-            if (finger->x < 0.25)
+            VVV_Finger* finger = &key.fingers[key.movementFinger];
+
+            if ((abs(finger->x - finger->lastX) * 320) > 1)
+            {
+                finger->lastDir = finger->x - finger->lastX;
+            }
+
+            if (finger->lastDir < 0)
             {
                 game.press_left = true;
             }
-            else if (finger->x >= 0.25)
+            else if (finger->lastDir > 0)
             {
                 game.press_right = true;
             }
@@ -2165,7 +2171,7 @@ void gameinput(void)
         {
             game.press_action = false;
             if (key.isDown(KEYBOARD_z) || key.isDown(KEYBOARD_SPACE) || key.isDown(KEYBOARD_v)
-                    || key.isDown(KEYBOARD_UP) || key.isDown(KEYBOARD_DOWN) || key.isDown(KEYBOARD_w) || key.isDown(KEYBOARD_s) || key.isDown(game.controllerButton_flip)) game.press_action = true;
+                    || key.isDown(KEYBOARD_UP) || key.isDown(KEYBOARD_DOWN) || key.isDown(KEYBOARD_w) || key.isDown(KEYBOARD_s) || key.isDown(game.controllerButton_flip) || clicked()) game.press_action = true;
         }
 
         if (game.press_action && !game.jumpheld)
