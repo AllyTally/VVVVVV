@@ -1,6 +1,7 @@
 #include "GraphicsResources.h"
 
 #include "Alloc.h"
+#include "Screen.h"
 #include "FileSystemUtils.h"
 #include "Vlogging.h"
 
@@ -18,7 +19,7 @@ extern "C"
 }
 
 /* Don't declare `static`, this is used elsewhere */
-SDL_Surface* LoadImage(const char *filename)
+SDL_Texture* LoadImage(const char *filename)
 {
     //Temporary storage for the image that's loaded
     SDL_Surface* loadedImage = NULL;
@@ -57,15 +58,17 @@ SDL_Surface* LoadImage(const char *filename)
 
     if (loadedImage != NULL)
     {
-        optimizedImage = SDL_ConvertSurfaceFormat(
-            loadedImage,
-            SDL_PIXELFORMAT_ARGB8888,
-            0
-        );
+        //Create texture from surface pixels
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(gameScreen.m_renderer, loadedImage);
+        if (texture == NULL)
+        {
+            vlog_error("Failed creating texture: %s. SDL error: %s\n", filename, SDL_GetError());
+        }
+
         VVV_freefunc(SDL_FreeSurface, loadedImage);
         VVV_free(data);
-        SDL_SetSurfaceBlendMode(optimizedImage, SDL_BLENDMODE_BLEND);
-        return optimizedImage;
+
+        return texture;
     }
     else
     {
@@ -105,28 +108,6 @@ void GraphicsResources::init(void)
 
 void GraphicsResources::destroy(void)
 {
-#define CLEAR(img) VVV_freefunc(SDL_FreeSurface, img)
-    CLEAR(im_tiles);
-    CLEAR(im_tiles2);
-    CLEAR(im_tiles3);
-    CLEAR(im_entcolours);
-    CLEAR(im_sprites);
-    CLEAR(im_flipsprites);
-    CLEAR(im_bfont);
-    CLEAR(im_teleporter);
 
-    CLEAR(im_image0);
-    CLEAR(im_image1);
-    CLEAR(im_image2);
-    CLEAR(im_image3);
-    CLEAR(im_image4);
-    CLEAR(im_image5);
-    CLEAR(im_image6);
-    CLEAR(im_image7);
-    CLEAR(im_image8);
-    CLEAR(im_image9);
-    CLEAR(im_image10);
-    CLEAR(im_image11);
-    CLEAR(im_image12);
-#undef CLEAR
+    // TODO: Del textures
 }

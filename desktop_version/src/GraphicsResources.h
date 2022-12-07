@@ -9,27 +9,27 @@ public:
     void init(void);
     void destroy(void);
 
-    SDL_Surface* im_tiles;
-    SDL_Surface* im_tiles2;
-    SDL_Surface* im_tiles3;
-    SDL_Surface* im_entcolours;
-    SDL_Surface* im_sprites;
-    SDL_Surface* im_flipsprites;
-    SDL_Surface* im_bfont;
-    SDL_Surface* im_teleporter;
-    SDL_Surface* im_image0;
-    SDL_Surface* im_image1;
-    SDL_Surface* im_image2;
-    SDL_Surface* im_image3;
-    SDL_Surface* im_image4;
-    SDL_Surface* im_image5;
-    SDL_Surface* im_image6;
-    SDL_Surface* im_image7;
-    SDL_Surface* im_image8;
-    SDL_Surface* im_image9;
-    SDL_Surface* im_image10;
-    SDL_Surface* im_image11;
-    SDL_Surface* im_image12;
+    SDL_Texture* im_tiles;
+    SDL_Texture* im_tiles2;
+    SDL_Texture* im_tiles3;
+    SDL_Texture* im_entcolours;
+    SDL_Texture* im_sprites;
+    SDL_Texture* im_flipsprites;
+    SDL_Texture* im_bfont;
+    SDL_Texture* im_teleporter;
+    SDL_Texture* im_image0;
+    SDL_Texture* im_image1;
+    SDL_Texture* im_image2;
+    SDL_Texture* im_image3;
+    SDL_Texture* im_image4;
+    SDL_Texture* im_image5;
+    SDL_Texture* im_image6;
+    SDL_Texture* im_image7;
+    SDL_Texture* im_image8;
+    SDL_Texture* im_image9;
+    SDL_Texture* im_image10;
+    SDL_Texture* im_image11;
+    SDL_Texture* im_image12;
 };
 
 #endif /* GRAPHICSRESOURCES_H */

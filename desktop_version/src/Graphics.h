@@ -261,17 +261,17 @@ public:
 
     int m;
 
-    std::vector <SDL_Surface*> images;
+    std::vector <SDL_Texture*> images;
 
-    std::vector <SDL_Surface*> tele;
-    std::vector <SDL_Surface*> tiles;
-    std::vector <SDL_Surface*> tiles2;
-    std::vector <SDL_Surface*> tiles3;
-    std::vector <SDL_Surface*> entcolours;
-    std::vector <SDL_Surface*> sprites;
-    std::vector <SDL_Surface*> flipsprites;
-    std::vector <SDL_Surface*> bfont;
-    std::vector <SDL_Surface*> flipbfont;
+    std::vector <SDL_Texture*> tele;
+    std::vector <SDL_Texture*> tiles;
+    std::vector <SDL_Texture*> tiles2;
+    std::vector <SDL_Texture*> tiles3;
+    std::vector <SDL_Texture*> entcolours;
+    std::vector <SDL_Texture*> sprites;
+    std::vector <SDL_Texture*> flipsprites;
+    std::vector <SDL_Texture*> bfont;
+    std::vector <SDL_Texture*> flipbfont;
 
     bool flipmode;
     bool setflipmode;
