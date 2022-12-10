@@ -141,9 +141,18 @@ public:
     void drawsprite(int x, int y, int t, SDL_Color color);
 
     void printcrewname(int x, int y, int t);
+
     void printcrewnamedark(int x, int y, int t);
 
+    void printcrewnamestatus(int x, int y, int t);
+
     void printcrewnamestatus(int x, int y, int t, bool rescued);
+
+    void drawimagetex(SDL_Texture* image, int x, int y);
+
+    void drawimagepart(SDL_Texture* image, int x, int y, int x2, int y2, int w, int h);
+
+    void drawgridtile(SDL_Texture* image, int t, int x, int y, int width, int height);
 
     void map_tab(int opt, const char* text, bool selected = false);
 

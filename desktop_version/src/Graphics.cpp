@@ -160,6 +160,24 @@ void Graphics::init(void)
 
 void Graphics::destroy(void)
 {
+    #define CLEAR_ARRAY(name) \
+        for (size_t i = 0; i < name.size(); i += 1) \
+        { \
+            SDL_DestroyTexture(name[i]); \
+        } \
+        name.clear();
+
+    CLEAR_ARRAY(tiles)
+    CLEAR_ARRAY(tiles2)
+    CLEAR_ARRAY(tiles3)
+    CLEAR_ARRAY(entcolours)
+    CLEAR_ARRAY(sprites)
+    CLEAR_ARRAY(flipsprites)
+    CLEAR_ARRAY(tele)
+    CLEAR_ARRAY(bfont)
+    CLEAR_ARRAY(flipbfont)
+
+    #undef CLEAR_ARRAY
 }
 
 void Graphics::create_buffers(const SDL_PixelFormat* fmt)

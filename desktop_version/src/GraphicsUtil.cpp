@@ -5,9 +5,7 @@
 #include "Alloc.h"
 #include "Graphics.h"
 #include "Maths.h"
-
-
-
+#include "Screen.h"
 
 void setRect( SDL_Rect& _r, int x, int y, int w, int h )
 {
@@ -396,53 +394,44 @@ SDL_Surface* ApplyFilter(SDL_Surface* src)
     return ret;
 }
 
-void FillRect( SDL_Surface* _surface, const int _x, const int _y, const int _w, const int _h, const int r, int g, int b )
+void FillRect( SDL_Renderer* renderer, const int _x, const int _y, const int _w, const int _h, const int r, int g, int b )
 {
     SDL_Rect rect = {_x, _y, _w, _h};
-    Uint32 color = SDL_MapRGB(_surface->format, r, g, b);
-    SDL_FillRect(_surface, &rect, color);
+
+    SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+    SDL_RenderFillRect(renderer, &rect);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }
 
-void FillRect( SDL_Surface* _surface, const int r, int g, int b )
+void FillRect( SDL_Renderer* renderer, const int r, int g, int b )
 {
-    Uint32 color = SDL_MapRGB(_surface->format, r, g, b);
-    SDL_FillRect(_surface, NULL, color);
+    SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+    SDL_RenderClear(renderer);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }
 
-void FillRect( SDL_Surface* _surface, SDL_Rect& _rect, const int r, int g, int b )
+void FillRect( SDL_Renderer* renderer, SDL_Rect& _rect, const int r, int g, int b )
 {
-    Uint32 color = SDL_MapRGB(_surface->format, r, g, b);
-    SDL_FillRect(_surface, &_rect, color);
+    SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+    SDL_RenderFillRect(renderer, &_rect);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }
 
-void FillRect(SDL_Surface* surface, const SDL_Rect rect, const SDL_Color color)
+void FillRect(SDL_Renderer* renderer, SDL_Rect rect, int rgba )
 {
-    const Uint32 mapped = SDL_MapRGBA(surface->format, color.r, color.g, color.b, color.a);
-    SDL_FillRect(surface, &rect, mapped);
+    Uint8 r;
+    Uint8 g;
+    Uint8 b;
+    SDL_GetRGB(rgba, gameScreen.m_screen->format, &r, &g, &b);
+    SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+    SDL_RenderFillRect(renderer, &rect);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }
 
-void FillRect(SDL_Surface* surface, const SDL_Color color)
+void ClearSurface(SDL_Renderer* renderer)
 {
-    const Uint32 mapped = SDL_MapRGBA(surface->format, color.r, color.g, color.b, color.a);
-    SDL_FillRect(surface, NULL, mapped);
-}
-
-void FillRect(SDL_Surface* surface, const int x, const int y, const int w, const int h, const SDL_Color color)
-{
-    const SDL_Rect rect = {x, y, w, h};
-    const Uint32 mapped = SDL_MapRGBA(surface->format, color.r, color.g, color.b, color.a);
-    SDL_FillRect(surface, &rect, mapped);
-}
-
-void FillRect(SDL_Surface* surface, const int r, const int g, const int b, const int a)
-{
-    const Uint32 mapped = SDL_MapRGBA(surface->format, r, g, b, a);
-    SDL_FillRect(surface, NULL, mapped);
-}
-
-void ClearSurface(SDL_Surface* surface)
-{
-    SDL_FillRect(surface, NULL, 0x00000000);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
 }
 
 void ScrollSurface( SDL_Surface* _src, int _pX, int _pY )

@@ -712,7 +712,7 @@ static void menurender(void)
 
             int box_x = SDL_min(10, (320-overflow.max_w_px)/2);
             int box_h = overflow.max_h_px - SDL_max(0, 10-loc::get_langmeta()->font_h);
-            FillRect(graphics.backBuffer, box_x-1, 30-1, overflow.max_w_px+2, box_h+2, tr/3, tg/3, tb/3);
+            //FillRect(graphics.backBuffer, box_x-1, 30-1, overflow.max_w_px+2, box_h+2, tr/3, tg/3, tb/3);
 
             int wraplimit;
             if (overflow.multiline)
@@ -1028,7 +1028,7 @@ static void menurender(void)
             graphics.bigprint(-1, 30, loc::gettext("Text Outline"), tr, tg, tb, true);
             int next_y = graphics.PrintWrap(-1, 65, loc::gettext("Disables outline on game text."), tr, tg, tb, true);
 
-            FillRect(graphics.backBuffer, 0, next_y-4, 320, 16, tr, tg, tb);
+            //FillRect(graphics.backBuffer, 0, next_y-4, 320, 16, tr, tg, tb);
 
             if (!graphics.notextoutline)
             {
@@ -1597,7 +1597,7 @@ static void menurender(void)
 void titlerender(void)
 {
 
-    ClearSurface(graphics.backBuffer);
+    //ClearSurface(graphics.backBuffer);
 
     if (!game.menustart)
     {
@@ -1649,7 +1649,7 @@ void titlerender(void)
 
 void gamecompleterender(void)
 {
-    ClearSurface(graphics.backBuffer);
+    //ClearSurface(graphics.backBuffer);
 
     if(!game.colourblindmode) graphics.drawtowerbackground(graphics.titlebg);
 
@@ -1801,7 +1801,7 @@ void gamecompleterender(void)
 
 void gamecompleterender2(void)
 {
-    ClearSurface(graphics.backBuffer);
+    //ClearSurface(graphics.backBuffer);
 
     graphics.drawimage(10, 0, 0);
 
@@ -1813,18 +1813,18 @@ void gamecompleterender2(void)
             {
                 if (i > game.creditposx)
                 {
-                    FillRect(graphics.backBuffer, i * 8, j * 8, 8, 8, 0, 0, 0);
+                    //FillRect(graphics.backBuffer, i * 8, j * 8, 8, 8, 0, 0, 0);
                 }
             }
 
             if (j > game.creditposy)
             {
-                FillRect(graphics.backBuffer, i * 8, j * 8, 8, 8, 0, 0, 0);
+                //FillRect(graphics.backBuffer, i * 8, j * 8, 8, 8, 0, 0, 0);
             }
         }
     }
 
-    FillRect(graphics.backBuffer, graphics.lerp(game.oldcreditposx * 8, game.creditposx * 8) + 8, game.creditposy * 8, 8, 8, 0, 0, 0);
+    //FillRect(graphics.backBuffer, graphics.lerp(game.oldcreditposx * 8, game.creditposx * 8) + 8, game.creditposy * 8, 8, 8, 0, 0, 0);
 
     graphics.drawfade();
 
@@ -1868,7 +1868,7 @@ void gamerender(void)
             }
             else
             {
-                ClearSurface(graphics.backBuffer);
+                //ClearSurface(graphics.backBuffer);
             }
             graphics.drawtowermap();
         }
@@ -1880,7 +1880,7 @@ void gamerender(void)
             }
             else
             {
-                ClearSurface(graphics.backBuffer);
+                //ClearSurface(graphics.backBuffer);
             }
             if ((map.finalmode || map.custommode) && map.final_colormode)
             {
@@ -2382,12 +2382,12 @@ static void rendermapcursor(const bool flashing)
 
 void maprender(void)
 {
-    ClearSurface(graphics.backBuffer);
+    //ClearSurface(graphics.backBuffer);
 
     draw_roomname_menu();
 
     //Background color
-    FillRect(graphics.backBuffer,0, 12, 320, 240, 10, 24, 26 );
+    //FillRect(graphics.backBuffer,0, 12, 320, 240, 10, 24, 26 );
 
     //Menubar:
     graphics.drawtextbox( -10, 212, 43, 3, 65, 185, 207);
@@ -2878,14 +2878,15 @@ void maprender(void)
 
 void teleporterrender(void)
 {
-    ClearSurface(graphics.backBuffer);
+
+    //ClearSurface(graphics.backBuffer);
     const int telex = map.teleporters[game.teleport_to_teleporter].x;
     const int teley = map.teleporters[game.teleport_to_teleporter].y;
 
     draw_roomname_menu();
 
     //Background color
-    FillRect(graphics.backBuffer, 0, 12, 320, 240, 10, 24, 26);
+    //FillRect(graphics.backBuffer, 0, 12, 320, 240, 10, 24, 26);
 
     rendermap();
     rendermapfog();

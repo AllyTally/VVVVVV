@@ -95,15 +95,15 @@ void preloaderrender(void)
       pre_temprecty = (i * 16)- pre_offset;
       if (i % 2 == 0)
       {
-        FillRect(graphics.backBuffer, pre_temprectx, pre_temprecty, pre_temprectw,pre_temprecth, pre_lightcol);
+        //FillRect(graphics.backBuffer, pre_temprectx, pre_temprecty, pre_temprectw,pre_temprecth, pre_lightcol);
       }
       else
       {
-        FillRect(graphics.backBuffer, pre_temprectx, pre_temprecty, pre_temprectw,pre_temprecth, pre_darkcol);
+        //FillRect(graphics.backBuffer, pre_temprectx, pre_temprecty, pre_temprectw,pre_temprecth, pre_darkcol);
       }
     }
 
-    FillRect(graphics.backBuffer, pre_frontrectx, pre_frontrecty, pre_frontrectw,pre_frontrecth, graphics.getRGB(0x3E,0x31,0xA2));
+    //FillRect(graphics.backBuffer, pre_frontrectx, pre_frontrecty, pre_frontrectw,pre_frontrecth, graphics.getRGB(0x3E,0x31,0xA2));
 
     print_percentage = true;
 
@@ -114,12 +114,12 @@ void preloaderrender(void)
   }else if (pre_transition <= -10) {
     //Switch to TITLEMODE (handled by preloaderrenderfixed)
   }else if (pre_transition < 5) {
-    ClearSurface(graphics.backBuffer);
+    //ClearSurface(graphics.backBuffer);
   }else if (pre_transition < 20) {
     pre_temprecty = 0;
     pre_temprecth = 240;
-    ClearSurface(graphics.backBuffer);
-    FillRect(graphics.backBuffer, pre_frontrectx, pre_frontrecty, pre_frontrectw,pre_frontrecth, graphics.getRGB(0x3E,0x31,0xA2));
+    //ClearSurface(graphics.backBuffer);
+    //FillRect(graphics.backBuffer, pre_frontrectx, pre_frontrecty, pre_frontrectw,pre_frontrecth, graphics.getRGB(0x3E,0x31,0xA2));
 
     print_percentage = true;
   }

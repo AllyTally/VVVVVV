@@ -14,6 +14,7 @@
 #include "Game.h"
 #include "Graphics.h"
 #include "GraphicsUtil.h"
+#include "GraphicsResources.h"
 #include "KeyPoll.h"
 #include "Localization.h"
 #include "Map.h"
@@ -281,18 +282,25 @@ static int edentat( int xp, int yp )
 
 static void fillbox(const int x, const int y, const int x2, const int y2, const SDL_Color color)
 {
-    FillRect(graphics.backBuffer, x, y, x2-x, 1, color);
-    FillRect(graphics.backBuffer, x, y2-1, x2-x, 1, color);
-    FillRect(graphics.backBuffer, x, y, 1, y2-y, color);
-    FillRect(graphics.backBuffer, x2-1, y, 1, y2-y, color);
+    SDL_Rect rect;
+    rect.x = x;
+    rect.y = y;
+    rect.w = x2;
+    rect.h = y2;
+    SDL_SetRenderDrawColor(gameScreen.m_renderer, color.r, color.g, color.b, color.a);
+    SDL_RenderDrawRect(gameScreen.m_renderer, &rect);
+    
 }
 
 static void fillboxabs(const int x, const int y, const int x2, const int y2, const SDL_Color color)
 {
-    FillRect(graphics.backBuffer, x, y, x2, 1, color);
-    FillRect(graphics.backBuffer, x, y+y2-1, x2, 1, color);
-    FillRect(graphics.backBuffer, x, y, 1, y2, color);
-    FillRect(graphics.backBuffer, x+x2-1, y, 1, y2, color);
+    SDL_Rect rect;
+    rect.x = x;
+    rect.y = y;
+    rect.w = x2 - x;
+    rect.h = y2 - y;
+    SDL_SetRenderDrawColor(gameScreen.m_renderer, color.r, color.g, color.b, color.a);
+    SDL_RenderDrawRect(gameScreen.m_renderer, &rect);
 }
 
 
@@ -493,7 +501,7 @@ void editorrender(void)
 
     //Draw grid
 
-    ClearSurface(graphics.backBuffer);
+    //ClearSurface(graphics.backBuffer);
     for(int j=0; j<30; j++)
     {
         for(int i=0; i<40; i++)
@@ -566,12 +574,12 @@ void editorrender(void)
         //left edge
         if(ed.freewrap((ed.levx*40)-1,j+(ed.levy*30))==1)
         {
-            FillRect(graphics.backBuffer, 0,j*8, 2,8, graphics.getRGB(255 - help.glow, 255, 255));
+            //FillRect(graphics.backBuffer, 0,j*8, 2,8, graphics.getRGB(255 - help.glow, 255, 255));
         }
         //right edge
         if(ed.freewrap((ed.levx*40)+40,j+(ed.levy*30))==1)
         {
-            FillRect(graphics.backBuffer, 318,j*8, 2,8, graphics.getRGB(255 - help.glow, 255, 255));
+            //FillRect(graphics.backBuffer, 318,j*8, 2,8, graphics.getRGB(255 - help.glow, 255, 255));
         }
     }
 
@@ -579,12 +587,12 @@ void editorrender(void)
     {
         if(ed.freewrap((ed.levx*40)+i,(ed.levy*30)-1)==1)
         {
-            FillRect(graphics.backBuffer, i*8,0, 8,2, graphics.getRGB(255 - help.glow, 255, 255));
+            //FillRect(graphics.backBuffer, i*8,0, 8,2, graphics.getRGB(255 - help.glow, 255, 255));
         }
 
         if(ed.freewrap((ed.levx*40)+i,30+(ed.levy*30))==1)
         {
-            FillRect(graphics.backBuffer, i*8,238, 8,2, graphics.getRGB(255 - help.glow, 255, 255));
+            //FillRect(graphics.backBuffer, i*8,238, 8,2, graphics.getRGB(255 - help.glow, 255, 255));
         }
     }
 
@@ -631,8 +639,8 @@ void editorrender(void)
                 drawRect.x += tpoint.x;
                 drawRect.y += tpoint.y;
                 for (int j = 0; j < 4; j++) {
-                    if (custom_gray) BlitSurfaceTinted(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect, gray_ct);
-                    else BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
+                    //if (custom_gray) BlitSurfaceTinted(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect, gray_ct);
+                    //else BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
                     drawRect.x += 8;
                 }
 
@@ -664,8 +672,8 @@ void editorrender(void)
                     drawRect.x += tpoint.x;
                     drawRect.y += tpoint.y;
                     for (int j = 0; j < 4; j++) {
-                        if (custom_gray) BlitSurfaceTinted(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect, gray_ct);
-                        else BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
+                        //if (custom_gray) BlitSurfaceTinted(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect, gray_ct);
+                        //else BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
                         drawRect.x += 8;
                     }
                 }
@@ -692,8 +700,8 @@ void editorrender(void)
                 drawRect.x += tpoint.x;
                 drawRect.y += tpoint.y;
                 for (int j = 0; j < 4; j++) {
-                    if (custom_gray) BlitSurfaceTinted(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect, gray_ct);
-                    else BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
+                    //if (custom_gray) BlitSurfaceTinted(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect, gray_ct);
+                    //else BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
                     drawRect.x += 8;
                 }
 
@@ -714,7 +722,7 @@ void editorrender(void)
                     int tx = customentities[i].p2;
                     int tx2 = tx + customentities[i].p3/8;
                     int ty = customentities[i].y % 30;
-                    FillRect(graphics.backBuffer, (tx*8),(ty*8)+4, (tx2-tx)*8,1, graphics.getRGB(194,194,194));
+                    //FillRect(graphics.backBuffer, (tx*8),(ty*8)+4, (tx2-tx)*8,1, graphics.getRGB(194,194,194));
                     fillboxabs((customentities[i].x*8)- (ed.levx*40*8),(customentities[i].y*8)- (ed.levy*30*8),8,8,graphics.getRGB(164,255,164));
                 }
                 else  //Vertical
@@ -722,7 +730,7 @@ void editorrender(void)
                     int tx = customentities[i].x % 40;
                     int ty = customentities[i].p2;
                     int ty2 = ty + customentities[i].p3/8;
-                    FillRect(graphics.backBuffer, (tx*8)+3,(ty*8), 1,(ty2-ty)*8, graphics.getRGB(194,194,194));
+                    //FillRect(graphics.backBuffer, (tx*8)+3,(ty*8), 1,(ty2-ty)*8, graphics.getRGB(194,194,194));
                     fillboxabs((customentities[i].x*8)- (ed.levx*40*8),(customentities[i].y*8)- (ed.levy*30*8),8,8,graphics.getRGB(164,255,164));
                 }
                 break;
@@ -922,7 +930,7 @@ void editorrender(void)
 
     //Draw ghosts (spooky!)
     if (game.ghostsenabled) {
-        ClearSurface(graphics.ghostbuffer);
+        //ClearSurface(graphics.ghostbuffer);
         for (int i = 0; i < (int)ed.ghosts.size(); i++) {
             if (i <= ed.currentghosts) { // We don't want all of them to show up at once :)
                 if (ed.ghosts[i].rx != ed.levx || ed.ghosts[i].ry != ed.levy
@@ -937,7 +945,12 @@ void editorrender(void)
                 SDL_Rect drawRect = graphics.sprites_rect;
                 drawRect.x += tpoint.x;
                 drawRect.y += tpoint.y;
-                BlitSurfaceColoured(graphics.sprites[ed.ghosts[i].frame],NULL, graphics.ghostbuffer, &drawRect, ct);
+                //BlitSurfaceColoured(graphics.sprites[ed.ghosts[i].frame],NULL, graphics.ghostbuffer, &drawRect, ct);
+                //BlitSurfaceColoured(graphics.sprites[ed.ghosts[i].frame],NULL, graphics.ghostbuffer, &drawRect, ct);
+                graphics.drawsprite(drawRect.x, drawRect.y, ed.ghosts[i].frame, ct);
+                //SDL_SetTextureColorMod(grphx.im_sprites, ct.r, ct.g, ct.b);
+                //SDL_SetTextureAlphaMod(grphx.im_sprites, ct.a);
+                //graphics.drawgridtile(grphx.im_sprites, ed.ghosts[i].frame, drawRect.x, drawRect.y, 32, 32);
             }
         }
         SDL_BlitSurface(graphics.ghostbuffer, NULL, graphics.backBuffer, NULL);
@@ -1026,8 +1039,9 @@ void editorrender(void)
 
             //Draw five lines of the editor
             const int temp = ed.dmtile - (ed.dmtile % 40) - 80;
-            FillRect(graphics.backBuffer, 0,-t2,320,40, graphics.getRGB(0,0,0));
-            FillRect(graphics.backBuffer, 0,-t2+40,320,2, graphics.getRGB(255,255,255));
+            //FillRect(graphics.backBuffer, 0,-t2,320,40, graphics.getRGB(0,0,0));
+            //FillRect(graphics.backBuffer, 0,-t2+40,320,2, graphics.getRGB(255,255,255));
+
             if(room->tileset==0)
             {
                 const int numtiles = (((int) graphics.tiles.size()) / 40) * 40;
@@ -1064,8 +1078,8 @@ void editorrender(void)
             short labellen = 2 + graphics.len(loc::gettext("Tile:"));
             graphics.bprint(2, 45-t2, loc::gettext("Tile:"), 196, 196, 255 - help.glow, false);
             graphics.bprint(labellen+16, 45-t2, help.String(ed.dmtile), 196, 196, 255 - help.glow, false);
-            FillRect(graphics.backBuffer, labellen+2,44-t2,10,10, graphics.getRGB(255 - help.glow, 196, 196));
-            FillRect(graphics.backBuffer, labellen+3,45-t2,8,8, graphics.getRGB(0,0,0));
+            //FillRect(graphics.backBuffer, labellen+2,44-t2,10,10, graphics.getRGB(255 - help.glow, 196, 196));
+            //FillRect(graphics.backBuffer, labellen+3,45-t2,8,8, graphics.getRGB(0,0,0));
 
             if(room->tileset==0)
             {
@@ -1081,8 +1095,8 @@ void editorrender(void)
             short labellen = 2 + graphics.len(loc::gettext("Tile:"));
             graphics.bprint(2, 12, loc::gettext("Tile:"), 196, 196, 255 - help.glow, false);
             graphics.bprint(labellen+16, 12, help.String(ed.dmtile), 196, 196, 255 - help.glow, false);
-            FillRect(graphics.backBuffer, labellen+2,11,10,10, graphics.getRGB(255 - help.glow, 196, 196));
-            FillRect(graphics.backBuffer, labellen+3,12,8,8, graphics.getRGB(0,0,0));
+            //FillRect(graphics.backBuffer, labellen+2,11,10,10, graphics.getRGB(255 - help.glow, 196, 196));
+            //FillRect(graphics.backBuffer, labellen+3,12,8,8, graphics.getRGB(0,0,0));
 
             if(room->tileset==0)
             {
@@ -1104,6 +1118,8 @@ void editorrender(void)
         std::string message;
         if(ed.boundarymod==1)
         {
+            //FillRect(graphics.backBuffer, 0,230,320,240, graphics.getRGB(32,32,32));
+            //FillRect(graphics.backBuffer, 0,231,320,240, graphics.getRGB(0,0,0));
             switch(ed.boundarytype)
             {
             case 0:
@@ -1122,6 +1138,8 @@ void editorrender(void)
         }
         else if(ed.boundarymod==2)
         {
+            //FillRect(graphics.backBuffer, 0,230,320,240, graphics.getRGB(32,32,32));
+            //FillRect(graphics.backBuffer, 0,231,320,240, graphics.getRGB(0,0,0));
             switch(ed.boundarytype)
             {
             case 0:
@@ -1151,8 +1169,8 @@ void editorrender(void)
     else if(ed.scripteditmod)
     {
         //Elaborate C64 BASIC menu goes here!
-        FillRect(graphics.backBuffer, 0,0,320,240, graphics.getRGB(123, 111, 218));
-        FillRect(graphics.backBuffer, 14,16,292,208, graphics.getRGB(61, 48, 162));
+        //FillRect(graphics.backBuffer, 0,0,320,240, graphics.getRGB(123, 111, 218));
+        //FillRect(graphics.backBuffer, 14,16,292,208, graphics.getRGB(61, 48, 162));
         switch(ed.scripthelppage)
         {
         case 0:
@@ -1189,7 +1207,7 @@ void editorrender(void)
         case 1:
         {
             //Current scriptname
-            FillRect(graphics.backBuffer, 14,226,292,12, graphics.getRGB(61, 48, 162));
+            //FillRect(graphics.backBuffer, 14,226,292,12, graphics.getRGB(61, 48, 162));
             char namebuffer[SCREEN_WIDTH_CHARS + 1];
             vformat_buf(
                 namebuffer, sizeof(namebuffer),
@@ -1223,7 +1241,7 @@ void editorrender(void)
         }
         else
         {
-            ClearSurface(graphics.backBuffer);
+            //ClearSurface(graphics.backBuffer);
         }
 
         int tr = graphics.titlebg.r - (help.glow / 4) - int(fRandom() * 4);
@@ -1245,8 +1263,8 @@ void editorrender(void)
         std::string wrapped = graphics.string_wordwrap(ed.textdesc, 312, &lines);
         short textheight = 8*lines+8;
 
-        FillRect(graphics.backBuffer, 0, 238-textheight, 320, 240, graphics.getRGB(32, 32, 32));
-        FillRect(graphics.backBuffer, 0, 239-textheight, 320, 240, graphics.getRGB(0, 0, 0));
+        //FillRect(graphics.backBuffer, 0, 238-textheight, 320, 240, graphics.getRGB(32, 32, 32));
+        //FillRect(graphics.backBuffer, 0, 239-textheight, 320, 240, graphics.getRGB(0, 0, 0));
         graphics.PrintWrap(4, 240-textheight, wrapped, 255, 255, 255, false, 8, 312);
         std::string input = key.keybuffer;
         if (ed.entframe < 2)
@@ -1264,15 +1282,15 @@ void editorrender(void)
         //placing warp token
         FillRect(graphics.backBuffer, 0,221,320,240, graphics.getRGB(32,32,32));
         FillRect(graphics.backBuffer, 0,222,320,240, graphics.getRGB(0,0,0));
-        graphics.Print(4, 224, loc::gettext("Left click to place warp destination"), 196, 196, 255 - help.glow, false);
-        graphics.Print(4, 232, loc::gettext("Right click to cancel"), 196, 196, 255 - help.glow, false);
+        //graphics.Print(4, 224, loc::gettext("Left click to place warp destination"), 196, 196, 255 - help.glow, false);
+        //graphics.Print(4, 232, loc::gettext("Right click to cancel"), 196, 196, 255 - help.glow, false);
     }
     else
     {
         if(ed.spacemod)
         {
-            FillRect(graphics.backBuffer, 0,208,320,240, graphics.getRGB(32,32,32));
-            FillRect(graphics.backBuffer, 0,209,320,240, graphics.getRGB(0,0,0));
+            //FillRect(graphics.backBuffer, 0,208,320,240, graphics.getRGB(32,32,32));
+            //FillRect(graphics.backBuffer, 0,209,320,240, graphics.getRGB(0,0,0));
 
             //Draw little icons for each thingy
             int tx=6, ty=211, tg=32;
@@ -1281,9 +1299,9 @@ void editorrender(void)
             {
                 for(int i=0; i<10; i++)
                 {
-                    FillRect(graphics.backBuffer, 4+(i*tg), 209,20,20,graphics.getRGB(32,32,32));
+                    //FillRect(graphics.backBuffer, 4+(i*tg), 209,20,20,graphics.getRGB(32,32,32));
                 }
-                FillRect(graphics.backBuffer, 4+(ed.drawmode*tg), 209,20,20,graphics.getRGB(64,64,64));
+                //FillRect(graphics.backBuffer, 4+(ed.drawmode*tg), 209,20,20,graphics.getRGB(64,64,64));
                 //0:
                 graphics.drawtile(tx,ty,83);
                 graphics.drawtile(tx+8,ty,83);
@@ -1321,7 +1339,7 @@ void editorrender(void)
                 graphics.drawsprite(tx,ty,78+ed.entframe,196,196,196);
                 //9:
                 tx+=tg;
-                FillRect(graphics.backBuffer, tx+2,ty+8,12,1,graphics.getRGB(255,255,255));
+                //FillRect(graphics.backBuffer, tx+2,ty+8,12,1,graphics.getRGB(255,255,255));
 
                 for (int i = 0; i < 10; i++)
                 {
@@ -1339,9 +1357,9 @@ void editorrender(void)
             {
                 for(int i=0; i<7; i++)
                 {
-                    FillRect(graphics.backBuffer, 4+(i*tg), 209,20,20,graphics.getRGB(32,32,32));
+                    //FillRect(graphics.backBuffer, 4+(i*tg), 209,20,20,graphics.getRGB(32,32,32));
                 }
-                FillRect(graphics.backBuffer, 4+((ed.drawmode-10)*tg), 209,20,20,graphics.getRGB(64,64,64));
+                //FillRect(graphics.backBuffer, 4+((ed.drawmode-10)*tg), 209,20,20,graphics.getRGB(64,64,64));
                 //10:
                 graphics.Print(tx,ty,"A",196, 196, 255 - help.glow, false);
                 graphics.Print(tx+8,ty,"B",196, 196, 255 - help.glow, false);
@@ -1358,7 +1376,7 @@ void editorrender(void)
                 graphics.drawsprite(tx,ty,18+(ed.entframe%2),196,196,196);
                 //14:
                 tx+=tg;
-                FillRect(graphics.backBuffer, tx+6,ty+2,4,12,graphics.getRGB(255,255,255));
+                //FillRect(graphics.backBuffer, tx+6,ty+2,4,12,graphics.getRGB(255,255,255));
                 //15:
                 tx+=tg;
                 graphics.drawsprite(tx,ty,186,graphics.col_crewblue);
@@ -1388,6 +1406,9 @@ void editorrender(void)
             graphics.Print(320-graphics.len(changetooltext), 232, changetooltext, 196, 196, 255 - help.glow, false);
 
             const char* toolname;
+            //FillRect(graphics.backBuffer, 0,198,120,10, graphics.getRGB(32,32,32));
+            //FillRect(graphics.backBuffer, 0,199,119,9, graphics.getRGB(0,0,0));
+
             switch(ed.drawmode)
             {
             case 0:
@@ -1450,8 +1471,8 @@ void editorrender(void)
             FillRect(graphics.backBuffer, 0,198,toolnamelen+7,10, graphics.getRGB(0,0,0));
             graphics.bprint(2,199, toolname, 196, 196, 255 - help.glow);
 
-            FillRect(graphics.backBuffer, 260,197,80,11, graphics.getRGB(32,32,32));
-            FillRect(graphics.backBuffer, 261,198,80,10, graphics.getRGB(0,0,0));
+            //FillRect(graphics.backBuffer, 260,197,80,11, graphics.getRGB(32,32,32));
+            //FillRect(graphics.backBuffer, 261,198,80,10, graphics.getRGB(0,0,0));
             graphics.bprint(268,199, "("+help.String(ed.levx+1)+","+help.String(ed.levy+1)+")",196, 196, 255 - help.glow, false);
 
         }
@@ -1468,7 +1489,7 @@ void editorrender(void)
                 }
                 else
                 {
-                    FillRect(graphics.backBuffer, 0,230+ed.roomnamehide,320,10, graphics.getRGB(0,0,0));
+                    //FillRect(graphics.backBuffer, 0,230+ed.roomnamehide,320,10, graphics.getRGB(0,0,0));
                 }
                 graphics.bprint(5,231+ed.roomnamehide,room->roomname, 196, 196, 255 - help.glow, true);
                 graphics.bprint(4, 222, loc::gettext("SPACE ^  SHIFT ^"), 196, 196, 255 - help.glow, false);
@@ -1505,12 +1526,13 @@ void editorrender(void)
             }
 
             fillboxabs(0, 117,menuwidth+17,140,graphics.getRGB(64,64,64));
-            FillRect(graphics.backBuffer, 0,118,menuwidth+16,140, graphics.getRGB(0,0,0));
+            //FillRect(graphics.backBuffer, 0,118,menuwidth+16,140, graphics.getRGB(0,0,0));
             for (size_t i = 0; i < SDL_arraysize(shiftmenuoptions); i++)
                 graphics.Print(4, 120+i*10, shiftmenuoptions[i], 164,164,164,false);
 
             fillboxabs(220, 207,100,60,graphics.getRGB(64,64,64));
-            FillRect(graphics.backBuffer, 221,208,160,60, graphics.getRGB(0,0,0));
+
+            //FillRect(graphics.backBuffer, 221,208,160,60, graphics.getRGB(0,0,0));
             graphics.Print(224, 210, loc::gettext("S: Save Map"),164,164,164,false);
             graphics.Print(224, 220, loc::gettext("L: Load Map"),164,164,164,false);
         }
@@ -1584,8 +1606,8 @@ void editorrender(void)
         short banner_y = 120 - textheight/2 - 5;
 
         float alpha = graphics.lerp(ed.oldnotedelay, ed.notedelay);
-        FillRect(graphics.backBuffer, 0, banner_y, 320, 10+textheight, graphics.getRGB(92,92,92));
-        FillRect(graphics.backBuffer, 0, banner_y+1, 320, 8+textheight, graphics.getRGB(0,0,0));
+        //FillRect(graphics.backBuffer, 0, banner_y, 320, 10+textheight, graphics.getRGB(92,92,92));
+        //FillRect(graphics.backBuffer, 0, banner_y+1, 320, 8+textheight, graphics.getRGB(0,0,0));
         graphics.PrintWrap(0,banner_y+5, wrapped, 196-((45.0f-alpha)*4), 196-((45.0f-alpha)*4), 196-((45.0f-alpha)*4), true);
     }
 

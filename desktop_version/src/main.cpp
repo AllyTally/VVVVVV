@@ -590,6 +590,16 @@ int main(int argc, char *argv[])
 
     // Load Ini
 
+    {
+        // Prioritize unlock.vvv first (2.2 and below),
+        // but settings have been migrated to settings.vvv (2.3 and up)
+        struct ScreenSettings screen_settings;
+        SDL_zero(screen_settings);
+        ScreenSettings_default(&screen_settings);
+        game.loadstats(&screen_settings);
+        game.loadsettings(&screen_settings);
+        gameScreen.init(&screen_settings);
+    }
 
     graphics.init();
 
@@ -623,17 +633,6 @@ int main(int argc, char *argv[])
     map.oldypos = map.ypos;
     map.setbgobjlerp(graphics.towerbg);
     map.setbgobjlerp(graphics.titlebg);
-
-    {
-        // Prioritize unlock.vvv first (2.2 and below),
-        // but settings have been migrated to settings.vvv (2.3 and up)
-        struct ScreenSettings screen_settings;
-        SDL_zero(screen_settings);
-        ScreenSettings_default(&screen_settings);
-        game.loadstats(&screen_settings);
-        game.loadsettings(&screen_settings);
-        gameScreen.init(&screen_settings);
-    }
 
     loc::loadtext(false);
     loc::loadlanguagelist();
@@ -872,7 +871,7 @@ static void unfocused_run(void)
 {
     if (!game.blackout)
     {
-        ClearSurface(graphics.backBuffer);
+        //ClearSurface(graphics.backBuffer);
 #define FLIP(YPOS) graphics.flipmode ? 232 - YPOS : YPOS
         graphics.bprint(5, FLIP(110), loc::gettext("Game paused"), 196 - help.glow, 255 - help.glow, 196 - help.glow, true);
         graphics.bprint(5, FLIP(120), loc::gettext("[click to resume]"), 196 - help.glow, 255 - help.glow, 196 - help.glow, true);

@@ -111,17 +111,18 @@ void Screen::LoadIcon(void)
 
 }
 #else
-SDL_Surface* LoadImage(const char* filename);
+//SDL_Surface* LoadImage(const char* filename);
 
 void Screen::LoadIcon(void)
 {
-    SDL_Surface* icon = LoadImage("VVVVVV.png");
+
+    /*SDL_Surface * icon = LoadImage("VVVVVV.png");
     if (icon == NULL)
     {
         return;
     }
     SDL_SetWindowIcon(m_window, icon);
-    VVV_freefunc(SDL_FreeSurface, icon);
+    VVV_freefunc(SDL_FreeSurface, icon);*/
 }
 #endif /* __APPLE__ */
 
@@ -269,13 +270,19 @@ void Screen::UpdateScreen(SDL_Surface* buffer, SDL_Rect* rect )
     }
 
 
-    ClearSurface(m_screen);
-    BlitSurfaceStandard(buffer,NULL,m_screen,rect);
+    //ClearSurface(m_screen);
+    //BlitSurfaceStandard(buffer,NULL,m_screen,rect);
 
-    if(badSignalEffect)
-    {
-        VVV_freefunc(SDL_FreeSurface, buffer);
-    }
+    SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
+    SDL_RenderPresent(m_renderer);
+    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+    SDL_RenderClear(m_renderer);
+    SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
+
+    //if(badSignalEffect)
+    //{
+    //    VVV_freefunc(SDL_FreeSurface, buffer);
+    //}
 
 }
 
@@ -315,7 +322,7 @@ void Screen::FlipScreen(const bool flipmode)
     );
     SDL_RenderPresent(m_renderer);
     SDL_RenderClear(m_renderer);
-    ClearSurface(m_screen);
+    //ClearSurface(m_screen);
 }
 
 void Screen::toggleFullScreen(void)

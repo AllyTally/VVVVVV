@@ -1539,7 +1539,7 @@ void customlevelclass::generatecustomminimap(void)
     map.custommmxsize = 240 - (map.custommmxoff * 2);
     map.custommmysize = 180 - (map.custommmyoff * 2);
 
-    FillRect(graphics.images[12], graphics.getRGB(0, 0, 0));
+    //FillRect(graphics.images[12], graphics.getRGB(0, 0, 0));
 
     // Scan over the map size
     for (int j2 = 0; j2 < mapheight; j2++)
@@ -1587,14 +1587,14 @@ void customlevelclass::generatecustomminimap(void)
                     if (tile >= 1)
                     {
                         // Fill in this pixel
-                        FillRect(
-                            graphics.images[12],
-                            (i2 * 12 * map.customzoom) + i,
-                            (j2 * 9 * map.customzoom) + j,
-                            1,
-                            1,
-                            graphics.getRGB(tm, tm, tm)
-                        );
+                        //FillRect(
+                        //    graphics.images[12],
+                        //    (i2 * 12 * map.customzoom) + i,
+                        //    (j2 * 9 * map.customzoom) + j,
+                        //    1,
+                        //    1,
+                        //    graphics.getRGB(tm, tm, tm)
+                        //);
                     }
                 }
             }
