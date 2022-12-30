@@ -80,7 +80,7 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
             "Unable to initialize PhysFS: %s",
             PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
         );
-        return 0;
+        //return 0;
     }
 
     PHYSFS_permitSymbolicLinks(1);
@@ -140,8 +140,9 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
     mkdir(levelDir, 0777);
     vlog_info("Level directory: %s", levelDir);
 
-    basePath = SDL_GetBasePath();
-
+    //basePath = SDL_GetBasePath();
+    basePath = SDL_strdup("C:\\Users\\Ally\\Desktop\\ved\\");
+    
     if (basePath == NULL)
     {
         vlog_warn("Unable to determine base path, falling back to current directory");
@@ -162,6 +163,11 @@ int FILESYSTEM_init(char *argvZero, char* baseDir, char *assetsPath)
     }
     if (!PHYSFS_mount(output, NULL, 1))
     {
+        vlog_error(
+            "Could not mount %s: %s",
+            output,
+            PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+        );
         vlog_error("Error: data.zip missing!");
         vlog_error("You do not have data.zip!");
         vlog_error("Grab it from your purchased copy of the game,");

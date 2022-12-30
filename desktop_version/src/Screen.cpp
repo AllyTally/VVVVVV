@@ -1,4 +1,5 @@
 #define GAMESCREEN_DEFINITION
+#define DLL_EXPORT
 #include "Screen.h"
 
 #include <SDL.h>
@@ -19,6 +20,13 @@ void ScreenSettings_default(struct ScreenSettings* _this)
     _this->scalingMode = SCALING_INTEGER;
     _this->linearFilter = false;
     _this->badSignal = false;
+}
+
+void* screenbufferPointer;
+
+extern "C" DECLSPEC void SDLCALL setScreenbufferPointer(void* ptr)
+{
+    screenbufferPointer = ptr;
 }
 
 void Screen::init(const struct ScreenSettings* settings)
@@ -57,19 +65,20 @@ void Screen::init(const struct ScreenSettings* settings)
     LoadIcon();
 
     // FIXME: This surface should be the actual backbuffer! -flibit
-    m_screen = SDL_CreateRGBSurface(
-        0,
+    m_screen = SDL_CreateRGBSurfaceFrom(
+        screenbufferPointer,
         SCREEN_WIDTH_PIXELS,
         SCREEN_HEIGHT_PIXELS,
         32,
-        0x00FF0000,
-        0x0000FF00,
+        4*SCREEN_WIDTH_PIXELS,
         0x000000FF,
+        0x0000FF00,
+        0x00FF0000,
         0xFF000000
     );
     m_screenTexture = SDL_CreateTexture(
         m_renderer,
-        SDL_PIXELFORMAT_ARGB8888,
+        SDL_PIXELFORMAT_ABGR8888,
         SDL_TEXTUREACCESS_STREAMING,
         SCREEN_WIDTH_PIXELS,
         SCREEN_HEIGHT_PIXELS
@@ -347,7 +356,7 @@ void Screen::toggleLinearFilter(void)
     SDL_DestroyTexture(m_screenTexture);
     m_screenTexture = SDL_CreateTexture(
         m_renderer,
-        SDL_PIXELFORMAT_ARGB8888,
+        SDL_PIXELFORMAT_ABGR8888,
         SDL_TEXTUREACCESS_STREAMING,
         SCREEN_WIDTH_PIXELS,
         SCREEN_HEIGHT_PIXELS

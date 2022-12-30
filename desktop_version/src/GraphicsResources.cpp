@@ -59,7 +59,7 @@ SDL_Surface* LoadImage(const char *filename)
     {
         optimizedImage = SDL_ConvertSurfaceFormat(
             loadedImage,
-            SDL_PIXELFORMAT_ARGB8888,
+            SDL_PIXELFORMAT_ABGR8888,
             0
         );
         VVV_freefunc(SDL_FreeSurface, loadedImage);

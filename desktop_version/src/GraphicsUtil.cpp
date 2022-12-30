@@ -217,12 +217,13 @@ void BlitSurfaceColoured(
         {
             Uint32 pixel = ReadPixel(_src, x, y);
             Uint32 Alpha = pixel & fmt.Amask;
-            Uint32 result = ct.colour & 0x00FFFFFF;
+            Uint32 result = ct.colour & (fmt.Rmask | fmt.Gmask | fmt.Bmask);
             Uint32 CTAlpha = ct.colour & fmt.Amask;
-            float div1 = ((Alpha >> 24) / 255.0f);
-            float div2 = ((CTAlpha >> 24) / 255.0f);
+       
+            float div1 = ((Alpha >> fmt.Ashift) / 255.0f);
+            float div2 = ((CTAlpha >> fmt.Ashift) / 255.0f);
             Uint32 UseAlpha = (div1 * div2) * 255.0f;
-            DrawPixel(tempsurface, x, y, result | (UseAlpha << 24));
+            DrawPixel(tempsurface, x, y, result | (UseAlpha << fmt.Ashift));
         }
     }
 

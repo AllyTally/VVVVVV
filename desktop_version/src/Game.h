@@ -1,11 +1,16 @@
 #ifndef GAME_H
 #define GAME_H
 
+#define DLL_EXPORT
+
 #include <SDL.h>
 #include <string>
 #include <vector>
 
 #include "ScreenSettings.h"
+
+extern "C" DECLSPEC int SDLCALL getFrameCounter(void);
+extern "C" DECLSPEC int SDLCALL mainLoop(int argc, char* argv[]);
 
 /* FIXME: Can't forward declare this enum in C++, unfortunately.
  * In C, enum sizes are always the same, so you can forward declare them.

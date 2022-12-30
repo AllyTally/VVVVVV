@@ -1678,8 +1678,7 @@ static const char* interact_prompt(
 
 void gamerender(void)
 {
-
-
+    FillRect(graphics.backBuffer, 0, 0, 320, 240, 0, 0, 0);
 
     if(!game.blackout)
     {
