@@ -268,9 +268,8 @@ void Screen::UpdateScreen(SDL_Surface* buffer, SDL_Rect* rect )
         buffer = ApplyFilter(buffer);
     }
 
-
-    ClearSurface(m_screen);
-    BlitSurfaceStandard(buffer,NULL,m_screen,rect);
+    //ClearSurface(m_screen);
+    //BlitSurfaceStandard(buffer,NULL,m_screen,rect);
 
     if(badSignalEffect)
     {

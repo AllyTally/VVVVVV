@@ -160,24 +160,7 @@ void Graphics::init(void)
 
 void Graphics::destroy(void)
 {
-    #define CLEAR_ARRAY(name) \
-        for (size_t i = 0; i < name.size(); i += 1) \
-        { \
-            VVV_freefunc(SDL_FreeSurface, name[i]); \
-        } \
-        name.clear();
-
-    CLEAR_ARRAY(tiles)
-    CLEAR_ARRAY(tiles2)
-    CLEAR_ARRAY(tiles3)
-    CLEAR_ARRAY(entcolours)
-    CLEAR_ARRAY(sprites)
-    CLEAR_ARRAY(flipsprites)
-    CLEAR_ARRAY(tele)
-    CLEAR_ARRAY(bfont)
-    CLEAR_ARRAY(flipbfont)
-
-    #undef CLEAR_ARRAY
+    // TODO: Free surfaces
 }
 
 void Graphics::create_buffers(const SDL_PixelFormat* fmt)
@@ -195,12 +178,12 @@ void Graphics::create_buffers(const SDL_PixelFormat* fmt)
     footerbuffer = CREATE_SURFACE(SCREEN_WIDTH_PIXELS, 10);
     SDL_SetSurfaceBlendMode(footerbuffer, SDL_BLENDMODE_BLEND);
     SDL_SetSurfaceAlphaMod(footerbuffer, 127);
-    FillRect(footerbuffer, 0, 0, 0);
+    //FillRect(footerbuffer, 0, 0, 0);
 
     roomname_translator::dimbuffer = CREATE_SURFACE(SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
     SDL_SetSurfaceBlendMode(roomname_translator::dimbuffer, SDL_BLENDMODE_BLEND);
     SDL_SetSurfaceAlphaMod(roomname_translator::dimbuffer, 96);
-    FillRect(roomname_translator::dimbuffer, 0, 0, 0);
+    //FillRect(roomname_translator::dimbuffer, 0, 0, 0);
 
     ghostbuffer = CREATE_SURFACE(SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
     SDL_SetSurfaceBlendMode(ghostbuffer, SDL_BLENDMODE_BLEND);
@@ -402,26 +385,16 @@ int Graphics::bfontlen(uint32_t ch)
 
 bool Graphics::MakeTileArray(void)
 {
-    PROCESS_TILESHEET(tiles, 8, {})
-    PROCESS_TILESHEET(tiles2, 8, {})
-    PROCESS_TILESHEET(tiles3, 8, {})
-    PROCESS_TILESHEET(entcolours, 8, {})
-
     return true;
 }
 
 bool Graphics::maketelearray(void)
 {
-    PROCESS_TILESHEET_RENAME(teleporter, tele, 96, {})
-
     return true;
 }
 
 bool Graphics::MakeSpriteArray(void)
 {
-    PROCESS_TILESHEET(sprites, 32, {})
-    PROCESS_TILESHEET(flipsprites, 32, {})
-
     return true;
 }
 
@@ -1416,14 +1389,14 @@ void Graphics::cutscenebars(void)
     const int usethispos = lerp(oldcutscenebarspos, cutscenebarspos);
     if (showcutscenebars)
     {
-        FillRect(backBuffer, 0, 0, usethispos, 16, 0, 0, 0);
-        FillRect(backBuffer, 360-usethispos, 224, usethispos, 16, 0, 0, 0);
+        FillRect(0, 0, usethispos, 16, 0, 0, 0);
+        FillRect(360-usethispos, 224, usethispos, 16, 0, 0, 0);
     }
     else if (cutscenebarspos > 0) //disappearing
     {
         //draw
-        FillRect(backBuffer, 0, 0, usethispos, 16, 0, 0, 0);
-        FillRect(backBuffer, 360-usethispos, 224, usethispos, 16, 0, 0, 0);
+        FillRect(0, 0, usethispos, 16, 0, 0, 0);
+        FillRect(360-usethispos, 224, usethispos, 16, 0, 0, 0);
     }
 }
 
@@ -1517,7 +1490,7 @@ void Graphics::drawpixeltextbox(
 ) {
     int k;
 
-    FillRect(backBuffer, x, y, w, h, r/6, g/6, b/6);
+    FillRect(x, y, w, h, r/6, g/6, b/6);
 
     /* Horizontal tiles */
     for (k = 0; k < w/8 - 2; ++k)
@@ -1687,13 +1660,13 @@ void Graphics::drawfade(void)
     case FADE_FADING_OUT:
         for (size_t i = 0; i < SDL_arraysize(fadebars); i++)
         {
-            FillRect(backBuffer, fadebars[i], i * 16, usethisamount, 16, 0, 0, 0);
+            FillRect(fadebars[i], i * 16, usethisamount, 16, 0, 0, 0);
         }
         break;
     case FADE_FADING_IN:
         for (size_t i = 0; i < SDL_arraysize(fadebars); i++)
         {
-            FillRect(backBuffer, fadebars[i]-usethisamount, i * 16, 500, 16, 0, 0, 0);
+            FillRect(fadebars[i]-usethisamount, i * 16, 500, 16, 0, 0, 0);
         }
         break;
     case FADE_NONE:
@@ -1937,40 +1910,40 @@ void Graphics::drawgravityline( int t )
         switch(linestate)
         {
         case 0:
-            FillRect(backBuffer,line_rect, getRGB(200-20, 200-20, 200-20));
+            FillRect(line_rect, getRGB(200-20, 200-20, 200-20));
             break;
         case 1:
-            FillRect(backBuffer,line_rect, getRGB(245-30, 245-30, 225-30));
+            FillRect(line_rect, getRGB(245-30, 245-30, 225-30));
             break;
         case 2:
-            FillRect(backBuffer,line_rect, getRGB(225-30, 245-30, 245-30));
+            FillRect(line_rect, getRGB(225-30, 245-30, 245-30));
             break;
         case 3:
-            FillRect(backBuffer,line_rect, getRGB(200-20, 200-20, 164-10));
+            FillRect(line_rect, getRGB(200-20, 200-20, 164-10));
             break;
         case 4:
-            FillRect(backBuffer,line_rect, getRGB(196-20, 255-30, 224-20));
+            FillRect(line_rect, getRGB(196-20, 255-30, 224-20));
             break;
         case 5:
-            FillRect(backBuffer,line_rect, getRGB(196-20, 235-30, 205-20));
+            FillRect(line_rect, getRGB(196-20, 235-30, 205-20));
             break;
         case 6:
-            FillRect(backBuffer,line_rect, getRGB(164-10, 164-10, 164-10));
+            FillRect(line_rect, getRGB(164-10, 164-10, 164-10));
             break;
         case 7:
-            FillRect(backBuffer,line_rect, getRGB(205-20, 245-30, 225-30));
+            FillRect(line_rect, getRGB(205-20, 245-30, 225-30));
             break;
         case 8:
-            FillRect(backBuffer,line_rect, getRGB(225-30, 255-30, 205-20));
+            FillRect(line_rect, getRGB(225-30, 255-30, 205-20));
             break;
         case 9:
-            FillRect(backBuffer,line_rect, getRGB(245-30, 245-30, 245-30));
+            FillRect(line_rect, getRGB(245-30, 245-30, 245-30));
             break;
         }
     }
     else
     {
-        FillRect(backBuffer,line_rect, getRGB(96, 96, 96));
+        FillRect(line_rect, getRGB(96, 96, 96));
     }
 }
 
@@ -2265,7 +2238,7 @@ void Graphics::drawentity(const int i, const int yoff)
     case 3:    // Big chunky pixels!
         prect.x = xp;
         prect.y = yp - yoff;
-        FillRect(backBuffer, prect, obj.entities[i].realcol);
+        FillRect(prect, obj.entities[i].realcol);
         break;
     case 4:    // Small pickups
         drawhuetile(xp, yp - yoff, obj.entities[i].tile, obj.entities[i].realcol);
@@ -2476,11 +2449,11 @@ void Graphics::drawbackground( int t )
             star_rect.x = lerp(star_rect.x + starsspeed[i], star_rect.x);
             if (starsspeed[i] <= 6)
             {
-                FillRect(backBuffer,star_rect, getRGB(0x22,0x22,0x22));
+                FillRect(star_rect, getRGB(0x22,0x22,0x22));
             }
             else
             {
-                FillRect(backBuffer,star_rect, getRGB(0x55,0x55,0x55));
+                FillRect(star_rect, getRGB(0x55,0x55,0x55));
             }
         }
         break;
@@ -2556,7 +2529,7 @@ void Graphics::drawbackground( int t )
                 }
             break;
         }
-        FillRect(backBuffer,bcol2);
+        FillRect(bcol2);
 
         for (int i = 0; i < numbackboxes; i++)
         {
@@ -2629,12 +2602,12 @@ void Graphics::drawbackground( int t )
             backboxrect.x = lerp(backboxes[i].x - backboxvx[i], backboxes[i].x);
             backboxrect.y = lerp(backboxes[i].y - backboxvy[i], backboxes[i].y);
 
-            FillRect(backBuffer, backboxrect, bcol);
+            FillRect(backboxrect, bcol);
             backboxrect.x += 1;
             backboxrect.y += 1;
             backboxrect.w -= 2;
             backboxrect.h -= 2;
-            FillRect(backBuffer,backboxrect, bcol2);
+            FillRect(backboxrect, bcol2);
         }
         break;
     }
@@ -2698,11 +2671,11 @@ void Graphics::drawbackground( int t )
             const SDL_Rect warprect = {160 - temp, 120 - temp, temp * 2, temp * 2};
             if (i % 2 == warpskip)
             {
-                FillRect(backBuffer, warprect, warpbcol);
+                FillRect(warprect, warpbcol);
             }
             else
             {
-                FillRect(backBuffer, warprect, warpfcol);
+                FillRect(warprect, warpfcol);
             }
         }
         break;
@@ -2718,11 +2691,11 @@ void Graphics::drawbackground( int t )
             star_rect.y = lerp(star_rect.y + starsspeed[i], star_rect.y);
             if (starsspeed[i] <= 8)
             {
-                FillRect(backBuffer, star_rect, getRGB(0x22, 0x22, 0x22));
+                FillRect(star_rect, getRGB(0x22, 0x22, 0x22));
             }
             else
             {
-                FillRect(backBuffer, star_rect, getRGB(0x55, 0x55, 0x55));
+                FillRect(star_rect, getRGB(0x55, 0x55, 0x55));
             }
         }
         break;
@@ -3441,7 +3414,7 @@ int Graphics::crewcolour(const int t)
 
 void Graphics::flashlight(void)
 {
-    FillRect(backBuffer, 0xBB, 0xBB, 0xBB, 0xBB);
+    FillRect(0xBB, 0xBB, 0xBB, 0xBB);
 }
 
 void Graphics::screenshake(void)
@@ -3660,21 +3633,21 @@ void Graphics::drawrect(int x, int y, int w, int h, int r, int g, int b)
     madrect.y = y;
     madrect.w = w;
     madrect.h = 1;
-    FillRect(backBuffer, madrect, getRGB(r, g, b));
+    FillRect(madrect, getRGB(r, g, b));
 
     madrect.w = 1;
     madrect.h = h;
-    FillRect(backBuffer, madrect, getRGB(r, g, b));
+    FillRect(madrect, getRGB(r, g, b));
 
     madrect.x = x + w - 1;
     madrect.w = 1;
     madrect.h = h;
-    FillRect(backBuffer, madrect, getRGB(r, g, b));
+    FillRect(madrect, getRGB(r, g, b));
     madrect.x = x;
     madrect.y = y + h - 1;
     madrect.w = w;
     madrect.h = 1;
-    FillRect(backBuffer, madrect, getRGB(r, g, b));
+    FillRect(madrect, getRGB(r, g, b));
 }
 
 bool Graphics::onscreen(int t)
@@ -3763,7 +3736,7 @@ void Graphics::render_roomname(const char* roomname, int r, int g, int b)
     }
     else
     {
-        FillRect(backBuffer, footerrect, 0, 0, 0);
+        FillRect(footerrect, 0, 0, 0);
         Print(5, 231, roomname, r, g, b, true);
     }
 }

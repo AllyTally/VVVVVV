@@ -712,7 +712,7 @@ static void menurender(void)
 
             int box_x = SDL_min(10, (320-overflow.max_w_px)/2);
             int box_h = overflow.max_h_px - SDL_max(0, 10-loc::get_langmeta()->font_h);
-            FillRect(graphics.backBuffer, box_x-1, 30-1, overflow.max_w_px+2, box_h+2, tr/3, tg/3, tb/3);
+            FillRect(box_x-1, 30-1, overflow.max_w_px+2, box_h+2, tr/3, tg/3, tb/3);
 
             int wraplimit;
             if (overflow.multiline)
@@ -1028,7 +1028,7 @@ static void menurender(void)
             graphics.bigprint(-1, 30, loc::gettext("Text Outline"), tr, tg, tb, true);
             int next_y = graphics.PrintWrap(-1, 65, loc::gettext("Disables outline on game text."), tr, tg, tb, true);
 
-            FillRect(graphics.backBuffer, 0, next_y-4, 320, 16, tr, tg, tb);
+            FillRect(0, next_y-4, 320, 16, tr, tg, tb);
 
             if (!graphics.notextoutline)
             {
@@ -1813,18 +1813,18 @@ void gamecompleterender2(void)
             {
                 if (i > game.creditposx)
                 {
-                    FillRect(graphics.backBuffer, i * 8, j * 8, 8, 8, 0, 0, 0);
+                    FillRect(i * 8, j * 8, 8, 8, 0, 0, 0);
                 }
             }
 
             if (j > game.creditposy)
             {
-                FillRect(graphics.backBuffer, i * 8, j * 8, 8, 8, 0, 0, 0);
+                FillRect(i * 8, j * 8, 8, 8, 0, 0, 0);
             }
         }
     }
 
-    FillRect(graphics.backBuffer, graphics.lerp(game.oldcreditposx * 8, game.creditposx * 8) + 8, game.creditposy * 8, 8, 8, 0, 0, 0);
+    FillRect(graphics.lerp(game.oldcreditposx * 8, game.creditposx * 8) + 8, game.creditposy * 8, 8, 8, 0, 0, 0);
 
     graphics.drawfade();
 
@@ -2387,7 +2387,7 @@ void maprender(void)
     draw_roomname_menu();
 
     //Background color
-    FillRect(graphics.backBuffer,0, 12, 320, 240, 10, 24, 26 );
+    FillRect(0, 12, 320, 240, 10, 24, 26 );
 
     //Menubar:
     graphics.drawtextbox( -10, 212, 43, 3, 65, 185, 207);
@@ -2885,7 +2885,7 @@ void teleporterrender(void)
     draw_roomname_menu();
 
     //Background color
-    FillRect(graphics.backBuffer, 0, 12, 320, 240, 10, 24, 26);
+    FillRect(0, 12, 320, 240, 10, 24, 26);
 
     rendermap();
     rendermapfog();

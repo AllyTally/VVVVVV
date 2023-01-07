@@ -134,6 +134,12 @@ public:
 
     void drawimagecol(int t, int xp, int yp, SDL_Color ct, bool cent= false);
 
+    void drawtexture(SDL_Texture* image, int x, int y);
+
+    void drawtexturepart(SDL_Texture* image, int x, int y, int x2, int y2, int w, int h);
+
+    void drawgridtile(SDL_Texture* image, int t, int x, int y, int width, int height);
+
     void updatetextboxes(void);
     void drawgui(void);
 
@@ -262,16 +268,6 @@ public:
     int m;
 
     std::vector <SDL_Surface*> images;
-
-    std::vector <SDL_Surface*> tele;
-    std::vector <SDL_Surface*> tiles;
-    std::vector <SDL_Surface*> tiles2;
-    std::vector <SDL_Surface*> tiles3;
-    std::vector <SDL_Surface*> entcolours;
-    std::vector <SDL_Surface*> sprites;
-    std::vector <SDL_Surface*> flipsprites;
-    std::vector <SDL_Surface*> bfont;
-    std::vector <SDL_Surface*> flipbfont;
 
     bool flipmode;
     bool setflipmode;
