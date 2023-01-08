@@ -1175,7 +1175,6 @@ void Graphics::drawimagecol( int t, int xp, int yp, const SDL_Color ct, bool cen
 
     SDL_QueryTexture(images[t], NULL, NULL, &trect.w, &trect.h);
 
-    point tpoint;
     if (cent)
     {
         trect.x = 160 - int(trect.w / 2);
@@ -1221,20 +1220,20 @@ void Graphics::drawtexture(SDL_Texture * image, int x, int y)
 {
     int w, h;
     SDL_QueryTexture(image, NULL, NULL, &w, &h);
-    SDL_Rect dstrect{ x, y, w, h };
+    SDL_Rect dstrect = { x, y, w, h };
     SDL_RenderCopy(gameScreen.m_renderer, image, NULL, &dstrect);
 }
 
 void Graphics::drawtexturepart(SDL_Texture* image, int x, int y, int x2, int y2, int w, int h, int scalex, int scaley)
 {
-    SDL_Rect srcrect{ x2, y2, w, h };
+    SDL_Rect srcrect = { x2, y2, w, h };
 
     int flip = SDL_FLIP_NONE;
 
     if (scalex < 0) flip |= SDL_FLIP_HORIZONTAL;
     if (scaley < 0) flip |= SDL_FLIP_VERTICAL;
 
-    SDL_Rect dstrect{ x, y, w * abs(scalex), h * abs(scaley)};
+    SDL_Rect dstrect = { x, y, w * abs(scalex), h * abs(scaley)};
 
     SDL_RenderCopyEx(gameScreen.m_renderer, image, &srcrect, &dstrect, 0, NULL, (SDL_RendererFlip)flip);
 }
@@ -2091,9 +2090,11 @@ void Graphics::drawentity(const int i, const int yoff)
         FillRect(prect, obj.entities[i].realcol);
         break;
     case 4:    // Small pickups
+    {
         SDL_Color color = obj.entities[i].realcol;
         drawcoloredtile(xp, yp - yoff, obj.entities[i].tile, color.r, color.g, color.b);
         break;
+    }
     case 5:    //Horizontal Line
     {
         int oldw = obj.entities[i].w;
