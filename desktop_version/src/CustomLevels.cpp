@@ -21,6 +21,7 @@
 #include "Localization.h"
 #include "LocalizationStorage.h"
 #include "Map.h"
+#include "Screen.h"
 #include "Script.h"
 #include "UtilityClass.h"
 #include "Vlogging.h"
@@ -1539,7 +1540,18 @@ void customlevelclass::generatecustomminimap(void)
     map.custommmxsize = 240 - (map.custommmxoff * 2);
     map.custommmysize = 180 - (map.custommmyoff * 2);
 
-    FillRect(graphics.images[12], graphics.getRGB(0, 0, 0));
+    // Destroy and re-create the minimap image, just in case someone resizes their minimap.png.
+    // The custom generated minimap should always be 240, 180 (though, it gets cropped later at rendering time
+
+    SDL_DestroyTexture(graphics.images[12]);
+    graphics.grphx.im_image12 = SDL_CreateTexture(gameScreen.m_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, 240, 180);
+    graphics.images[12] = graphics.grphx.im_image12;
+
+    // Start drawing the minimap
+
+    SDL_Texture* target = SDL_GetRenderTarget(gameScreen.m_renderer);
+    SDL_SetRenderTarget(gameScreen.m_renderer, graphics.images[12]);
+    FillRect(0, 0, 0);
 
     // Scan over the map size
     for (int j2 = 0; j2 < mapheight; j2++)
@@ -1587,19 +1599,14 @@ void customlevelclass::generatecustomminimap(void)
                     if (tile >= 1)
                     {
                         // Fill in this pixel
-                        FillRect(
-                            graphics.images[12],
-                            (i2 * 12 * map.customzoom) + i,
-                            (j2 * 9 * map.customzoom) + j,
-                            1,
-                            1,
-                            graphics.getRGB(tm, tm, tm)
-                        );
+                        FillRect((i2 * 12 * map.customzoom) + i, (j2 * 9 * map.customzoom) + j, 1, 1, graphics.getRGB(tm, tm, tm));
                     }
                 }
             }
         }
     }
+
+    SDL_SetRenderTarget(gameScreen.m_renderer, target);
 }
 
 // Return a graphics-ready color based off of the given tileset and tilecol

@@ -7105,7 +7105,7 @@ void Game::returntolab(void)
 #if !defined(NO_CUSTOM_LEVELS) && !defined(NO_EDITOR)
 static void resetbg(void)
 {
-    graphics.backgrounddrawn = false;
+
 }
 
 void Game::returntoeditor(void)

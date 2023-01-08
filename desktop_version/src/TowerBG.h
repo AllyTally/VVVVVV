@@ -5,8 +5,6 @@
 
 struct TowerBG
 {
-    SDL_Surface* buffer;
-    SDL_Surface* buffer_lerp;
     bool tdrawback;
     int bypos;
     int bscroll;

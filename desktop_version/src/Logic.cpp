@@ -1406,10 +1406,6 @@ void gamelogic(void)
     if (map.finalmode && map.final_colormode)
     {
         map.final_aniframedelay--;
-        if(map.final_aniframedelay==0)
-        {
-            graphics.foregrounddrawn=false;
-        }
         if (map.final_aniframedelay <= 0) {
             map.final_aniframedelay = 2;
             map.final_aniframe++;

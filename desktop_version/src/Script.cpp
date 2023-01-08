@@ -185,7 +185,6 @@ void scriptclass::run(void)
                 //Do we update our own room?
                 if(game.roomx-100==temprx && game.roomy-100==tempry){
                     //If screen warping, then override all that:
-                    graphics.backgrounddrawn = false;
                     map.warpx=false; map.warpy=false;
                     if(room->warpdir==0){
                         map.background = 1;
@@ -3123,7 +3122,6 @@ void scriptclass::hardreset(void)
     game.ingame_titlemode = false;
 
     //dwgraphicsclass
-    graphics.backgrounddrawn = false;
     graphics.textboxes.clear();
     graphics.flipmode = false; //This will be reset if needs be elsewhere
     graphics.showcutscenebars = false;

@@ -39,17 +39,12 @@ public:
 
     bool Makebfont(void);
 
-    void drawhuetile(int x, int y, int t, SDL_Color ct);
     SDL_Color huetilegetcol(int t);
     SDL_Color bigchunkygetcol(int t);
 
     void drawgravityline(int t);
 
-    bool MakeTileArray(void);
-
     bool MakeSpriteArray(void);
-
-    bool maketelearray(void);
 
     void drawcoloredtile(int x, int y, int t, int r, int g, int b);
 
@@ -136,9 +131,10 @@ public:
 
     void drawtexture(SDL_Texture* image, int x, int y);
 
-    void drawtexturepart(SDL_Texture* image, int x, int y, int x2, int y2, int w, int h);
+    void drawtexturepart(SDL_Texture* image, int x, int y, int x2, int y2, int w, int h, int scalex, int scaley);
 
     void drawgridtile(SDL_Texture* image, int t, int x, int y, int width, int height);
+    void drawgridtile(SDL_Texture* image, int t, int x, int y, int width, int height, int scalex, int scaley);
 
     void updatetextboxes(void);
     void drawgui(void);
@@ -255,7 +251,7 @@ public:
 
     void menuoffrender(void);
 
-    void drawtowerbackground(const TowerBG& bg_obj);
+    void drawtowerbackground(TowerBG& bg_obj);
     void updatetowerbackground(TowerBG& bg_obj);
 
     SDL_Color getcol(int t);
@@ -267,18 +263,20 @@ public:
 
     int m;
 
-    std::vector <SDL_Surface*> images;
+    std::vector <SDL_Surface*> sprites_surf;
+    std::vector <SDL_Surface*> flipsprites_surf;
+
+    std::vector <SDL_Texture*> images;
 
     bool flipmode;
     bool setflipmode;
     bool notextoutline;
-    //buffer objects. //TODO refactor buffer objects
-    SDL_Surface* backBuffer;
-    SDL_Surface* menubuffer;
-    SDL_Surface* foregroundBuffer;
-    SDL_Surface* menuoffbuffer;
-    SDL_Surface* warpbuffer;
-    SDL_Surface* warpbuffer_lerp;
+
+    SDL_Texture* gameTexture;
+    SDL_Texture* tempTexture;
+    SDL_Texture* gameplayTexture;
+    SDL_Texture* menuTexture;
+    SDL_Texture* ghostTexture;
 
     TowerBG towerbg;
     TowerBG titlebg;
@@ -291,11 +289,9 @@ public:
 
     SDL_Rect prect;
     SDL_Rect footerrect;
-    SDL_Surface* footerbuffer;
 
     int linestate, linedelay;
     int backoffset;
-    bool backgrounddrawn, foregrounddrawn;
 
     int menuoffset;
     int oldmenuoffset;
@@ -335,8 +331,6 @@ public:
     bool translucentroomname;
 
     std::map<int, int> font_positions;
-
-    SDL_Surface* ghostbuffer;
 
 #ifndef GAME_DEFINITION
     float inline lerp(const float v0, const float v1)

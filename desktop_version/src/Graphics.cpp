@@ -81,7 +81,6 @@ void Graphics::init(void)
         backboxint[i] = bint;
     }
     backoffset = 0;
-    backgrounddrawn = false;
 
     warpskip = 0;
 
@@ -103,18 +102,13 @@ void Graphics::init(void)
     ingame_fademode = FADE_NONE;
 
     // initialize everything else to zero
-    backBuffer = NULL;
-    foregrounddrawn = false;
-    foregroundBuffer = NULL;
-    backgrounddrawn = false;
     m = 0;
     linedelay = 0;
-    menubuffer = NULL;
-    menuoffbuffer = NULL;
-    warpbuffer = NULL;
-    warpbuffer_lerp = NULL;
-    footerbuffer = NULL;
-    ghostbuffer = NULL;
+    gameTexture = NULL;
+    gameplayTexture = NULL;
+    menuTexture = NULL;
+    ghostTexture = NULL;
+    tempTexture = NULL;
     towerbg = TowerBG();
     titlebg = TowerBG();
     trinketr = 0;
@@ -160,84 +154,35 @@ void Graphics::init(void)
 
 void Graphics::destroy(void)
 {
-    // TODO: Free surfaces
+#define CLEAR_ARRAY(name) \
+    for (size_t i = 0; i < name.size(); i += 1) \
+    { \
+        VVV_freefunc(SDL_FreeSurface, name[i]); \
+    } \
+    name.clear();
+
+    CLEAR_ARRAY(sprites_surf)
+    CLEAR_ARRAY(flipsprites_surf)
+
+#undef CLEAR_ARRAY
 }
 
 void Graphics::create_buffers(const SDL_PixelFormat* fmt)
 {
-    #define CREATE_SURFACE(w, h) \
-        SDL_CreateRGBSurface( \
-            SDL_SWSURFACE, \
-            w, h, \
-            fmt->BitsPerPixel, \
-            fmt->Rmask, fmt->Gmask, fmt->Bmask, fmt->Amask \
-        )
-    backBuffer = CREATE_SURFACE(SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
-    SDL_SetSurfaceBlendMode(backBuffer, SDL_BLENDMODE_NONE);
-
-    footerbuffer = CREATE_SURFACE(SCREEN_WIDTH_PIXELS, 10);
-    SDL_SetSurfaceBlendMode(footerbuffer, SDL_BLENDMODE_BLEND);
-    SDL_SetSurfaceAlphaMod(footerbuffer, 127);
-    //FillRect(footerbuffer, 0, 0, 0);
-
-    roomname_translator::dimbuffer = CREATE_SURFACE(SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
-    SDL_SetSurfaceBlendMode(roomname_translator::dimbuffer, SDL_BLENDMODE_BLEND);
-    SDL_SetSurfaceAlphaMod(roomname_translator::dimbuffer, 96);
-    //FillRect(roomname_translator::dimbuffer, 0, 0, 0);
-
-    ghostbuffer = CREATE_SURFACE(SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
-    SDL_SetSurfaceBlendMode(ghostbuffer, SDL_BLENDMODE_BLEND);
-    SDL_SetSurfaceAlphaMod(ghostbuffer, 127);
-
-    foregroundBuffer =  CREATE_SURFACE(SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
-    SDL_SetSurfaceBlendMode(foregroundBuffer, SDL_BLENDMODE_BLEND);
-
-    menubuffer = CREATE_SURFACE(SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
-    SDL_SetSurfaceBlendMode(menubuffer, SDL_BLENDMODE_NONE);
-
-    warpbuffer = CREATE_SURFACE(SCREEN_WIDTH_PIXELS + 16, SCREEN_HEIGHT_PIXELS + 16);
-    SDL_SetSurfaceBlendMode(warpbuffer, SDL_BLENDMODE_NONE);
-
-    warpbuffer_lerp = CREATE_SURFACE(SCREEN_WIDTH_PIXELS + 16, SCREEN_HEIGHT_PIXELS + 16);
-    SDL_SetSurfaceBlendMode(warpbuffer_lerp, SDL_BLENDMODE_NONE);
-
-    towerbg.buffer =  CREATE_SURFACE(SCREEN_WIDTH_PIXELS + 16, SCREEN_HEIGHT_PIXELS + 16);
-    SDL_SetSurfaceBlendMode(towerbg.buffer, SDL_BLENDMODE_NONE);
-
-    towerbg.buffer_lerp = CREATE_SURFACE(SCREEN_WIDTH_PIXELS + 16, SCREEN_HEIGHT_PIXELS + 16);
-    SDL_SetSurfaceBlendMode(towerbg.buffer_lerp, SDL_BLENDMODE_NONE);
-
-    titlebg.buffer = CREATE_SURFACE(SCREEN_WIDTH_PIXELS + 16, SCREEN_HEIGHT_PIXELS + 16);
-    SDL_SetSurfaceBlendMode(titlebg.buffer, SDL_BLENDMODE_NONE);
-
-    titlebg.buffer_lerp = CREATE_SURFACE(SCREEN_WIDTH_PIXELS + 16, SCREEN_HEIGHT_PIXELS + 16);
-    SDL_SetSurfaceBlendMode(titlebg.buffer_lerp, SDL_BLENDMODE_NONE);
-
-    menuoffbuffer = CREATE_SURFACE(SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
-    SDL_SetSurfaceBlendMode(menuoffbuffer, SDL_BLENDMODE_NONE);
-
-    #undef CREATE_SURFACE
+    gameTexture     = SDL_CreateTexture(gameScreen.m_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
+    gameplayTexture = SDL_CreateTexture(gameScreen.m_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
+    menuTexture     = SDL_CreateTexture(gameScreen.m_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
+    ghostTexture    = SDL_CreateTexture(gameScreen.m_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
+    tempTexture     = SDL_CreateTexture(gameScreen.m_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
 }
 
 void Graphics::destroy_buffers(void)
 {
-#define FREE_SURFACE(SURFACE) VVV_freefunc(SDL_FreeSurface, SURFACE)
-
-    FREE_SURFACE(backBuffer);
-    FREE_SURFACE(footerbuffer);
-    FREE_SURFACE(roomname_translator::dimbuffer);
-    FREE_SURFACE(ghostbuffer);
-    FREE_SURFACE(foregroundBuffer);
-    FREE_SURFACE(menubuffer);
-    FREE_SURFACE(warpbuffer);
-    FREE_SURFACE(warpbuffer_lerp);
-    FREE_SURFACE(towerbg.buffer);
-    FREE_SURFACE(towerbg.buffer_lerp);
-    FREE_SURFACE(titlebg.buffer);
-    FREE_SURFACE(titlebg.buffer_lerp);
-    FREE_SURFACE(menuoffbuffer);
-
-#undef FREE_SURFACE
+    VVV_freefunc(SDL_DestroyTexture, gameTexture);
+    VVV_freefunc(SDL_DestroyTexture, gameplayTexture);
+    VVV_freefunc(SDL_DestroyTexture, menuTexture);
+    VVV_freefunc(SDL_DestroyTexture, ghostTexture);
+    VVV_freefunc(SDL_DestroyTexture, tempTexture);
 }
 
 int Graphics::font_idx(uint32_t ch)
@@ -264,15 +209,11 @@ int Graphics::font_idx(uint32_t ch)
 
 void Graphics::drawspritesetcol(int x, int y, int t, int c)
 {
-    if (!INBOUNDS_VEC(t, sprites))
-    {
-        return;
-    }
-    SDL_Rect rect;
-    setRect(rect,x,y,sprites_rect.w,sprites_rect.h);
     const SDL_Color ct = getcol(c);
 
-    BlitSurfaceColoured(sprites[t],NULL,backBuffer, &rect, ct);
+    SDL_SetTextureColorMod(grphx.im_sprites, ct.r, ct.g, ct.b);
+    drawgridtile(grphx.im_sprites, t, x, y, sprites_rect.w, sprites_rect.h);
+    SDL_SetTextureColorMod(grphx.im_sprites, 255, 255, 255);
 }
 
 void Graphics::updatetitlecolours(void)
@@ -338,12 +279,6 @@ void Graphics::updatetitlecolours(void)
 
 bool Graphics::Makebfont(void)
 {
-    PROCESS_TILESHEET(bfont, 8,
-    {
-        SDL_Surface* TempFlipped = FlipSurfaceVerticle(temp);
-        flipbfont.push_back(TempFlipped);
-    })
-
     unsigned char* charmap = NULL;
     size_t length;
     if (FILESYSTEM_areAssetsInSameRealDir("graphics/font.png", "graphics/font.txt"))
@@ -383,18 +318,11 @@ int Graphics::bfontlen(uint32_t ch)
     }
 }
 
-bool Graphics::MakeTileArray(void)
-{
-    return true;
-}
-
-bool Graphics::maketelearray(void)
-{
-    return true;
-}
-
 bool Graphics::MakeSpriteArray(void)
 {
+    PROCESS_TILESHEET(sprites_surf, 32, {})
+    PROCESS_TILESHEET(flipsprites_surf, 32, {})
+
     return true;
 }
 
@@ -450,38 +378,6 @@ void Graphics::map_option(int opt, int num_opts, const std::string& text, bool s
     }
 }
 
-static void print_char(
-    SDL_Surface* const buffer,
-    SDL_Surface* const font,
-    const int x,
-    const int y,
-    const int scale,
-    const SDL_Color color
-) {
-    SDL_Rect font_rect = {x, y, 8*scale, 8*scale};
-    SDL_Surface* surface;
-
-    if (scale > 1)
-    {
-        surface = ScaleSurface(font, 8 * scale, 8 * scale);
-        if (surface == NULL)
-        {
-            return;
-        }
-    }
-    else
-    {
-        surface = font;
-    }
-
-    BlitSurfaceColoured(surface, NULL, buffer, &font_rect, color);
-
-    if (scale > 1)
-    {
-        VVV_freefunc(SDL_FreeSurface, surface);
-    }
-}
-
 void Graphics::do_print(
     const int x,
     const int y,
@@ -492,7 +388,7 @@ void Graphics::do_print(
     int a,
     const int scale
 ) {
-    std::vector<SDL_Surface*>& font = flipmode ? flipbfont : bfont;
+    //std::vector<SDL_Surface*>& font = flipmode ? flipbfont : bfont;
 
     int position = 0;
     std::string::const_iterator iter = text.begin();
@@ -502,20 +398,20 @@ void Graphics::do_print(
     b = SDL_clamp(b, 0, 255);
     a = SDL_clamp(a, 0, 255);
 
-    const SDL_Color ct = getRGBA(r, g, b, a);
-
     while (iter != text.end())
     {
         const uint32_t character = utf8::unchecked::next(iter);
         const int idx = font_idx(character);
 
-        if (INBOUNDS_VEC(idx, font))
-        {
-            print_char(backBuffer, font[idx], x + position, y, scale, ct);
-        }
+        SDL_SetTextureColorMod(grphx.im_bfont, r, g, b);
+        SDL_SetTextureAlphaMod(grphx.im_bfont, a);
+
+        drawgridtile(grphx.im_bfont, idx, (x + position), y, 8, 8, scale, scale * (flipmode ? -1 : 1));
 
         position += bfontlen(character) * scale;
     }
+    SDL_SetTextureColorMod(grphx.im_bfont, 255, 255, 255);
+    SDL_SetTextureAlphaMod(grphx.im_bfont, 255);
 }
 
 void Graphics::Print( int _x, int _y, const std::string& _s, int r, int g, int b, bool cen /*= false*/ ) {
@@ -982,26 +878,16 @@ void Graphics::printcrewnamestatus( int x, int y, int t, bool rescued )
 
 void Graphics::drawsprite( int x, int y, int t, int r, int g,  int b )
 {
-    if (!INBOUNDS_VEC(t, sprites))
-    {
-        WHINE_ONCE("drawsprite() out-of-bounds!");
-        return;
-    }
-
-    SDL_Rect rect = {x, y, sprites_rect.w, sprites_rect.h};
-    BlitSurfaceColoured(sprites[t], NULL, backBuffer, &rect, getRGB(r, g, b));
+    SDL_SetTextureColorMod(grphx.im_sprites, r, g, b);
+    drawgridtile(grphx.im_sprites, t, x, y, sprites_rect.w, sprites_rect.h);
+    SDL_SetTextureColorMod(grphx.im_sprites, 255, 255, 255);
 }
 
 void Graphics::drawsprite(int x, int y, int t, const SDL_Color color)
 {
-    if (!INBOUNDS_VEC(t, sprites))
-    {
-        WHINE_ONCE("drawsprite() out-of-bounds!");
-        return;
-    }
-
-    SDL_Rect rect = {x, y, sprites_rect.w, sprites_rect.h};
-    BlitSurfaceColoured(sprites[t], NULL, backBuffer, &rect, color);
+    SDL_SetTextureColorMod(grphx.im_sprites, color.r, color.g, color.b);
+    drawgridtile(grphx.im_sprites, t, x, y, sprites_rect.w, sprites_rect.h);
+    SDL_SetTextureColorMod(grphx.im_sprites, 255, 255, 255);
 }
 
 #ifndef NO_CUSTOM_LEVELS
@@ -1015,48 +901,36 @@ bool Graphics::shouldrecoloroneway(const int tilenum, const bool mounted)
 
 void Graphics::drawtile( int x, int y, int t )
 {
-    if (!INBOUNDS_VEC(t, tiles))
-    {
-        WHINE_ONCE("drawtile() out-of-bounds!");
-        return;
-    }
-
-    SDL_Rect rect = {x, y, tiles_rect.w, tiles_rect.h};
-
 #if !defined(NO_CUSTOM_LEVELS)
     if (shouldrecoloroneway(t, tiles1_mounted))
     {
-        const SDL_Color thect = cl.getonewaycol();
-        BlitSurfaceTinted(tiles[t], NULL, backBuffer, &rect, thect);
+        const SDL_Color color = cl.getonewaycol();
+        SDL_SetTextureColorMod(grphx.im_tiles_tint, color.r, color.g, color.b);
+        drawgridtile(grphx.im_tiles_tint, t, x, y, tiles_rect.w, tiles_rect.h);
+        SDL_SetTextureColorMod(grphx.im_tiles_tint, 255, 255, 255);
     }
     else
 #endif
     {
-        BlitSurfaceStandard(tiles[t], NULL, backBuffer, &rect);
+        drawgridtile(grphx.im_tiles, t, x, y, tiles_rect.w, tiles_rect.h);
     }
 }
 
 
 void Graphics::drawtile2( int x, int y, int t )
 {
-    if (!INBOUNDS_VEC(t, tiles2))
-    {
-        WHINE_ONCE("drawtile2() out-of-bounds!");
-        return;
-    }
-
-    SDL_Rect rect = {x, y, tiles_rect.w, tiles_rect.h};
-
 #if !defined(NO_CUSTOM_LEVELS)
     if (shouldrecoloroneway(t, tiles2_mounted))
     {
-        const SDL_Color thect = cl.getonewaycol();
-        BlitSurfaceTinted(tiles2[t], NULL, backBuffer, &rect, thect);
+        const SDL_Color color = cl.getonewaycol();
+        SDL_SetTextureColorMod(grphx.im_tiles2_tint, color.r, color.g, color.b);
+        drawgridtile(grphx.im_tiles2_tint, t, x, y, tiles_rect.w, tiles_rect.h);
+        SDL_SetTextureColorMod(grphx.im_tiles2_tint, 255, 255, 255);
     }
     else
 #endif
     {
-        BlitSurfaceStandard(tiles2[t], NULL, backBuffer, &rect);
+        drawgridtile(grphx.im_tiles2, t, x, y, tiles_rect.w, tiles_rect.h);
     }
 }
 
@@ -1065,42 +939,29 @@ void Graphics::drawtile2( int x, int y, int t )
 void Graphics::drawtile3( int x, int y, int t, int off, int height_subtract /*= 0*/ )
 {
     t += off * 30;
-    if (!INBOUNDS_VEC(t, tiles3))
-    {
-        WHINE_ONCE("drawtile3() out-of-bounds!");
-        return;
-    }
-    SDL_Rect src_rect = { 0, 0, tiles_rect.w, tiles_rect.h - height_subtract };
-    SDL_Rect rect = {x, y, tiles_rect.w, tiles_rect.h};
-    BlitSurfaceStandard(tiles3[t], &src_rect, backBuffer, &rect);
+
+    // Can't use drawgridtile because we want to draw a slice of the tile,
+    // so do the logic ourselves (except include height_subtract in the final call)
+
+    // Get width of texture
+    int w, h;
+    SDL_QueryTexture(grphx.im_tiles3, NULL, NULL, &w, &h);
+    int x2 = (t % (w / 8)) * 8;
+    int y2 = (t / (w / 8)) * 8;
+    drawtexturepart(grphx.im_tiles3, x, y, x2, y2, 8, 8 - height_subtract, 1, 1);
 }
 
 void Graphics::drawtowertile( int x, int y, int t )
 {
-    if (!INBOUNDS_VEC(t, tiles2))
-    {
-        WHINE_ONCE("drawtowertile() out-of-bounds!");
-        return;
-    }
-    x += 8;
-    y += 8;
-    SDL_Rect rect = {x, y, tiles_rect.w, tiles_rect.h};
-    BlitSurfaceStandard(tiles2[t], NULL, warpbuffer, &rect);
+    drawgridtile(grphx.im_tiles2, t, x, y, tiles_rect.w, tiles_rect.h);
 }
 
 
 void Graphics::drawtowertile3( int x, int y, int t, TowerBG& bg_obj )
 {
-    t += bg_obj.colstate*30;
-    if (!INBOUNDS_VEC(t, tiles3))
-    {
-        WHINE_ONCE("drawtowertile3() out-of-bounds!");
-        return;
-    }
-    x += 8;
-    y += 8;
-    SDL_Rect rect = {x, y, tiles_rect.w, tiles_rect.h};
-    BlitSurfaceStandard(tiles3[t], NULL, bg_obj.buffer, &rect);
+    t += bg_obj.colstate * 30;
+
+    drawgridtile(grphx.im_tiles3, t, x, y, tiles_rect.w, tiles_rect.h);
 }
 
 void Graphics::drawgui(void)
@@ -1309,27 +1170,20 @@ void Graphics::drawimagecol( int t, int xp, int yp, const SDL_Color ct, bool cen
     }
     SDL_Rect trect;
 
+    trect.x = xp;
+    trect.y = yp;
+
+    SDL_QueryTexture(images[t], NULL, NULL, &trect.w, &trect.h);
+
     point tpoint;
     if (cent)
     {
-        tpoint.x = 160 - int(images[t]->w / 2);
-        tpoint.y = yp;
-        trect.x = tpoint.x ;
-        trect.y = tpoint.y;
-        trect.w = images[t]->w;
-        trect.h= images[t]->h;
-        BlitSurfaceColoured(images[t], NULL, backBuffer, &trect, ct);
-
+        trect.x = 160 - int(trect.w / 2);
     }
-    else
-    {
-        trect.x = xp;
-        trect.y = yp;
-        trect.w = images[t]->w;
-        trect.h = images[t]->h;
-        BlitSurfaceColoured(images[t], NULL, backBuffer, &trect, ct);
 
-    }
+    SDL_SetTextureColorMod(grphx.im_tiles, ct.r, ct.g, ct.b);
+    drawtexture(images[t], trect.x, trect.y);
+    SDL_SetTextureColorMod(grphx.im_tiles, 255, 255, 255);
 }
 
 void Graphics::drawimage( int t, int xp, int yp, bool cent/*=false*/ )
@@ -1340,48 +1194,64 @@ void Graphics::drawimage( int t, int xp, int yp, bool cent/*=false*/ )
     }
 
     SDL_Rect trect;
+
+    trect.x = xp;
+    trect.y = yp;
+
+    SDL_QueryTexture(images[t], NULL, NULL, &trect.w, &trect.h);
+
     if (cent)
     {
-        trect.x = 160 - int(images[t]->w / 2);
-        trect.y = yp;
-        trect.w = images[t]->w;
-        trect.h = images[t]->h;
-        BlitSurfaceStandard(images[t], NULL, backBuffer, &trect);
+        trect.x = 160 - int(trect.w / 2);
     }
-    else
-    {
 
-        trect.x = xp;
-        trect.y = yp;
-        trect.w = images[t]->w;
-        trect.h= images[t]->h;
-
-        BlitSurfaceStandard(images[t], NULL, backBuffer, &trect);
-    }
+    drawtexture(images[t], trect.x, trect.y);
 }
 
-void Graphics::drawpartimage( int t, int xp, int yp, int wp, int hp)
+void Graphics::drawpartimage(int t, int xp, int yp, int wp, int hp)
 {
-  if (!INBOUNDS_VEC(t, images) || images[t] == NULL)
-  {
-    return;
-  }
+    if (!INBOUNDS_VEC(t, images) || images[t] == NULL)
+    {
+        return;
+    }
+    drawtexturepart(images[t], xp, yp, 0, 0, wp, hp, 1, 1);
+}
 
-  SDL_Rect trect;
+void Graphics::drawtexture(SDL_Texture * image, int x, int y)
+{
+    int w, h;
+    SDL_QueryTexture(image, NULL, NULL, &w, &h);
+    SDL_Rect dstrect{ x, y, w, h };
+    SDL_RenderCopy(gameScreen.m_renderer, image, NULL, &dstrect);
+}
 
-  trect.x = xp;
-  trect.y = yp;
-  trect.w = wp;
-  trect.h= hp;
+void Graphics::drawtexturepart(SDL_Texture* image, int x, int y, int x2, int y2, int w, int h, int scalex, int scaley)
+{
+    SDL_Rect srcrect{ x2, y2, w, h };
 
-  SDL_Rect trect2;
+    int flip = SDL_FLIP_NONE;
 
-  trect2.x = 0;
-  trect2.y = 0;
-  trect2.w = wp;
-  trect2.h= hp;
+    if (scalex < 0) flip |= SDL_FLIP_HORIZONTAL;
+    if (scaley < 0) flip |= SDL_FLIP_VERTICAL;
 
-  BlitSurfaceStandard(images[t], &trect2, backBuffer, &trect);
+    SDL_Rect dstrect{ x, y, w * abs(scalex), h * abs(scaley)};
+
+    SDL_RenderCopyEx(gameScreen.m_renderer, image, &srcrect, &dstrect, 0, NULL, (SDL_RendererFlip)flip);
+}
+
+void Graphics::drawgridtile(SDL_Texture* image, int t, int x, int y, int width, int height)
+{
+    drawgridtile(image, t, x, y, width, height, 1, 1);
+}
+
+void Graphics::drawgridtile(SDL_Texture * image, int t, int x, int y, int width, int height, int scalex, int scaley)
+{
+    // Get width of texture
+    int w, h;
+    SDL_QueryTexture(image, NULL, NULL, &w, &h);
+    int x2 = (t % (w / width)) * width;
+    int y2 = (t / (w / width)) * height;
+    drawtexturepart(image, x, y, x2, y2, width, height, scalex, scaley);
 }
 
 void Graphics::cutscenebars(void)
@@ -1655,7 +1525,7 @@ void Graphics::drawfade(void)
     {
     case FADE_FULLY_BLACK:
     case FADE_START_FADEIN:
-        ClearSurface(backBuffer);
+        FillRect(0, 0, 0);
         break;
     case FADE_FADING_OUT:
         for (size_t i = 0; i < SDL_arraysize(fadebars); i++)
@@ -1830,23 +1700,11 @@ void Graphics::drawmenu(int cr, int cg, int cb, enum Menu::MenuName menu)
 }
 
 
-void Graphics::drawcoloredtile(
-    const int x,
-    const int y,
-    const int t,
-    const int r,
-    const int g,
-    const int b
-) {
-    SDL_Rect rect;
-
-    if (!INBOUNDS_VEC(t, tiles))
-    {
-        return;
-    }
-
-    setRect(rect, x, y, tiles_rect.w, tiles_rect.h);
-    BlitSurfaceColoured(tiles[t], NULL, backBuffer, &rect, getRGB(r, g, b));
+void Graphics::drawcoloredtile(const int x, const int y, const int t, const int r, const int g, const int b)
+{
+    SDL_SetTextureColorMod(grphx.im_tiles_white, r, g, b);
+    drawgridtile(grphx.im_tiles_white, t, x, y, tiles_rect.w, tiles_rect.h);
+    SDL_SetTextureColorMod(grphx.im_tiles_white, 255, 255, 255);
 }
 
 
@@ -2111,9 +1969,9 @@ void Graphics::drawentity(const int i, const int yoff)
     const bool custom_gray = false;
 #endif
 
-    std::vector<SDL_Surface*>& tilesvec = (map.custommode && !map.finalmode) ? entcolours : tiles;
-
-    std::vector<SDL_Surface*>& spritesvec = flipmode ? flipsprites : sprites;
+    SDL_Texture* sprites = flipmode ? grphx.im_flipsprites : grphx.im_sprites;
+    SDL_Texture* tiles = (map.custommode && !map.finalmode) ? grphx.im_entcolours : grphx.im_tiles;
+    SDL_Texture* tiles_tint = (map.custommode && !map.finalmode) ? grphx.im_entcolours_tint : grphx.im_tiles_tint;
 
     const int xp = lerp(obj.entities[i].lerpoldxp, obj.entities[i].xp);
     const int yp = lerp(obj.entities[i].lerpoldyp, obj.entities[i].yp);
@@ -2123,10 +1981,6 @@ void Graphics::drawentity(const int i, const int yoff)
     case 0:
     {
         // Sprites
-        if (!INBOUNDS_VEC(obj.entities[i].drawframe, spritesvec))
-        {
-            return;
-        }
         tpoint.x = xp;
         tpoint.y = yp - yoff;
         const SDL_Color ct = obj.entities[i].realcol;
@@ -2134,7 +1988,9 @@ void Graphics::drawentity(const int i, const int yoff)
         drawRect = sprites_rect;
         drawRect.x += tpoint.x;
         drawRect.y += tpoint.y;
-        BlitSurfaceColoured(spritesvec[obj.entities[i].drawframe], NULL, backBuffer, &drawRect, ct);
+
+        SDL_SetTextureColorMod(sprites, ct.r, ct.g, ct.b);
+        drawgridtile(sprites, obj.entities[i].drawframe, drawRect.x, drawRect.y, 32, 32);
 
         //screenwrapping!
         point wrappedPoint;
@@ -2171,45 +2027,40 @@ void Graphics::drawentity(const int i, const int yoff)
             drawRect = sprites_rect;
             drawRect.x += wrappedPoint.x;
             drawRect.y += tpoint.y;
-            BlitSurfaceColoured(spritesvec[obj.entities[i].drawframe], NULL, backBuffer, &drawRect, ct);
+            drawgridtile(sprites, obj.entities[i].drawframe, drawRect.x, drawRect.y, 32, 32);
         }
         if (wrapY && map.warpy)
         {
             drawRect = sprites_rect;
             drawRect.x += tpoint.x;
             drawRect.y += wrappedPoint.y;
-            BlitSurfaceColoured(spritesvec[obj.entities[i].drawframe], NULL, backBuffer, &drawRect, ct);
+            drawgridtile(sprites, obj.entities[i].drawframe, drawRect.x, drawRect.y, 32, 32);
         }
         if (wrapX && wrapY && map.warpx && map.warpy)
         {
             drawRect = sprites_rect;
             drawRect.x += wrappedPoint.x;
             drawRect.y += wrappedPoint.y;
-            BlitSurfaceColoured(spritesvec[obj.entities[i].drawframe], NULL, backBuffer, &drawRect, ct);
+            drawgridtile(sprites, obj.entities[i].drawframe, drawRect.x, drawRect.y, 32, 32);
         }
+        SDL_SetTextureColorMod(sprites, 255, 255, 255);
         break;
     }
     case 1:
         // Tiles
-        if (!INBOUNDS_VEC(obj.entities[i].drawframe, tiles))
-        {
-            return;
-        }
         tpoint.x = xp;
         tpoint.y = yp - yoff;
         drawRect = tiles_rect;
         drawRect.x += tpoint.x;
         drawRect.y += tpoint.y;
-        BlitSurfaceStandard(tiles[obj.entities[i].drawframe],NULL, backBuffer, &drawRect);
+
+        drawgridtile(tiles, obj.entities[i].drawframe, drawRect.x, drawRect.y, 8, 8);
         break;
     case 2:
     case 8:
     {
         // Special: Moving platform, 4 tiles or 8 tiles
-        if (!INBOUNDS_VEC(obj.entities[i].drawframe, tilesvec))
-        {
-            return;
-        }
+
         tpoint.x = xp;
         tpoint.y = yp - yoff;
         int thiswidth = 4;
@@ -2225,12 +2076,11 @@ void Graphics::drawentity(const int i, const int yoff)
             drawRect.x += 8 * ii;
             if (custom_gray)
             {
-                const SDL_Color temp_ct = {255, 255, 255, 255};
-                BlitSurfaceTinted(tilesvec[obj.entities[i].drawframe], NULL, backBuffer, &drawRect, temp_ct);
+                drawgridtile(tiles_tint, obj.entities[i].drawframe, drawRect.x, drawRect.y, 8, 8);
             }
             else
             {
-                BlitSurfaceStandard(tilesvec[obj.entities[i].drawframe],NULL, backBuffer, &drawRect);
+                drawgridtile(tiles, obj.entities[i].drawframe, drawRect.x, drawRect.y, 8, 8);
             }
         }
         break;
@@ -2241,7 +2091,8 @@ void Graphics::drawentity(const int i, const int yoff)
         FillRect(prect, obj.entities[i].realcol);
         break;
     case 4:    // Small pickups
-        drawhuetile(xp, yp - yoff, obj.entities[i].tile, obj.entities[i].realcol);
+        SDL_Color color = obj.entities[i].realcol;
+        drawcoloredtile(xp, yp - yoff, obj.entities[i].tile, color.r, color.g, color.b);
         break;
     case 5:    //Horizontal Line
     {
@@ -2280,10 +2131,10 @@ void Graphics::drawentity(const int i, const int yoff)
         drawRect = sprites_rect;
         drawRect.x += tpoint.x;
         drawRect.y += tpoint.y;
-        if (INBOUNDS_VEC(obj.entities[i].drawframe, spritesvec))
-        {
-            BlitSurfaceColoured(spritesvec[obj.entities[i].drawframe],NULL, backBuffer, &drawRect, ct);
-        }
+
+        SDL_SetTextureColorMod(sprites, ct.r, ct.g, ct.b);
+
+        drawgridtile(sprites, obj.entities[i].drawframe, drawRect.x, drawRect.y, 32, 32);
 
         tpoint.x = xp+32;
         tpoint.y = yp - yoff;
@@ -2291,10 +2142,8 @@ void Graphics::drawentity(const int i, const int yoff)
         drawRect = sprites_rect;
         drawRect.x += tpoint.x;
         drawRect.y += tpoint.y;
-        if (INBOUNDS_VEC(obj.entities[i].drawframe+1, spritesvec))
-        {
-            BlitSurfaceColoured(spritesvec[obj.entities[i].drawframe+1],NULL, backBuffer, &drawRect, ct);
-        }
+
+        drawgridtile(sprites, obj.entities[i].drawframe + 1, drawRect.x, drawRect.y, 32, 32);
 
         tpoint.x = xp;
         tpoint.y = yp+32 - yoff;
@@ -2302,10 +2151,8 @@ void Graphics::drawentity(const int i, const int yoff)
         drawRect = sprites_rect;
         drawRect.x += tpoint.x;
         drawRect.y += tpoint.y;
-        if (INBOUNDS_VEC(obj.entities[i].drawframe+12, spritesvec))
-        {
-            BlitSurfaceColoured(spritesvec[obj.entities[i].drawframe+12],NULL, backBuffer, &drawRect, ct);
-        }
+
+        drawgridtile(sprites, obj.entities[i].drawframe + 12, drawRect.x, drawRect.y, 32, 32);
 
         tpoint.x = xp+32;
         tpoint.y = yp+32 - yoff;
@@ -2313,10 +2160,10 @@ void Graphics::drawentity(const int i, const int yoff)
         drawRect = sprites_rect;
         drawRect.x += tpoint.x;
         drawRect.y += tpoint.y;
-        if (INBOUNDS_VEC(obj.entities[i].drawframe+13, spritesvec))
-        {
-            BlitSurfaceColoured(spritesvec[obj.entities[i].drawframe + 13],NULL, backBuffer, &drawRect, ct);
-        }
+
+        drawgridtile(sprites, obj.entities[i].drawframe + 13, drawRect.x, drawRect.y, 32, 32);
+
+        SDL_SetTextureColorMod(sprites, 255, 255, 255);
         break;
     }
     case 10:         // 2x1 Sprite
@@ -2329,10 +2176,10 @@ void Graphics::drawentity(const int i, const int yoff)
         drawRect = sprites_rect;
         drawRect.x += tpoint.x;
         drawRect.y += tpoint.y;
-        if (INBOUNDS_VEC(obj.entities[i].drawframe, spritesvec))
-        {
-            BlitSurfaceColoured(spritesvec[obj.entities[i].drawframe],NULL, backBuffer, &drawRect, ct);
-        }
+
+        SDL_SetTextureColorMod(sprites, ct.r, ct.g, ct.b);
+
+        drawgridtile(sprites, obj.entities[i].drawframe, drawRect.x, drawRect.y, 32, 32);
 
         tpoint.x = xp+32;
         tpoint.y = yp - yoff;
@@ -2340,10 +2187,10 @@ void Graphics::drawentity(const int i, const int yoff)
         drawRect = sprites_rect;
         drawRect.x += tpoint.x;
         drawRect.y += tpoint.y;
-        if (INBOUNDS_VEC(obj.entities[i].drawframe+1, spritesvec))
-        {
-            BlitSurfaceColoured(spritesvec[obj.entities[i].drawframe+1],NULL, backBuffer, &drawRect, ct);
-        }
+
+        drawgridtile(sprites, obj.entities[i].drawframe + 1, drawRect.x, drawRect.y, 32, 32);
+
+        SDL_SetTextureColorMod(sprites, 255, 255, 255);
         break;
     }
     case 11:    //The fucking elephant
@@ -2358,11 +2205,10 @@ void Graphics::drawentity(const int i, const int yoff)
         drawRect = sprites_rect;
         drawRect.x += tpoint.x;
         drawRect.y += tpoint.y;
-        if (INBOUNDS_VEC(obj.entities[i].drawframe, spritesvec))
-        {
-            BlitSurfaceColoured(spritesvec[obj.entities[i].drawframe],NULL, backBuffer, &drawRect, ct);
-        }
 
+        SDL_SetTextureColorMod(sprites, ct.r, ct.g, ct.b);
+        drawgridtile(sprites, obj.entities[i].drawframe, drawRect.x, drawRect.y, 32, 32);
+        SDL_SetTextureColorMod(sprites, 255, 255, 255);
 
         //if we're outside the screen, we need to draw indicators
 
@@ -2383,10 +2229,10 @@ void Graphics::drawentity(const int i, const int yoff)
             drawRect = tiles_rect;
             drawRect.x += tpoint.x;
             drawRect.y += tpoint.y;
-            if (INBOUNDS_VEC(1167, tiles))
-            {
-                BlitSurfaceColoured(tiles[1167],NULL, backBuffer, &drawRect, ct);
-            }
+
+            SDL_SetTextureColorMod(sprites, ct.r, ct.g, ct.b);
+            drawgridtile(grphx.im_tiles_white, 1167, drawRect.x, drawRect.y, 8, 8);
+            SDL_SetTextureColorMod(sprites, 255, 255, 255);
 
         }
         else if (obj.entities[i].xp > 340 && obj.entities[i].vx < 0)
@@ -2406,29 +2252,23 @@ void Graphics::drawentity(const int i, const int yoff)
             drawRect = tiles_rect;
             drawRect.x += tpoint.x;
             drawRect.y += tpoint.y;
-            if (INBOUNDS_VEC(1166, tiles))
-            {
-                BlitSurfaceColoured(tiles[1166],NULL, backBuffer, &drawRect, ct);
-            }
+
+            SDL_SetTextureColorMod(sprites, ct.r, ct.g, ct.b);
+            drawgridtile(grphx.im_tiles_white, 1166, drawRect.x, drawRect.y, 8, 8);
+            SDL_SetTextureColorMod(sprites, 255, 255, 255);
         }
         break;
     }
     case 13:
     {
         //Special for epilogue: huge hero!
-        if (!INBOUNDS_VEC(obj.entities[i].drawframe, spritesvec))
-        {
-            return;
-        }
 
         tpoint.x = xp; tpoint.y = yp - yoff;
-        setRect(drawRect, xp, yp - yoff, sprites_rect.x * 6, sprites_rect.y * 6);
-        SDL_Surface* TempSurface = ScaleSurface( spritesvec[obj.entities[i].drawframe], 6 * sprites_rect.w,6* sprites_rect.h );
-        BlitSurfaceColoured(TempSurface, NULL, backBuffer, &drawRect, obj.entities[i].realcol);
-        VVV_freefunc(SDL_FreeSurface, TempSurface);
 
-
-
+        SDL_Color color = obj.entities[i].realcol;
+        SDL_SetTextureColorMod(grphx.im_sprites, color.r, color.g, color.b);
+        drawgridtile(grphx.im_sprites, obj.entities[i].drawframe, tpoint.x, tpoint.y, sprites_rect.w, sprites_rect.h, 6, 6);
+        SDL_SetTextureColorMod(grphx.im_sprites, 255, 255, 255);
         break;
     }
     }
@@ -2440,7 +2280,7 @@ void Graphics::drawbackground( int t )
     {
     case 1:
         //Starfield
-        ClearSurface(backBuffer);
+        FillRect(0, 0, 0);
         for (int i = 0; i < numstars; i++)
         {
             stars[i].w = 2;
@@ -2612,17 +2452,37 @@ void Graphics::drawbackground( int t )
         break;
     }
     case 3: //Warp zone (horizontal)
-        ClearSurface(backBuffer);
-        BlitSurfaceStandard(warpbuffer, NULL, warpbuffer_lerp, NULL);
-        ScrollSurface(warpbuffer_lerp, lerp(0, -3), 0);
-        BlitSurfaceStandard(warpbuffer_lerp, &towerbuffer_rect, backBuffer, NULL);
+    {
+        FillRect(0, 0, 0);
+        const int temp = 680 + (rcol * 3);
+        for (int j = 0; j < 15; j++)
+        {
+            for (int i = 0; i < 22; i++)
+            {
+                drawtowertile((i * 16) - (backoffset - lerp(0, -3)) - 3, (j * 16), temp + 40);
+                drawtowertile((i * 16) - (backoffset - lerp(0, -3)) + 8 - 3, (j * 16), temp + 41);
+                drawtowertile((i * 16) - (backoffset - lerp(0, -3)) - 3, (j * 16) + 8, temp + 80);
+                drawtowertile((i * 16) - (backoffset - lerp(0, -3)) + 8 - 3, (j * 16) + 8, temp + 81);
+            }
+        }
         break;
+    }
     case 4: //Warp zone (vertical)
-        ClearSurface(backBuffer);
-        SDL_BlitSurface(warpbuffer, NULL, warpbuffer_lerp, NULL);
-        ScrollSurface(warpbuffer_lerp, 0, lerp(0, -3));
-        SDL_BlitSurface(warpbuffer_lerp, &towerbuffer_rect, backBuffer, NULL);
+    {
+        FillRect(0, 0, 0);
+        const int temp = 760 + (rcol * 3);
+        for (int j = 0; j < 17; j++)
+        {
+            for (int i = 0; i < 21; i++)
+            {
+                drawtowertile((i * 16),     (j * 16) - (backoffset - lerp(0, -3))     - 3, temp + 40);
+                drawtowertile((i * 16) + 8, (j * 16) - (backoffset - lerp(0, -3))     - 3, temp + 41);
+                drawtowertile((i * 16),     (j * 16) - (backoffset - lerp(0, -3)) + 8 - 3, temp + 80);
+                drawtowertile((i * 16) + 8, (j * 16) - (backoffset - lerp(0, -3)) + 8 - 3, temp + 81);
+            }
+        }
         break;
+    }
     case 5:
     {
         //Warp zone, central
@@ -2682,7 +2542,7 @@ void Graphics::drawbackground( int t )
     }
     case 6:
         //Final Starfield
-        ClearSurface(backBuffer);
+        FillRect(0, 0, 0);
         for (int i = 0; i < numstars; i++)
         {
             stars[i].w = 2;
@@ -2730,7 +2590,7 @@ void Graphics::drawbackground( int t )
         }
         break;
     default:
-        ClearSurface(backBuffer);
+        FillRect(0, 0, 0);
 
         break;
     }
@@ -2797,80 +2657,14 @@ void Graphics::updatebackground(int t)
         break;
     case 3: //Warp zone (horizontal)
     {
-        const int temp = 680 + (rcol * 3);
         backoffset+=3;
         if (backoffset >= 16) backoffset -= 16;
-
-        if (backgrounddrawn)
-        {
-            ScrollSurface(warpbuffer, -3, 0 );
-            for (int j = 0; j < 15; j++)
-            {
-                for (int i = 0; i < 2; i++)
-                {
-                    drawtowertile(317 - backoffset + (i * 16), (j * 16), temp+40);  //20*16 = 320
-                    drawtowertile(317 - backoffset + (i * 16) + 8, (j * 16), temp + 41);
-                    drawtowertile(317 - backoffset + (i * 16), (j * 16) + 8, temp + 80);
-                    drawtowertile(317 - backoffset + (i * 16) + 8, (j * 16) + 8, temp + 81);
-                }
-            }
-        }
-        else
-        {
-            //draw the whole thing for the first time!
-            backoffset = 0;
-            ClearSurface(warpbuffer);
-            for (int j = 0; j < 15; j++)
-            {
-                for (int i = 0; i < 21; i++)
-                {
-                    drawtowertile((i * 16) - backoffset - 3, (j * 16), temp+40);
-                    drawtowertile((i * 16) - backoffset + 8 - 3, (j * 16), temp + 41);
-                    drawtowertile((i * 16) - backoffset - 3, (j * 16) + 8, temp + 80);
-                    drawtowertile((i * 16) - backoffset + 8 - 3, (j * 16) + 8, temp + 81);
-                }
-            }
-            backgrounddrawn = true;
-        }
         break;
     }
     case 4: //Warp zone (vertical)
     {
-        const int temp = 760 + (rcol * 3);
         backoffset+=3;
         if (backoffset >= 16) backoffset -= 16;
-
-        if (backgrounddrawn)
-        {
-            ScrollSurface(warpbuffer,0,-3);
-            for (int j = 0; j < 2; j++)
-            {
-                for (int i = 0; i < 21; i++)
-                {
-                    drawtowertile((i * 16), 237 - backoffset + (j * 16), temp + 40); //14*17=240 - 3
-                    drawtowertile((i * 16) + 8, 237 - backoffset + (j * 16), temp + 41);
-                    drawtowertile((i * 16), 237 - backoffset + (j * 16) + 8, temp + 80);
-                    drawtowertile((i * 16) + 8, 237 - backoffset + (j * 16) + 8, temp + 81);
-                }
-            }
-        }
-        else
-        {
-            //draw the whole thing for the first time!
-            backoffset = 0;
-            ClearSurface(warpbuffer);
-            for (int j = 0; j < 16; j++)
-            {
-                for (int i = 0; i < 21; i++)
-                {
-                    drawtowertile((i * 16), (j * 16)- backoffset - 3, temp+40);
-                    drawtowertile((i * 16)+ 8, (j * 16)- backoffset - 3, temp + 41);
-                    drawtowertile((i * 16), (j * 16)- backoffset + 8 - 3, temp + 80);
-                    drawtowertile((i * 16)+ 8, (j * 16)- backoffset + 8 - 3, temp + 81);
-                }
-            }
-            backgrounddrawn = true;
-        }
         break;
     }
     case 5:
@@ -2903,71 +2697,58 @@ void Graphics::updatebackground(int t)
 
 void Graphics::drawmap(void)
 {
-    if (!foregrounddrawn)
+    if(map.tileset==0)
     {
-        ClearSurface(foregroundBuffer);
-        if(map.tileset==0)
+        for (int j = 0; j < 30; j++)
         {
-            for (int j = 0; j < 30; j++)
+            for (int i = 0; i < 40; i++)
             {
-                for (int i = 0; i < 40; i++)
-                {
-                    const int tile = map.contents[TILE_IDX(i, j)];
-                    if(tile>0) drawforetile(i * 8, j * 8, tile);
-                }
+                const int tile = map.contents[TILE_IDX(i, j)];
+                if(tile>0) drawforetile(i * 8, j * 8, tile);
             }
         }
-        else if (map.tileset == 1)
-        {
-            for (int jt = 0; jt < 30; jt++)
-            {
-                for (int it = 0; it < 40; it++)
-                {
-                    const int tile = map.contents[TILE_IDX(it, jt)];
-                    if(tile>0) drawforetile2(it * 8, jt * 8, tile);
-                }
-            }
-        }
-        else if (map.tileset == 2)
-        {
-            for (int j = 0; j < 30; j++)
-            {
-                for (int i = 0; i < 40; i++)
-                {
-                    const int tile = map.contents[TILE_IDX(i, j)];
-                    if(tile>0) drawforetile3(i * 8, j * 8, tile,map.rcol);
-                }
-            }
-        }
-        foregrounddrawn = true;
     }
-    SDL_BlitSurface(foregroundBuffer, NULL, backBuffer, NULL);
-
+    else if (map.tileset == 1)
+    {
+        for (int jt = 0; jt < 30; jt++)
+        {
+            for (int it = 0; it < 40; it++)
+            {
+                const int tile = map.contents[TILE_IDX(it, jt)];
+                if(tile>0) drawforetile2(it * 8, jt * 8, tile);
+            }
+        }
+    }
+    else if (map.tileset == 2)
+    {
+        for (int j = 0; j < 30; j++)
+        {
+            for (int i = 0; i < 40; i++)
+            {
+                const int tile = map.contents[TILE_IDX(i, j)];
+                if(tile>0) drawforetile3(i * 8, j * 8, tile,map.rcol);
+            }
+        }
+    }
 }
 
 void Graphics::drawfinalmap(void)
 {
-    if (!foregrounddrawn) {
-        ClearSurface(foregroundBuffer);
-        if(map.tileset==0){
-            for (int j = 0; j < 30; j++) {
-                for (int i = 0; i < 40; i++) {
-                    if((map.contents[TILE_IDX(i, j)])>0)
-                        drawforetile(i * 8, j * 8, map.finalat(i,j));
-                }
-            }
-        }else if (map.tileset == 1) {
-            for (int j = 0; j < 30; j++) {
-                for (int i = 0; i < 40; i++) {
-                    if((map.contents[TILE_IDX(i, j)])>0)
-                        drawforetile2(i * 8, j * 8, map.finalat(i,j));
-                }
+    if(map.tileset==0){
+        for (int j = 0; j < 30; j++) {
+            for (int i = 0; i < 40; i++) {
+                if((map.contents[TILE_IDX(i, j)])>0)
+                    drawforetile(i * 8, j * 8, map.finalat(i,j));
             }
         }
-        foregrounddrawn=true;
+    }else if (map.tileset == 1) {
+        for (int j = 0; j < 30; j++) {
+            for (int i = 0; i < 40; i++) {
+                if((map.contents[TILE_IDX(i, j)])>0)
+                    drawforetile2(i * 8, j * 8, map.finalat(i,j));
+            }
+        }
     }
-
-    SDL_BlitSurface(foregroundBuffer, NULL, backBuffer, NULL);
 }
 
 void Graphics::drawtowermap(void)
@@ -2997,62 +2778,23 @@ void Graphics::drawtowerspikes(void)
     }
 }
 
-void Graphics::drawtowerbackground(const TowerBG& bg_obj)
+void Graphics::drawtowerbackground(TowerBG& bg_obj)
 {
-    ClearSurface(backBuffer);
-    SDL_BlitSurface(bg_obj.buffer, NULL, bg_obj.buffer_lerp, NULL);
-    ScrollSurface(bg_obj.buffer_lerp, 0, lerp(0, -bg_obj.bscroll));
-    SDL_BlitSurface(bg_obj.buffer_lerp, &towerbuffer_rect, backBuffer, NULL);
+    int off = bg_obj.scrolldir == 0 ? 0 : bg_obj.bscroll;
+    //Draw the whole thing; needed for every colour cycle!
+    for (int j = -1; j < 32; j++)
+    {
+        for (int i = 0; i < 40; i++)
+        {
+            const int temp = map.tower.backat(i, j, bg_obj.bypos);
+            drawtowertile3(i * 8, (j * 8) - (bg_obj.bypos % 8) - off, temp, bg_obj);
+        }
+    }
 }
 
 void Graphics::updatetowerbackground(TowerBG& bg_obj)
 {
     if (bg_obj.bypos < 0) bg_obj.bypos += 120 * 8;
-
-    if (bg_obj.tdrawback)
-    {
-        int off = bg_obj.scrolldir == 0 ? 0 : bg_obj.bscroll;
-        //Draw the whole thing; needed for every colour cycle!
-        for (int j = -1; j < 32; j++)
-        {
-            for (int i = 0; i < 40; i++)
-            {
-                const int temp = map.tower.backat(i, j, bg_obj.bypos);
-                drawtowertile3(i * 8, (j * 8) - (bg_obj.bypos % 8) - off, temp, bg_obj);
-            }
-        }
-
-        bg_obj.tdrawback = false;
-    }
-    else
-    {
-        //just update the bottom
-        ScrollSurface(bg_obj.buffer, 0, -bg_obj.bscroll);
-        if (bg_obj.scrolldir == 0)
-        {
-            for (int i = 0; i < 40; i++)
-            {
-                int temp = map.tower.backat(i, -1, bg_obj.bypos);
-                drawtowertile3(i * 8, -1*8 - (bg_obj.bypos % 8), temp, bg_obj);
-                temp = map.tower.backat(i, 0, bg_obj.bypos);
-                drawtowertile3(i * 8, -(bg_obj.bypos % 8), temp, bg_obj);
-            }
-        }
-        else
-        {
-            for (int i = 0; i < 40; i++)
-            {
-                int temp = map.tower.backat(i, 29, bg_obj.bypos);
-                drawtowertile3(i * 8, 29*8 - (bg_obj.bypos % 8) - bg_obj.bscroll, temp, bg_obj);
-                temp = map.tower.backat(i, 30, bg_obj.bypos);
-                drawtowertile3(i * 8, 30*8 - (bg_obj.bypos % 8) - bg_obj.bscroll, temp, bg_obj);
-                temp = map.tower.backat(i, 31, bg_obj.bypos);
-                drawtowertile3(i * 8, 31*8 - (bg_obj.bypos % 8) - bg_obj.bscroll, temp, bg_obj);
-                temp = map.tower.backat(i, 32, bg_obj.bypos);
-                drawtowertile3(i * 8, 32*8 - (bg_obj.bypos % 8) - bg_obj.bscroll, temp, bg_obj);
-            }
-        }
-    }
 }
 
 SDL_Color Graphics::getcol( int t )
@@ -3225,30 +2967,10 @@ SDL_Color Graphics::getcol( int t )
 void Graphics::menuoffrender(void)
 {
     const int usethisoffset = lerp(oldmenuoffset, menuoffset);
-    SDL_Rect offsetRect = {0, usethisoffset, backBuffer->w, backBuffer->h};
+    SDL_Rect offsetRect = {0, usethisoffset, SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS};
 
-    BlitSurfaceStandard(backBuffer, NULL, menubuffer, NULL);
-    BlitSurfaceStandard(menuoffbuffer, NULL, backBuffer, NULL);
-    BlitSurfaceStandard(menubuffer, NULL, backBuffer, &offsetRect);
-
-    gameScreen.UpdateScreen(backBuffer, NULL);
-    ClearSurface(backBuffer);
-}
-
-void Graphics::drawhuetile(const int x, const int y, const int tile, const SDL_Color ct)
-{
-    if (!INBOUNDS_VEC(tile, tiles))
-    {
-        return;
-    }
-    point tpoint;
-    tpoint.x = x;
-    tpoint.y = y;
-
-
-    SDL_Rect rect;
-    setRect(rect,tpoint.x,tpoint.y,tiles_rect.w, tiles_rect.h);
-    BlitSurfaceColoured(tiles[tile], NULL, backBuffer, &rect, ct);
+    SDL_RenderCopy(gameScreen.m_renderer, gameplayTexture, NULL, NULL);
+    SDL_RenderCopy(gameScreen.m_renderer, menuTexture,     NULL, &offsetRect);
 }
 
 SDL_Color Graphics::huetilegetcol(const int t)
@@ -3414,15 +3136,18 @@ int Graphics::crewcolour(const int t)
 
 void Graphics::flashlight(void)
 {
+    SDL_SetRenderDrawBlendMode(gameScreen.m_renderer, SDL_BLENDMODE_NONE);
     FillRect(0xBB, 0xBB, 0xBB, 0xBB);
 }
 
 void Graphics::screenshake(void)
 {
-    SDL_Rect shakeRect = {screenshake_x, screenshake_y, backBuffer->w, backBuffer->h};
-    gameScreen.UpdateScreen(backBuffer, &shakeRect);
+    SDL_SetRenderTarget(gameScreen.m_renderer, NULL);
+    SDL_SetRenderDrawBlendMode(gameScreen.m_renderer, SDL_BLENDMODE_NONE);
+    FillRect(0, 0, 0);
 
-    ClearSurface(backBuffer);
+    SDL_Rect shakeRect = { screenshake_x, screenshake_y, SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS };
+    SDL_RenderCopy(gameScreen.m_renderer, gameTexture, NULL, &shakeRect);
 }
 
 void Graphics::updatescreenshake(void)
@@ -3433,7 +3158,11 @@ void Graphics::updatescreenshake(void)
 
 void Graphics::render(void)
 {
-    gameScreen.UpdateScreen(backBuffer, NULL);
+    SDL_SetRenderTarget(gameScreen.m_renderer, NULL);
+    SDL_SetRenderDrawBlendMode(gameScreen.m_renderer, SDL_BLENDMODE_NONE);
+    FillRect(0, 0, 0);
+
+    SDL_RenderCopyEx(gameScreen.m_renderer, gameTexture, NULL, NULL, 0, NULL, flipmode ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE);
 }
 
 void Graphics::renderwithscreeneffects(void)
@@ -3527,20 +3256,17 @@ void Graphics::bigbrprint(int x, int y, const std::string& s, int r, int g, int 
 void Graphics::drawtele(int x, int y, int t, const SDL_Color color)
 {
     SDL_Rect telerect;
-    setRect(telerect, x , y, tele_rect.w, tele_rect.h );
-    if (INBOUNDS_VEC(0, tele))
-    {
-        BlitSurfaceColoured(tele[0], NULL, backBuffer, &telerect, getRGB(16, 16, 16));
-    }
+    setRect(telerect, x, y, tele_rect.w, tele_rect.h);
+
+    SDL_SetTextureColorMod(grphx.im_teleporter, 16, 16, 16);
+    drawgridtile(grphx.im_teleporter, 0, x, y, tele_rect.w, tele_rect.h);
 
     if (t > 9) t = 8;
     if (t < 1) t = 1;
 
-    setRect(telerect, x , y, tele_rect.w, tele_rect.h );
-    if (INBOUNDS_VEC(t, tele))
-    {
-        BlitSurfaceColoured(tele[t], NULL, backBuffer, &telerect, color);
-    }
+    SDL_SetTextureColorMod(grphx.im_teleporter, color.r, color.g, color.b);
+    drawgridtile(grphx.im_teleporter, t, x, y, tele_rect.w, tele_rect.h);
+    SDL_SetTextureColorMod(grphx.im_teleporter, 255, 255, 255);
 }
 
 SDL_Color Graphics::getRGBA(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
@@ -3566,63 +3292,43 @@ SDL_Color Graphics::RGBf(int r, int g, int b)
 
 void Graphics::drawforetile(int x, int y, int t)
 {
-    if (!INBOUNDS_VEC(t, tiles))
-    {
-        WHINE_ONCE("drawforetile() out-of-bounds!");
-        return;
-    }
-
-    SDL_Rect rect;
-    setRect(rect, x,y,tiles_rect.w, tiles_rect.h);
-
 #if !defined(NO_CUSTOM_LEVELS)
     if (shouldrecoloroneway(t, tiles1_mounted))
     {
-        const SDL_Color thect = cl.getonewaycol();
-        BlitSurfaceTinted(tiles[t], NULL, foregroundBuffer, &rect, thect);
+        const SDL_Color color = cl.getonewaycol();
+        SDL_SetTextureColorMod(grphx.im_tiles_tint, color.r, color.g, color.b);
+        drawgridtile(grphx.im_tiles_tint, t, x, y, tiles_rect.w, tiles_rect.h);
+        SDL_SetTextureColorMod(grphx.im_tiles_tint, 255, 255, 255);
     }
     else
 #endif
     {
-        BlitSurfaceStandard(tiles[t],NULL, foregroundBuffer, &rect  );
+        drawgridtile(grphx.im_tiles, t, x, y, tiles_rect.w, tiles_rect.h);
     }
 }
 
 void Graphics::drawforetile2(int x, int y, int t)
 {
-    if (!INBOUNDS_VEC(t, tiles2))
-    {
-        WHINE_ONCE("drawforetile2() out-of-bounds!");
-        return;
-    }
-
-    SDL_Rect rect;
-    setRect(rect, x,y,tiles_rect.w, tiles_rect.h);
-
 #if !defined(NO_CUSTOM_LEVELS)
     if (shouldrecoloroneway(t, tiles2_mounted))
     {
-        const SDL_Color thect = cl.getonewaycol();
-        BlitSurfaceTinted(tiles2[t], NULL, foregroundBuffer, &rect, thect);
+        const SDL_Color color = cl.getonewaycol();
+        SDL_SetTextureColorMod(grphx.im_tiles2_tint, color.r, color.g, color.b);
+        drawgridtile(grphx.im_tiles2_tint, t, x, y, tiles_rect.w, tiles_rect.h);
+        SDL_SetTextureColorMod(grphx.im_tiles2_tint, 255, 255, 255);
     }
     else
 #endif
     {
-        BlitSurfaceStandard(tiles2[t],NULL, foregroundBuffer, &rect  );
+        drawgridtile(grphx.im_tiles2, t, x, y, tiles_rect.w, tiles_rect.h);
     }
 }
 
 void Graphics::drawforetile3(int x, int y, int t, int off)
 {
     t += off * 30;
-    if (!INBOUNDS_VEC(t, tiles3))
-    {
-        WHINE_ONCE("drawforetile3() out-of-bounds!");
-        return;
-    }
-    SDL_Rect rect;
-    setRect(rect, x,y,tiles_rect.w, tiles_rect.h);
-    BlitSurfaceStandard(tiles3[t],NULL, foregroundBuffer, &rect  );
+
+    drawgridtile(grphx.im_tiles3, t, x, y, tiles_rect.w, tiles_rect.h);
 }
 
 void Graphics::drawrect(int x, int y, int w, int h, int r, int g, int b)
@@ -3662,9 +3368,7 @@ bool Graphics::reloadresources(void)
 
     destroy();
 
-    MAYBE_FAIL(MakeTileArray());
     MAYBE_FAIL(MakeSpriteArray());
-    MAYBE_FAIL(maketelearray());
     MAYBE_FAIL(Makebfont());
 
     images.clear();
@@ -3729,14 +3433,10 @@ SDL_Color Graphics::crewcolourreal(int t)
 void Graphics::render_roomname(const char* roomname, int r, int g, int b)
 {
     footerrect.y = 230;
-    if (translucentroomname)
-    {
-        SDL_BlitSurface(footerbuffer, NULL, backBuffer, &footerrect);
-        bprint(5, 231, roomname, r, g, b, true);
-    }
-    else
-    {
-        FillRect(footerrect, 0, 0, 0);
-        Print(5, 231, roomname, r, g, b, true);
-    }
+
+    SDL_SetRenderDrawColor(gameScreen.m_renderer, 0, 0, 0, translucentroomname ? 127 : 255);
+    SDL_SetRenderDrawBlendMode(gameScreen.m_renderer, SDL_BLENDMODE_BLEND);
+    SDL_RenderFillRect(gameScreen.m_renderer, &footerrect);
+    bprint(5, 231, roomname, r, g, b, true);
+
 }

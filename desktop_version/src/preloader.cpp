@@ -114,11 +114,11 @@ void preloaderrender(void)
   }else if (pre_transition <= -10) {
     //Switch to TITLEMODE (handled by preloaderrenderfixed)
   }else if (pre_transition < 5) {
-    ClearSurface(graphics.backBuffer);
+      FillRect(0, 0, 0);
   }else if (pre_transition < 20) {
     pre_temprecty = 0;
     pre_temprecth = 240;
-    ClearSurface(graphics.backBuffer);
+    FillRect(0, 0, 0);
     FillRect(pre_frontrectx, pre_frontrecty, pre_frontrectw,pre_frontrecth, graphics.getRGB(0x3E,0x31,0xA2));
 
     print_percentage = true;

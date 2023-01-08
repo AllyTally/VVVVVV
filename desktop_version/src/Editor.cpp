@@ -493,7 +493,8 @@ void editorrender(void)
 
     //Draw grid
 
-    ClearSurface(graphics.backBuffer);
+    FillRect(0, 0, 0);
+
     for(int j=0; j<30; j++)
     {
         for(int i=0; i<40; i++)
@@ -595,7 +596,6 @@ void editorrender(void)
 
     // Special case for drawing gray entities
     bool custom_gray = room->tileset == 3 && room->tilecol == 6;
-    const SDL_Color gray_ct = {255, 255, 255, 255};
 
     // Draw entities backward to remain accurate with ingame
     for (int i = customentities.size() - 1; i >= 0; i--)
@@ -621,18 +621,13 @@ void editorrender(void)
                 fillboxabs((customentities[i].x*8)- (ed.levx*40*8),(customentities[i].y*8)- (ed.levy*30*8),16,16,graphics.getRGB(255,164,255));
                 break;
             case 2: //Threadmills & platforms
-                if (!INBOUNDS_VEC(obj.customplatformtile, graphics.entcolours))
-                {
-                    continue;
-                }
                 tpoint.x = (customentities[i].x*8)- (ed.levx*40*8);
                 tpoint.y = (customentities[i].y*8)- (ed.levy*30*8);
                 drawRect = graphics.tiles_rect;
                 drawRect.x += tpoint.x;
                 drawRect.y += tpoint.y;
                 for (int j = 0; j < 4; j++) {
-                    if (custom_gray) BlitSurfaceTinted(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect, gray_ct);
-                    else BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
+                    graphics.drawgridtile(custom_gray ? graphics.grphx.im_entcolours_tint : graphics.grphx.im_entcolours, obj.customplatformtile, drawRect.x, drawRect.y, 8, 8);
                     drawRect.x += 8;
                 }
 
@@ -664,8 +659,7 @@ void editorrender(void)
                     drawRect.x += tpoint.x;
                     drawRect.y += tpoint.y;
                     for (int j = 0; j < 4; j++) {
-                        if (custom_gray) BlitSurfaceTinted(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect, gray_ct);
-                        else BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
+                        graphics.drawgridtile(custom_gray ? graphics.grphx.im_entcolours_tint : graphics.grphx.im_entcolours, obj.customplatformtile, drawRect.x, drawRect.y, 8, 8);
                         drawRect.x += 8;
                     }
                 }
@@ -682,18 +676,13 @@ void editorrender(void)
                 }
                 break;
             case 3: //Disappearing Platform
-                if (!INBOUNDS_VEC(obj.customplatformtile, graphics.entcolours))
-                {
-                    continue;
-                }
                 tpoint.x = (customentities[i].x*8)- (ed.levx*40*8);
                 tpoint.y = (customentities[i].y*8)- (ed.levy*30*8);
                 drawRect = graphics.tiles_rect;
                 drawRect.x += tpoint.x;
                 drawRect.y += tpoint.y;
                 for (int j = 0; j < 4; j++) {
-                    if (custom_gray) BlitSurfaceTinted(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect, gray_ct);
-                    else BlitSurfaceStandard(graphics.entcolours[obj.customplatformtile],NULL, graphics.backBuffer, &drawRect);
+                    graphics.drawgridtile(custom_gray ? graphics.grphx.im_entcolours_tint : graphics.grphx.im_entcolours, obj.customplatformtile, drawRect.x, drawRect.y, 8, 8);
                     drawRect.x += 8;
                 }
 
@@ -922,11 +911,12 @@ void editorrender(void)
 
     //Draw ghosts (spooky!)
     if (game.ghostsenabled) {
-        ClearSurface(graphics.ghostbuffer);
+        SDL_SetRenderTarget(gameScreen.m_renderer, graphics.ghostTexture);
+        SDL_SetRenderDrawColor(gameScreen.m_renderer, 0, 0, 0, 0);
+        SDL_RenderClear(gameScreen.m_renderer);
         for (int i = 0; i < (int)ed.ghosts.size(); i++) {
             if (i <= ed.currentghosts) { // We don't want all of them to show up at once :)
-                if (ed.ghosts[i].rx != ed.levx || ed.ghosts[i].ry != ed.levy
-                || !INBOUNDS_VEC(ed.ghosts[i].frame, graphics.sprites))
+                if (ed.ghosts[i].rx != ed.levx || ed.ghosts[i].ry != ed.levy)
                     continue;
                 point tpoint;
                 tpoint.x = ed.ghosts[i].x;
@@ -937,10 +927,15 @@ void editorrender(void)
                 SDL_Rect drawRect = graphics.sprites_rect;
                 drawRect.x += tpoint.x;
                 drawRect.y += tpoint.y;
-                BlitSurfaceColoured(graphics.sprites[ed.ghosts[i].frame],NULL, graphics.ghostbuffer, &drawRect, ct);
+                SDL_SetTextureAlphaMod(graphics.grphx.im_sprites, ct.a);
+                graphics.drawsprite(drawRect.x, drawRect.y, ed.ghosts[i].frame, ct);
+                SDL_SetTextureAlphaMod(graphics.grphx.im_sprites, 255);
             }
         }
-        SDL_BlitSurface(graphics.ghostbuffer, NULL, graphics.backBuffer, NULL);
+        SDL_SetRenderTarget(gameScreen.m_renderer, graphics.gameTexture);
+        SDL_SetTextureAlphaMod(graphics.ghostTexture, 128);
+        SDL_SetTextureBlendMode(graphics.ghostTexture, SDL_BLENDMODE_BLEND);
+        SDL_RenderCopy(gameScreen.m_renderer, graphics.ghostTexture, NULL, NULL);
     }
 
     //Draw Cursor
@@ -1028,9 +1023,14 @@ void editorrender(void)
             const int temp = ed.dmtile - (ed.dmtile % 40) - 80;
             FillRect(0,-t2,320,40, graphics.getRGB(0,0,0));
             FillRect(0,-t2+40,320,2, graphics.getRGB(255,255,255));
-            if(room->tileset==0)
+
+            int texturewidth;
+            int textureheight;
+
+            if (room->tileset == 0)
             {
-                const int numtiles = (((int) graphics.tiles.size()) / 40) * 40;
+                SDL_QueryTexture(graphics.grphx.im_tiles, NULL, NULL, &texturewidth, &textureheight);
+                const int numtiles = (int)(texturewidth / 8) * (textureheight / 8);
 
                 for(int i=0; i<40; i++)
                 {
@@ -1043,7 +1043,8 @@ void editorrender(void)
             }
             else
             {
-                const int numtiles = (((int) graphics.tiles2.size()) / 40) * 40;
+                SDL_QueryTexture(graphics.grphx.im_tiles2, NULL, NULL, &texturewidth, &textureheight);
+                const int numtiles = (int)(texturewidth / 8) * (textureheight / 8);
 
                 for(int i=0; i<40; i++)
                 {
@@ -1223,7 +1224,7 @@ void editorrender(void)
         }
         else
         {
-            ClearSurface(graphics.backBuffer);
+            FillRect(0, 0, 0);
         }
 
         int tr = graphics.titlebg.r - (help.glow / 4) - int(fRandom() * 4);
@@ -1461,15 +1462,11 @@ void editorrender(void)
             //FillRect(0,231,71,240, graphics.RGB(0,0,0));
             if(room->roomname!="")
             {
-                if (graphics.translucentroomname)
-                {
-                    graphics.footerrect.y = 230+ed.roomnamehide;
-                    SDL_BlitSurface(graphics.footerbuffer, NULL, graphics.backBuffer, &graphics.footerrect);
-                }
-                else
-                {
-                    FillRect(0,230+ed.roomnamehide,320,10, graphics.getRGB(0,0,0));
-                }
+                graphics.footerrect.y = 230 + ed.roomnamehide;
+                SDL_SetRenderDrawColor(gameScreen.m_renderer, 0, 0, 0, graphics.translucentroomname ? 127 : 255);
+                SDL_SetRenderDrawBlendMode(gameScreen.m_renderer, SDL_BLENDMODE_BLEND);
+                SDL_RenderFillRect(gameScreen.m_renderer, &graphics.footerrect);
+
                 graphics.bprint(5,231+ed.roomnamehide,room->roomname, 196, 196, 255 - help.glow, true);
                 graphics.bprint(4, 222, loc::gettext("SPACE ^  SHIFT ^"), 196, 196, 255 - help.glow, false);
                 graphics.bprint(268,222, "("+help.String(ed.levx+1)+","+help.String(ed.levy+1)+")",196, 196, 255 - help.glow, false);
@@ -1858,13 +1855,11 @@ static void editormenuactionpress(void)
         case 4:
             //Load level
             ed.settingsmod=false;
-            graphics.backgrounddrawn=false;
             map.nexttowercolour();
 
             ed.keydelay = 6;
             ed.getlin(TEXT_LOAD, loc::gettext("Enter map filename to load:"), &(ed.filename));
             game.mapheld=true;
-            graphics.backgrounddrawn=false;
             break;
         case 5:
             //Save level
@@ -1874,7 +1869,6 @@ static void editormenuactionpress(void)
             ed.keydelay = 6;
             ed.getlin(TEXT_SAVE, loc::gettext("Enter map filename to save as:"), &(ed.filename));
             game.mapheld=true;
-            graphics.backgrounddrawn=false;
             break;
         case 6:
             /* Game options */
@@ -1939,7 +1933,6 @@ static void editormenuactionpress(void)
             ed.keydelay = 6;
             ed.getlin(TEXT_SAVE, loc::gettext("Enter map filename to save as:"), &(ed.filename));
             game.mapheld=true;
-            graphics.backgrounddrawn=false;
             break;
         case 1:
             //Quit without saving
@@ -2076,7 +2069,6 @@ void editorinput(void)
             {
                 ed.settingsmod = true;
             }
-            graphics.backgrounddrawn=false;
 
             if (ed.settingsmod)
             {
@@ -2357,7 +2349,6 @@ void editorinput(void)
 
                 ed.levx = SDL_clamp(help.Int(coord_x) - 1, 0, cl.mapwidth - 1);
                 ed.levy = SDL_clamp(help.Int(coord_y) - 1, 0, cl.mapheight - 1);
-                graphics.backgrounddrawn = false;
                 break;
             }
             case TEXT_LOAD:
@@ -2540,15 +2531,20 @@ void editorinput(void)
         else if (key.keymap[SDLK_LCTRL] || key.keymap[SDLK_RCTRL])
         {
             // Ctrl modifiers
-            int numtiles;
+            int texturewidth;
+            int textureheight;
+
             if (cl.getroomprop(ed.levx, ed.levy)->tileset == 0)
             {
-                numtiles = (((int) graphics.tiles.size()) / 40) * 40;
+                SDL_QueryTexture(graphics.grphx.im_tiles, NULL, NULL, &texturewidth, &textureheight);
             }
             else
             {
-                numtiles = (((int) graphics.tiles2.size()) / 40) * 40;
+                SDL_QueryTexture(graphics.grphx.im_tiles2, NULL, NULL, &texturewidth, &textureheight);
             }
+
+            const int numtiles = (int)(texturewidth / 8) * (textureheight / 8);
+
             ed.dmtileeditor=10;
             if(left_pressed)
             {
@@ -2583,13 +2579,11 @@ void editorinput(void)
             if (key.keymap[SDLK_F1])
             {
                 ed.switch_tileset(true);
-                graphics.backgrounddrawn = false;
                 ed.keydelay = 6;
             }
             if (key.keymap[SDLK_F2])
             {
                 ed.switch_tilecol(true);
-                graphics.backgrounddrawn = false;
                 ed.keydelay = 6;
             }
             if (key.keymap[SDLK_F3])
@@ -2600,7 +2594,6 @@ void editorinput(void)
             if (key.keymap[SDLK_w])
             {
                 ed.switch_warpdir(true);
-                graphics.backgrounddrawn = false;
                 ed.keydelay = 6;
             }
 
@@ -2659,13 +2652,11 @@ void editorinput(void)
             if(key.keymap[SDLK_F1])
             {
                 ed.switch_tileset(false);
-                graphics.backgrounddrawn = false;
                 ed.keydelay = 6;
             }
             if(key.keymap[SDLK_F2])
             {
                 ed.switch_tilecol(false);
-                graphics.backgrounddrawn = false;
                 ed.keydelay = 6;
             }
             if(key.keymap[SDLK_F3])
@@ -2703,7 +2694,6 @@ void editorinput(void)
                     cl.setroomdirectmode(ed.levx, ed.levy, 1);
                     ed.note=loc::gettext("Direct Mode Enabled");
                 }
-                graphics.backgrounddrawn=false;
 
                 ed.notedelay=45;
                 ed.updatetiles=true;
@@ -2730,7 +2720,6 @@ void editorinput(void)
             if(key.keymap[SDLK_w])
             {
                 ed.switch_warpdir(false);
-                graphics.backgrounddrawn = false;
                 ed.keydelay = 6;
             }
             if(key.keymap[SDLK_e])
@@ -2848,7 +2837,6 @@ void editorinput(void)
                         }
 
                         music.haltdasmusik();
-                        graphics.backgrounddrawn=false;
                         ed.returneditoralpha = 1000; // Let's start it higher than 255 since it gets clamped
                         ed.oldreturneditoralpha = 1000;
                         script.startgamemode(Start_EDITORPLAYTESTING);
@@ -2892,7 +2880,6 @@ void editorinput(void)
             if(up_pressed)
             {
                 ed.keydelay=6;
-                graphics.backgrounddrawn=false;
                 ed.levy--;
                 ed.updatetiles=true;
                 ed.changeroom=true;
@@ -2900,7 +2887,6 @@ void editorinput(void)
             else if(down_pressed)
             {
                 ed.keydelay=6;
-                graphics.backgrounddrawn=false;
                 ed.levy++;
                 ed.updatetiles=true;
                 ed.changeroom=true;
@@ -2908,7 +2894,6 @@ void editorinput(void)
             else if(left_pressed)
             {
                 ed.keydelay=6;
-                graphics.backgrounddrawn=false;
                 ed.levx--;
                 ed.updatetiles=true;
                 ed.changeroom=true;
@@ -2916,7 +2901,6 @@ void editorinput(void)
             else if(right_pressed)
             {
                 ed.keydelay=6;
-                graphics.backgrounddrawn=false;
                 ed.levx++;
                 ed.updatetiles=true;
                 ed.changeroom=true;

@@ -1081,16 +1081,6 @@ void mapclass::gotoroom(int rx, int ry)
     }
     loadlevel(game.roomx, game.roomy);
 
-
-    //Do we need to reload the background?
-    bool redrawbg = game.roomx != game.prevroomx || game.roomy != game.prevroomy;
-
-    if(redrawbg)
-    {
-        graphics.backgrounddrawn = false; //Used for background caching speedup
-    }
-    graphics.foregrounddrawn = false; //Used for background caching speedup
-
     game.prevroomx = game.roomx;
     game.prevroomy = game.roomy;
 
@@ -1614,7 +1604,6 @@ void mapclass::loadlevel(int rx, int ry)
         tileset = 1;
         background = 3;
         graphics.rcol = warplevel.rcol;
-        graphics.backgrounddrawn = false;
 
         warpx = warplevel.warpx;
         warpy = warplevel.warpy;
@@ -1641,7 +1630,6 @@ void mapclass::loadlevel(int rx, int ry)
         roomname_special = finallevel.roomname_special;
         tileset = 1;
         background = 3;
-        graphics.backgrounddrawn = false;
 
         if (finalstretch)
         {
@@ -1852,13 +1840,6 @@ void mapclass::loadlevel(int rx, int ry)
             tileset = 1;
             background = 1;
             break;
-        }
-
-        // If screen warping, then override all that:
-        bool redrawbg = game.roomx != game.prevroomx || game.roomy != game.prevroomy;
-        if (redrawbg)
-        {
-            graphics.backgrounddrawn = false;
         }
 
         switch (room->warpdir)

@@ -9,8 +9,6 @@ SDL_Surface* GetSubSurface( SDL_Surface* metaSurface, int x, int y, int width, i
 
 SDL_Color ReadPixel(const SDL_Surface* surface, int x, int y);
 
-SDL_Surface * ScaleSurface( SDL_Surface *Surface, int Width, int Height, SDL_Surface * Dest = NULL );
-
 void BlitSurfaceStandard( SDL_Surface* _src, SDL_Rect* _srcRect, SDL_Surface* _dest, SDL_Rect* _destRect );
 
 void BlitSurfaceColoured(SDL_Surface* src, const SDL_Rect* src_rect, SDL_Surface* dest, SDL_Rect* dest_rect, SDL_Color color);
@@ -31,11 +29,6 @@ void FillRect(int x, int y, int w, int h, SDL_Color color);
 
 void FillRect(int r, int g, int b, int a);
 
-void ClearSurface(SDL_Surface* surface);
-
-void ScrollSurface(SDL_Surface* _src, int pX, int py);
-
-SDL_Surface * FlipSurfaceVerticle(SDL_Surface* _src);
 void UpdateFilter(void);
 SDL_Surface* ApplyFilter( SDL_Surface* _src );
 

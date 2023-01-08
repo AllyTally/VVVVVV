@@ -1596,9 +1596,7 @@ static void menurender(void)
 
 void titlerender(void)
 {
-
-    ClearSurface(graphics.backBuffer);
-
+    FillRect(0, 0, 0);
     if (!game.menustart)
     {
         tr = graphics.col_tr;
@@ -1649,7 +1647,7 @@ void titlerender(void)
 
 void gamecompleterender(void)
 {
-    ClearSurface(graphics.backBuffer);
+    FillRect(0, 0, 0);
 
     if(!game.colourblindmode) graphics.drawtowerbackground(graphics.titlebg);
 
@@ -1801,7 +1799,7 @@ void gamecompleterender(void)
 
 void gamecompleterender2(void)
 {
-    ClearSurface(graphics.backBuffer);
+    FillRect(0, 0, 0);
 
     graphics.drawimage(10, 0, 0);
 
@@ -1854,8 +1852,9 @@ static const char* interact_prompt(
 
 void gamerender(void)
 {
-
-
+    SDL_SetRenderTarget(gameScreen.m_renderer, graphics.gameplayTexture);
+    SDL_SetRenderDrawColor(gameScreen.m_renderer, 0, 0, 0, 255);
+    SDL_RenderClear(gameScreen.m_renderer);
 
     if(!game.blackout)
     {
@@ -1868,7 +1867,7 @@ void gamerender(void)
             }
             else
             {
-                ClearSurface(graphics.backBuffer);
+                FillRect(0, 0, 0);
             }
             graphics.drawtowermap();
         }
@@ -1880,7 +1879,7 @@ void gamerender(void)
             }
             else
             {
-                ClearSurface(graphics.backBuffer);
+                FillRect(0, 0, 0);
             }
             if ((map.finalmode || map.custommode) && map.final_colormode)
             {
@@ -1961,7 +1960,10 @@ void gamerender(void)
 
     graphics.cutscenebars();
     graphics.drawfade();
-    BlitSurfaceStandard(graphics.backBuffer, NULL, graphics.menuoffbuffer, NULL);
+
+    SDL_SetRenderTarget(gameScreen.m_renderer, graphics.gameTexture);
+
+    SDL_RenderCopy(gameScreen.m_renderer, graphics.gameplayTexture, NULL, NULL);
 
     graphics.drawgui();
     if (graphics.flipmode)
@@ -2382,7 +2384,9 @@ static void rendermapcursor(const bool flashing)
 
 void maprender(void)
 {
-    ClearSurface(graphics.backBuffer);
+    SDL_SetRenderTarget(gameScreen.m_renderer, graphics.menuTexture);
+    SDL_SetRenderDrawColor(gameScreen.m_renderer, 0, 0, 0, 255);
+    SDL_RenderClear(gameScreen.m_renderer);
 
     draw_roomname_menu();
 
@@ -2850,19 +2854,7 @@ void maprender(void)
 
     }
 
-
-
-
-    // We need to draw the black screen above the menu in order to disguise it
-    // being jankily brought down in glitchrunner mode when exiting to the title
-    // Otherwise, there's no reason to obscure the menu
-    if (GlitchrunnerMode_less_than_or_equal(Glitchrunner2_2)
-    || FADEMODE_IS_FADING(graphics.fademode)
-    || game.fadetomenu
-    || game.fadetolab)
-    {
-        graphics.drawfade();
-    }
+    SDL_SetRenderTarget(gameScreen.m_renderer, graphics.gameTexture);
 
     if (graphics.resumegamemode || graphics.menuoffset > 0 || graphics.oldmenuoffset > 0)
     {
@@ -2870,15 +2862,32 @@ void maprender(void)
     }
     else
     {
-        graphics.renderwithscreeneffects();
+        SDL_RenderCopy(gameScreen.m_renderer, graphics.menuTexture, NULL, NULL);
     }
+
+    // We need to draw the black screen above the menu in order to disguise it
+    // being jankily brought down in glitchrunner mode when exiting to the title
+    // Otherwise, there's no reason to obscure the menu
+    if (GlitchrunnerMode_less_than_or_equal(Glitchrunner2_2)
+        || FADEMODE_IS_FADING(graphics.fademode)
+        || game.fadetomenu
+        || game.fadetolab)
+    {
+        graphics.drawfade();
+    }
+
+
+    graphics.renderwithscreeneffects();
 }
 
 #undef FLIP
 
 void teleporterrender(void)
 {
-    ClearSurface(graphics.backBuffer);
+    SDL_SetRenderTarget(gameScreen.m_renderer, graphics.menuTexture);
+    SDL_SetRenderDrawColor(gameScreen.m_renderer, 0, 0, 0, 255);
+    SDL_RenderClear(gameScreen.m_renderer);
+
     const int telex = map.teleporters[game.teleport_to_teleporter].x;
     const int teley = map.teleporters[game.teleport_to_teleporter].y;
 
@@ -2943,6 +2952,7 @@ void teleporterrender(void)
         if (game.advancetext) graphics.bprint(5, 5, loc::gettext("- Press ACTION to advance text -"), 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2), true);
     }
 
+    SDL_SetRenderTarget(gameScreen.m_renderer, graphics.gameTexture);
 
     if (graphics.resumegamemode || graphics.menuoffset > 0 || graphics.oldmenuoffset > 0)
     {
@@ -2950,6 +2960,8 @@ void teleporterrender(void)
     }
     else
     {
-        graphics.render();
+        SDL_RenderCopy(gameScreen.m_renderer, graphics.menuTexture, NULL, NULL);
     }
+
+    graphics.render();
 }

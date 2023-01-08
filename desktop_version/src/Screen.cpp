@@ -45,18 +45,13 @@ void Screen::init(const struct ScreenSettings* settings)
 
     // Uncomment this next line when you need to debug -flibit
     // SDL_SetHintWithPriority(SDL_HINT_RENDER_DRIVER, "software", SDL_HINT_OVERRIDE);
-    SDL_CreateWindowAndRenderer(
-        640,
-        480,
-        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI,
-        &m_window,
-        &m_renderer
-    );
+    m_window = SDL_CreateWindow("VVVVVV", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+    m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
+
     SDL_SetWindowTitle(m_window, "VVVVVV");
 
     LoadIcon();
 
-    // FIXME: This surface should be the actual backbuffer! -flibit
     m_screen = SDL_CreateRGBSurface(
         0,
         SCREEN_WIDTH_PIXELS,
@@ -111,11 +106,11 @@ void Screen::LoadIcon(void)
 
 }
 #else
-SDL_Surface* LoadImage(const char* filename);
+SDL_Surface* LoadImageSurface(const char* filename);
 
 void Screen::LoadIcon(void)
 {
-    SDL_Surface* icon = LoadImage("VVVVVV.png");
+    SDL_Surface* icon = LoadImageSurface("VVVVVV.png");
     if (icon == NULL)
     {
         return;
@@ -283,38 +278,12 @@ const SDL_PixelFormat* Screen::GetFormat(void)
     return m_screen->format;
 }
 
-void Screen::FlipScreen(const bool flipmode)
+void Screen::RenderPresent()
 {
-    static const SDL_Rect filterSubrect = {1, 1, 318, 238};
-
-    SDL_RendererFlip flip_flags;
-    if (flipmode)
-    {
-        flip_flags = SDL_FLIP_VERTICAL;
-    }
-    else
-    {
-        flip_flags = SDL_FLIP_NONE;
-    }
-
-    SDL_UpdateTexture(
-        m_screenTexture,
-        NULL,
-        m_screen->pixels,
-        m_screen->pitch
-    );
-    SDL_RenderCopyEx(
-        m_renderer,
-        m_screenTexture,
-        isFiltered ? &filterSubrect : NULL,
-        NULL,
-        0.0,
-        NULL,
-        flip_flags
-    );
     SDL_RenderPresent(m_renderer);
     SDL_RenderClear(m_renderer);
-    ClearSurface(m_screen);
+
+    SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
 }
 
 void Screen::toggleFullScreen(void)
