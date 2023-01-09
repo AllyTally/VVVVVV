@@ -1180,9 +1180,9 @@ void Graphics::drawimagecol( int t, int xp, int yp, const SDL_Color ct, bool cen
         trect.x = 160 - int(trect.w / 2);
     }
 
-    SDL_SetTextureColorMod(grphx.im_tiles, ct.r, ct.g, ct.b);
+    SDL_SetTextureColorMod(images[t], ct.r, ct.g, ct.b);
     drawtexture(images[t], trect.x, trect.y);
-    SDL_SetTextureColorMod(grphx.im_tiles, 255, 255, 255);
+    SDL_SetTextureColorMod(images[t], 255, 255, 255);
 }
 
 void Graphics::drawimage( int t, int xp, int yp, bool cent/*=false*/ )
@@ -2231,9 +2231,9 @@ void Graphics::drawentity(const int i, const int yoff)
             drawRect.x += tpoint.x;
             drawRect.y += tpoint.y;
 
-            SDL_SetTextureColorMod(sprites, ct.r, ct.g, ct.b);
+            SDL_SetTextureColorMod(grphx.im_tiles_white, ct.r, ct.g, ct.b);
             drawgridtile(grphx.im_tiles_white, 1167, drawRect.x, drawRect.y, 8, 8);
-            SDL_SetTextureColorMod(sprites, 255, 255, 255);
+            SDL_SetTextureColorMod(grphx.im_tiles_white, 255, 255, 255);
 
         }
         else if (obj.entities[i].xp > 340 && obj.entities[i].vx < 0)
@@ -2254,9 +2254,9 @@ void Graphics::drawentity(const int i, const int yoff)
             drawRect.x += tpoint.x;
             drawRect.y += tpoint.y;
 
-            SDL_SetTextureColorMod(sprites, ct.r, ct.g, ct.b);
+            SDL_SetTextureColorMod(grphx.im_tiles_white, ct.r, ct.g, ct.b);
             drawgridtile(grphx.im_tiles_white, 1166, drawRect.x, drawRect.y, 8, 8);
-            SDL_SetTextureColorMod(sprites, 255, 255, 255);
+            SDL_SetTextureColorMod(grphx.im_tiles_white, 255, 255, 255);
         }
         break;
     }

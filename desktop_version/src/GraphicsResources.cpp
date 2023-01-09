@@ -18,7 +18,7 @@ extern "C"
     extern const char* lodepng_error_text(unsigned code);
 }
 
-SDL_Surface* LoadImageRaw(const char* filename, unsigned char** data)
+static SDL_Surface* LoadImageRaw(const char* filename, unsigned char** data)
 {
     //Temporary storage for the image that's loaded
     SDL_Surface* loadedImage = NULL;
@@ -55,43 +55,50 @@ SDL_Surface* LoadImageRaw(const char* filename, unsigned char** data)
     return loadedImage;
 }
 
+static SDL_Surface* LoadSurfaceFromRaw(const char* filename, SDL_Surface* loadedImage)
+{
+    SDL_Surface* optimizedImage = optimizedImage = SDL_ConvertSurfaceFormat(
+        loadedImage,
+        SDL_PIXELFORMAT_ARGB8888,
+        0
+    );
+    SDL_SetSurfaceBlendMode(optimizedImage, SDL_BLENDMODE_BLEND);
+    return optimizedImage;
+}
+
+/* Can't be static, used in Screen.h */
 SDL_Surface* LoadImageSurface(const char* filename)
 {
-    //The optimized image that will be used
-    SDL_Surface* optimizedImage = NULL;
-
     unsigned char* data;
 
     SDL_Surface* loadedImage = LoadImageRaw(filename, &data);
+
+    SDL_Surface* optimizedImage = LoadSurfaceFromRaw(filename, loadedImage);
     if (loadedImage != NULL)
     {
-        optimizedImage = SDL_ConvertSurfaceFormat(
-            loadedImage,
-            SDL_PIXELFORMAT_ARGB8888,
-            0
-        );
         VVV_freefunc(SDL_FreeSurface, loadedImage);
-        VVV_free(data);
-        SDL_SetSurfaceBlendMode(optimizedImage, SDL_BLENDMODE_BLEND);
-        return optimizedImage;
     }
-    else
+
+    VVV_free(data);
+
+    if (optimizedImage == NULL)
     {
         VVV_free(data);
         vlog_error("Image not found: %s", filename);
         SDL_assert(0 && "Image not found! See stderr.");
-        return NULL;
     }
+
+    return optimizedImage;
 }
 
-SDL_Texture* LoadImage(const char *filename, const TextureLoadType loadtype)
+static SDL_Texture* LoadTextureFromRaw(const char* filename, SDL_Surface* loadedImage, const TextureLoadType loadtype)
 {
-    unsigned char* data;
-
-    SDL_Surface* loadedImage = LoadImageRaw(filename, &data);
-
     if (loadedImage != NULL)
     {
+        // Modify the surface with the load type.
+        // This could be done in LoadImageRaw, however currently, surfaces are only used for
+        // pixel perfect collision (which will be changed later,) and the window icon.
+
         switch (loadtype)
         {
         case TEX_WHITE:
@@ -133,41 +140,117 @@ SDL_Texture* LoadImage(const char *filename, const TextureLoadType loadtype)
             vlog_error("Failed creating texture: %s. SDL error: %s\n", filename, SDL_GetError());
         }
 
-        VVV_freefunc(SDL_FreeSurface, loadedImage);
-        VVV_free(data);
-
         return texture;
     }
-    else
-    {
-        VVV_free(data);
-        vlog_error("Image not found: %s", filename);
-        SDL_assert(0 && "Image not found! See stderr.");
-        return NULL;
-    }
+
+    return NULL;
 }
 
-SDL_Texture* LoadImage(const char* filename)
+static SDL_Texture* LoadImage(const char *filename, const TextureLoadType loadtype)
+{
+    unsigned char* data;
+
+    SDL_Surface* loadedImage = LoadImageRaw(filename, &data);
+
+    SDL_Texture* texture = LoadTextureFromRaw(filename, loadedImage, loadtype);
+
+    if (loadedImage != NULL)
+    {
+        VVV_freefunc(SDL_FreeSurface, loadedImage);
+    }
+
+    VVV_free(data);
+
+    if (texture == NULL)
+    {
+        vlog_error("Image not found: %s", filename);
+        SDL_assert(0 && "Image not found! See stderr.");
+    }
+
+    return texture;
+}
+
+static SDL_Texture* LoadImage(const char* filename)
 {
     return LoadImage(filename, TEX_COLOR);
 }
 
+/* Any unneeded variants can be NULL */
+static void LoadVariants(const char* filename, SDL_Texture** colored, SDL_Texture** white, SDL_Texture** grayscale)
+{
+    unsigned char* data;
+    SDL_Surface* loadedImage = LoadImageRaw(filename, &data);
+
+
+    if (colored != NULL)
+    {
+        *colored = LoadTextureFromRaw(filename, loadedImage, TEX_COLOR);
+        if (*colored == NULL)
+        {
+            vlog_error("Image not found: %s", filename);
+            SDL_assert(0 && "Image not found! See stderr.");
+        }
+    }
+    if (white != NULL)
+    {
+        *white = LoadTextureFromRaw(filename, loadedImage, TEX_WHITE);
+        if (*white == NULL)
+        {
+            vlog_error("Image not found: %s", filename);
+            SDL_assert(0 && "Image not found! See stderr.");
+        }
+    }
+    if (grayscale != NULL)
+    {
+        *grayscale = LoadTextureFromRaw(filename, loadedImage, TEX_GRAYSCALE);
+        if (*grayscale == NULL)
+        {
+            vlog_error("Image not found: %s", filename);
+            SDL_assert(0 && "Image not found! See stderr.");
+        }
+    }
+
+    if (loadedImage != NULL)
+    {
+        VVV_freefunc(SDL_FreeSurface, loadedImage);
+    }
+
+    VVV_free(data);
+}
+
+/* The pointers `texture` and `surface` cannot be NULL */
+static void LoadSprites(const char* filename, SDL_Texture** texture, SDL_Surface** surface)
+{
+    unsigned char* data;
+    SDL_Surface* loadedImage = LoadImageRaw(filename, &data);
+
+    *texture = LoadTextureFromRaw(filename, loadedImage, TEX_WHITE);
+    if (*texture == NULL)
+    {
+        vlog_error("Image not found: %s", filename);
+        SDL_assert(0 && "Image not found! See stderr.");
+    }
+
+    if (loadedImage != NULL)
+    {
+        VVV_freefunc(SDL_FreeSurface, loadedImage);
+    }
+
+    VVV_free(data);
+}
+
 void GraphicsResources::init(void)
 {
-    im_tiles            = LoadImage("graphics/tiles.png");
-    im_tiles_white      = LoadImage("graphics/tiles.png", TEX_WHITE);
-    im_tiles_tint       = LoadImage("graphics/tiles.png", TEX_GRAYSCALE);
-    im_tiles2           = LoadImage("graphics/tiles2.png");
-    im_tiles2_tint      = LoadImage("graphics/tiles2.png", TEX_GRAYSCALE);
-    im_tiles3           = LoadImage("graphics/tiles3.png");
-    im_entcolours       = LoadImage("graphics/entcolours.png");
-    im_entcolours_tint  = LoadImage("graphics/entcolours.png", TEX_GRAYSCALE);
-    im_sprites          = LoadImage("graphics/sprites.png", TEX_WHITE);
-    im_flipsprites      = LoadImage("graphics/flipsprites.png", TEX_WHITE);
-    im_sprites_surf     = LoadImageSurface("graphics/sprites.png");
-    im_flipsprites_surf = LoadImageSurface("graphics/flipsprites.png");
-    im_bfont            = LoadImage("graphics/font.png", TEX_WHITE);
-    im_teleporter       = LoadImage("graphics/teleporter.png", TEX_WHITE);
+    LoadVariants("graphics/tiles.png", &im_tiles, &im_tiles_white, &im_tiles_tint);
+    LoadVariants("graphics/tiles2.png", &im_tiles2, NULL, &im_tiles2_tint);
+    LoadVariants("graphics/entcolours.png", &im_entcolours, NULL, &im_entcolours_tint);
+
+    LoadSprites("graphics/sprites.png", &im_sprites, &im_sprites_surf);
+    LoadSprites("graphics/flipsprites.png", &im_flipsprites, &im_flipsprites_surf);
+
+    im_tiles3     = LoadImage("graphics/tiles3.png");
+    im_bfont      = LoadImage("graphics/font.png", TEX_WHITE);
+    im_teleporter = LoadImage("graphics/teleporter.png", TEX_WHITE);
 
     im_image0  = LoadImage("graphics/levelcomplete.png");
     im_image1  = LoadImage("graphics/minimap.png");
@@ -176,11 +259,11 @@ void GraphicsResources::init(void)
     im_image4  = LoadImage("graphics/gamecomplete.png");
     im_image5  = LoadImage("graphics/fliplevelcomplete.png");
     im_image6  = LoadImage("graphics/flipgamecomplete.png");
-    im_image7  = LoadImage("graphics/site.png");
-    im_image8  = LoadImage("graphics/site2.png");
-    im_image9  = LoadImage("graphics/site3.png");
+    im_image7  = LoadImage("graphics/site.png", TEX_WHITE);
+    im_image8  = LoadImage("graphics/site2.png", TEX_WHITE);
+    im_image9  = LoadImage("graphics/site3.png", TEX_WHITE);
     im_image10 = LoadImage("graphics/ending.png");
-    im_image11 = LoadImage("graphics/site4.png");
+    im_image11 = LoadImage("graphics/site4.png", TEX_WHITE);
     im_image12 = LoadImage("graphics/minimap.png");
 }
 
