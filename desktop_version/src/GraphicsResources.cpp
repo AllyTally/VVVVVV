@@ -231,6 +231,13 @@ static void LoadSprites(const char* filename, SDL_Texture** texture, SDL_Surface
         SDL_assert(0 && "Image not found! See stderr.");
     }
 
+    *surface = LoadSurfaceFromRaw(filename, loadedImage);
+    if (*surface == NULL)
+    {
+        vlog_error("Image not found: %s", filename);
+        SDL_assert(0 && "Image not found! See stderr.");
+    }
+
     if (loadedImage != NULL)
     {
         VVV_freefunc(SDL_FreeSurface, loadedImage);
