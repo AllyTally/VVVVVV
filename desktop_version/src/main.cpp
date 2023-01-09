@@ -782,9 +782,10 @@ static void cleanup(void)
     {
         game.savestatsandsettings();
     }
-    gameScreen.destroy();
+
     graphics.grphx.destroy();
     graphics.destroy_buffers();
+    gameScreen.destroy();
     graphics.destroy();
     music.destroy();
     map.destroy();
