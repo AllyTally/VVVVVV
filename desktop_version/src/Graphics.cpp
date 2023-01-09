@@ -167,7 +167,7 @@ void Graphics::destroy(void)
 #undef CLEAR_ARRAY
 }
 
-void Graphics::create_buffers(const SDL_PixelFormat* fmt)
+void Graphics::create_buffers(void)
 {
     gameTexture     = SDL_CreateTexture(gameScreen.m_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
     gameplayTexture = SDL_CreateTexture(gameScreen.m_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS);
@@ -3143,12 +3143,20 @@ void Graphics::flashlight(void)
 
 void Graphics::screenshake(void)
 {
-    SDL_SetRenderTarget(gameScreen.m_renderer, NULL);
+    if (gameScreen.badSignalEffect)
+    {
+        ApplyFilter();
+    }
+
+    SDL_SetRenderTarget(gameScreen.m_renderer, tempTexture);
     SDL_SetRenderDrawBlendMode(gameScreen.m_renderer, SDL_BLENDMODE_NONE);
     FillRect(0, 0, 0);
 
     SDL_Rect shakeRect = { screenshake_x, screenshake_y, SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS };
     SDL_RenderCopy(gameScreen.m_renderer, gameTexture, NULL, &shakeRect);
+
+    SDL_SetRenderTarget(gameScreen.m_renderer, NULL);
+    SDL_RenderCopy(gameScreen.m_renderer, tempTexture, NULL, NULL);
 }
 
 void Graphics::updatescreenshake(void)
@@ -3159,6 +3167,11 @@ void Graphics::updatescreenshake(void)
 
 void Graphics::render(void)
 {
+    if (gameScreen.badSignalEffect)
+    {
+        ApplyFilter();
+    }
+
     SDL_SetRenderTarget(gameScreen.m_renderer, NULL);
     SDL_SetRenderDrawBlendMode(gameScreen.m_renderer, SDL_BLENDMODE_NONE);
     FillRect(0, 0, 0);

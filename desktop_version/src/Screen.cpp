@@ -7,6 +7,7 @@
 #include "Constants.h"
 #include "FileSystemUtils.h"
 #include "Game.h"
+#include "Graphics.h"
 #include "GraphicsUtil.h"
 #include "Vlogging.h"
 
@@ -25,18 +26,16 @@ void Screen::init(const struct ScreenSettings* settings)
 {
     m_window = NULL;
     m_renderer = NULL;
-    m_screenTexture = NULL;
-    m_screen = NULL;
     isWindowed = !settings->fullscreen;
     scalingMode = settings->scalingMode;
     isFiltered = settings->linearFilter;
     vsync = settings->useVsync;
 
-    /*SDL_SetHintWithPriority(
+    SDL_SetHintWithPriority(
         SDL_HINT_RENDER_SCALE_QUALITY,
         isFiltered ? "linear" : "nearest",
         SDL_HINT_OVERRIDE
-    );*/
+    );
     SDL_SetHintWithPriority(
         SDL_HINT_RENDER_VSYNC,
         vsync ? "1" : "0",
@@ -52,24 +51,6 @@ void Screen::init(const struct ScreenSettings* settings)
 
     LoadIcon();
 
-    m_screen = SDL_CreateRGBSurface(
-        0,
-        SCREEN_WIDTH_PIXELS,
-        SCREEN_HEIGHT_PIXELS,
-        32,
-        0x00FF0000,
-        0x0000FF00,
-        0x000000FF,
-        0xFF000000
-    );
-    m_screenTexture = SDL_CreateTexture(
-        m_renderer,
-        SDL_PIXELFORMAT_ARGB8888,
-        SDL_TEXTUREACCESS_STREAMING,
-        SCREEN_WIDTH_PIXELS,
-        SCREEN_HEIGHT_PIXELS
-    );
-
     badSignalEffect = settings->badSignal;
 
     ResizeScreen(settings->windowWidth, settings->windowHeight);
@@ -78,8 +59,6 @@ void Screen::init(const struct ScreenSettings* settings)
 void Screen::destroy(void)
 {
     /* Order matters! */
-    VVV_freefunc(SDL_DestroyTexture, m_screenTexture);
-    VVV_freefunc(SDL_FreeSurface, m_screen);
     VVV_freefunc(SDL_DestroyRenderer, m_renderer);
     VVV_freefunc(SDL_DestroyWindow, m_window);
 }
@@ -251,33 +230,6 @@ void Screen::GetWindowSize(int* x, int* y)
     }
 }
 
-void Screen::UpdateScreen(SDL_Surface* buffer, SDL_Rect* rect )
-{
-    if((buffer == NULL) && (m_screen == NULL) )
-    {
-        return;
-    }
-
-    if(badSignalEffect)
-    {
-        buffer = ApplyFilter(buffer);
-    }
-
-    //ClearSurface(m_screen);
-    //BlitSurfaceStandard(buffer,NULL,m_screen,rect);
-
-    if(badSignalEffect)
-    {
-        VVV_freefunc(SDL_FreeSurface, buffer);
-    }
-
-}
-
-const SDL_PixelFormat* Screen::GetFormat(void)
-{
-    return m_screen->format;
-}
-
 void Screen::RenderPresent()
 {
     SDL_RenderPresent(m_renderer);
@@ -312,11 +264,11 @@ void Screen::toggleLinearFilter(void)
         isFiltered ? "linear" : "nearest",
         SDL_HINT_OVERRIDE
     );
-    SDL_DestroyTexture(m_screenTexture);
-    m_screenTexture = SDL_CreateTexture(
+    SDL_DestroyTexture(graphics.gameTexture);
+    graphics.gameTexture = SDL_CreateTexture(
         m_renderer,
         SDL_PIXELFORMAT_ARGB8888,
-        SDL_TEXTUREACCESS_STREAMING,
+        SDL_TEXTUREACCESS_TARGET,
         SCREEN_WIDTH_PIXELS,
         SCREEN_HEIGHT_PIXELS
     );

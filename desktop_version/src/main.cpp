@@ -632,7 +632,7 @@ int main(int argc, char *argv[])
     loc::loadlanguagelist();
     game.createmenu(Menu::mainmenu);
 
-    graphics.create_buffers(gameScreen.GetFormat());
+    graphics.create_buffers();
 
     if (game.skipfakeload)
         game.gamestate = TITLEMODE;

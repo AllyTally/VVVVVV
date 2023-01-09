@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "Alloc.h"
+#include "Constants.h"
 #include "Graphics.h"
 #include "Maths.h"
 #include "Screen.h"
@@ -51,20 +52,6 @@ static SDL_Surface* RecreateSurfaceWithDimensions(
     SDL_SetSurfaceBlendMode(retval, blend_mode);
 
     return retval;
-}
-
-static SDL_Surface* RecreateSurface(SDL_Surface* surface)
-{
-    if (surface == NULL)
-    {
-        return NULL;
-    }
-
-    return RecreateSurfaceWithDimensions(
-        surface,
-        surface->w,
-        surface->h
-    );
 }
 
 SDL_Surface* GetSubSurface( SDL_Surface* metaSurface, int x, int y, int width, int height )
@@ -131,142 +118,6 @@ SDL_Color ReadPixel(const SDL_Surface* surface, const int x, const int y)
     return color;
 }
 
-void BlitSurfaceStandard( SDL_Surface* _src, SDL_Rect* _srcRect, SDL_Surface* _dest, SDL_Rect* _destRect )
-{
-    SDL_BlitSurface( _src, _srcRect, _dest, _destRect );
-}
-
-static void BlitSurfaceTransform(
-    SDL_Surface* src,
-    const SDL_Rect* src_rect,
-    SDL_Surface* dest,
-    SDL_Rect* dest_rect,
-    SDL_Color (*transform)(SDL_Color pixel, SDL_Color color),
-    const SDL_Color color
-) {
-    if (src == NULL || dest == NULL || transform == NULL)
-    {
-        return;
-    }
-    if (color.a == 0)
-    {
-        return;
-    }
-
-    SDL_Rect orig_rect;
-    if (src_rect == NULL)
-    {
-        setRect(orig_rect, 0, 0, src->w, src->h);
-    }
-    else
-    {
-        orig_rect = *src_rect;
-    }
-    int blit_x;
-    int blit_y;
-    if (dest_rect == NULL)
-    {
-        blit_x = 0;
-        blit_y = 0;
-    }
-    else
-    {
-        blit_x = dest_rect->x;
-        blit_y = dest_rect->y;
-    }
-
-    /* FIXME: Find a way to do this without allocating... */
-    SDL_Surface* tempsurface = RecreateSurfaceWithDimensions(src, orig_rect.w, orig_rect.h);
-    if (tempsurface == NULL)
-    {
-        return;
-    }
-    SDL_SetSurfaceBlendMode(tempsurface, SDL_BLENDMODE_BLEND);
-
-    for (int x = 0; x < orig_rect.w; x++)
-    {
-        for (int y = 0; y < orig_rect.h; y++)
-        {
-            if (blit_x + x < 0 || blit_y + y < 0 ||
-            blit_x + x >= dest->w || blit_y + y >= dest->h)
-            {
-                continue;
-            }
-
-            const SDL_Color pixel = ReadPixel(src, orig_rect.x + x, orig_rect.y + y);
-            if (pixel.a == 0)
-            {
-                continue;
-            }
-
-            const SDL_Color result = transform(pixel, color);
-            DrawPixel(tempsurface, x, y, result);
-        }
-    }
-
-    SDL_Rect final_rect = {blit_x, blit_y, 0, 0};
-    SDL_BlitSurface(tempsurface, NULL, dest, &final_rect);
-    VVV_freefunc(SDL_FreeSurface, tempsurface);
-}
-
-static SDL_Color transform_color(const SDL_Color pixel, const SDL_Color color)
-{
-    const float div1 = pixel.a / 255.0f;
-    const float div2 = color.a / 255.0f;
-    const Uint8 alpha = (div1 * div2) * 255.0f;
-    const SDL_Color result = {color.r, color.g, color.b, alpha};
-    return result;
-}
-
-void BlitSurfaceColoured(
-    SDL_Surface* src,
-    const SDL_Rect* src_rect,
-    SDL_Surface* dest,
-    SDL_Rect* dest_rect,
-    const SDL_Color color
-) {
-    return BlitSurfaceTransform(
-        src, src_rect, dest, dest_rect, transform_color, color
-    );
-}
-
-static SDL_Color transform_tint(const SDL_Color pixel, const SDL_Color color)
-{
-    double red = pixel.r * 0.299;
-    double green = pixel.g * 0.587;
-    double blue = pixel.b * 0.114;
-
-    const double gray = SDL_floor(red + green + blue + 0.5);
-
-    red = gray * color.r / 255.0;
-    green = gray * color.g / 255.0;
-    blue = gray * color.b / 255.0;
-
-    red = SDL_clamp(red, 0, 255);
-    green = SDL_clamp(green, 0, 255);
-    blue = SDL_clamp(blue, 0, 255);
-
-    const float div1 = pixel.a / 255.0f;
-    const float div2 = color.a / 255.0f;
-    const Uint8 alpha = (div1 * div2) * 255.0f;
-
-    const SDL_Color result = {(Uint8) red, (Uint8) green, (Uint8) blue, alpha};
-    return result;
-}
-
-void BlitSurfaceTinted(
-    SDL_Surface* src,
-    const SDL_Rect* src_rect,
-    SDL_Surface* dest,
-    SDL_Rect* dest_rect,
-    const SDL_Color color
-) {
-    return BlitSurfaceTransform(
-        src, src_rect, dest, dest_rect, transform_tint, color
-    );
-}
-
-
 static int oldscrollamount = 0;
 static int scrollamount = 0;
 static bool isscrolling = 0;
@@ -291,15 +142,25 @@ void UpdateFilter(void)
     }
 }
 
-SDL_Surface* ApplyFilter(SDL_Surface* src)
+void ApplyFilter(void)
 {
-    SDL_Surface* ret = RecreateSurface(src);
+    // Copy the screen to a temporary surface
+    SDL_Surface* src = SDL_CreateRGBSurface(0, SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS, 32, 0, 0, 0, 0);
+
+    SDL_RenderReadPixels(gameScreen.m_renderer, NULL, 0, src->pixels, src->pitch);
+
+    Uint32 rawFormat;
+    SDL_QueryTexture(graphics.gameTexture, &rawFormat, NULL, NULL, NULL);
+    SDL_PixelFormat* format = SDL_AllocFormat(rawFormat);
+
+    // Have a second surface to do work on
+    SDL_Surface* dest = SDL_CreateRGBSurface(0, SCREEN_WIDTH_PIXELS, SCREEN_HEIGHT_PIXELS, 32, 0, 0, 0, 0);
 
     const int red_offset = rand() % 4;
 
-    for (int x = 0; x < ret->w; x++)
+    for (int x = 0; x < src->w; x++)
     {
-        for (int y = 0; y < ret->h; y++)
+        for (int y = 0; y < src->h; y++)
         {
             const int sampley = (y + (int) graphics.lerp(oldscrollamount, scrollamount)) % 240;
 
@@ -344,11 +205,16 @@ SDL_Surface* ApplyFilter(SDL_Surface* src)
             blue = SDL_max(blue - (distX + distY), 0);
 
             const SDL_Color color = {red, green, blue, pixel.a};
-            DrawPixel(ret, x, y, color);
+            DrawPixel(dest, x, y, color);
         }
     }
 
-    return ret;
+    SDL_FreeFormat(format);
+
+    SDL_UpdateTexture(graphics.gameTexture, NULL, dest->pixels, dest->pitch);
+
+    SDL_FreeSurface(src);
+    SDL_FreeSurface(dest);
 }
 
 void FillRect(const int x, const int y, const int w, const int h, const int r, int g, int b )

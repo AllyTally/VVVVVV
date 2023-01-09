@@ -6297,8 +6297,8 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         {
             option(loc::gettext("resize to nearest"), gameScreen.isWindowed);
         }
-        option(loc::gettext("toggle filter"), false);
-        option(loc::gettext("toggle analogue"), false);
+        option(loc::gettext("toggle filter"));
+        option(loc::gettext("toggle analogue"));
         option(loc::gettext("toggle vsync"));
         option(loc::gettext("return"));
         menuyoff = -10;

@@ -29,7 +29,7 @@ public:
     void init(void);
     void destroy(void);
 
-    void create_buffers(const SDL_PixelFormat* fmt);
+    void create_buffers(void);
     void destroy_buffers(void);
 
     GraphicsResources grphx;

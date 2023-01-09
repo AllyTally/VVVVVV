@@ -676,16 +676,16 @@ static void menuactionpress(void)
         if (game.currentmenuoption == offset + 3)
         {
             processed = true;
-            //music.playef(11);
-            //gameScreen.toggleLinearFilter();
+            music.playef(11);
+            gameScreen.toggleLinearFilter();
             game.savestatsandsettings_menu();
         }
         if (game.currentmenuoption == offset + 4)
         {
             processed = true;
             //change smoothing
-            //music.playef(11);
-            //gameScreen.badSignalEffect= !gameScreen.badSignalEffect;
+            music.playef(11);
+            gameScreen.badSignalEffect= !gameScreen.badSignalEffect;
             game.savestatsandsettings_menu();
         }
         if (game.currentmenuoption == offset + 5)

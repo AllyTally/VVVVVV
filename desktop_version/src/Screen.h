@@ -19,10 +19,7 @@ public:
     void ResizeToNearestMultiple(void);
     void GetWindowSize(int* x, int* y);
 
-    void UpdateScreen(SDL_Surface* buffer, SDL_Rect* rect);
     void RenderPresent();
-
-    const SDL_PixelFormat* GetFormat(void);
 
     void toggleFullScreen(void);
     void toggleScalingMode(void);
@@ -39,8 +36,6 @@ public:
 
     SDL_Window *m_window;
     SDL_Renderer *m_renderer;
-    SDL_Texture *m_screenTexture;
-    SDL_Surface* m_screen;
 };
 
 #ifndef GAMESCREEN_DEFINITION
