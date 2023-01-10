@@ -55,9 +55,9 @@ static SDL_Surface* LoadImageRaw(const char* filename, unsigned char** data)
     return loadedImage;
 }
 
-static SDL_Surface* LoadSurfaceFromRaw(const char* filename, SDL_Surface* loadedImage)
+static SDL_Surface* LoadSurfaceFromRaw(SDL_Surface* loadedImage)
 {
-    SDL_Surface* optimizedImage = optimizedImage = SDL_ConvertSurfaceFormat(
+    SDL_Surface* optimizedImage = SDL_ConvertSurfaceFormat(
         loadedImage,
         SDL_PIXELFORMAT_ARGB8888,
         0
@@ -73,7 +73,7 @@ SDL_Surface* LoadImageSurface(const char* filename)
 
     SDL_Surface* loadedImage = LoadImageRaw(filename, &data);
 
-    SDL_Surface* optimizedImage = LoadSurfaceFromRaw(filename, loadedImage);
+    SDL_Surface* optimizedImage = LoadSurfaceFromRaw(loadedImage);
     if (loadedImage != NULL)
     {
         VVV_freefunc(SDL_FreeSurface, loadedImage);
@@ -233,7 +233,7 @@ static void LoadSprites(const char* filename, SDL_Texture** texture, SDL_Surface
         SDL_assert(0 && "Image not found! See stderr.");
     }
 
-    *surface = LoadSurfaceFromRaw(filename, loadedImage);
+    *surface = LoadSurfaceFromRaw(loadedImage);
     if (*surface == NULL)
     {
         vlog_error("Image not found: %s", filename);
