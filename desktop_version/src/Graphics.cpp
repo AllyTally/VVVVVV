@@ -2053,7 +2053,7 @@ void Graphics::drawentity(const int i, const int yoff)
         drawRect.x += tpoint.x;
         drawRect.y += tpoint.y;
 
-        drawgridtile(tiles, obj.entities[i].drawframe, drawRect.x, drawRect.y, 8, 8);
+        drawgridtile(grphx.im_tiles, obj.entities[i].drawframe, drawRect.x, drawRect.y, 8, 8);
         break;
     case 2:
     case 8:

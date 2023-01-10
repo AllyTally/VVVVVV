@@ -191,19 +191,21 @@ static void LoadVariants(const char* filename, SDL_Texture** colored, SDL_Textur
             SDL_assert(0 && "Image not found! See stderr.");
         }
     }
-    if (white != NULL)
+
+    if (grayscale != NULL)
     {
-        *white = LoadTextureFromRaw(filename, loadedImage, TEX_WHITE);
-        if (*white == NULL)
+        *grayscale = LoadTextureFromRaw(filename, loadedImage, TEX_GRAYSCALE);
+        if (*grayscale == NULL)
         {
             vlog_error("Image not found: %s", filename);
             SDL_assert(0 && "Image not found! See stderr.");
         }
     }
-    if (grayscale != NULL)
+
+    if (white != NULL)
     {
-        *grayscale = LoadTextureFromRaw(filename, loadedImage, TEX_GRAYSCALE);
-        if (*grayscale == NULL)
+        *white = LoadTextureFromRaw(filename, loadedImage, TEX_WHITE);
+        if (*white == NULL)
         {
             vlog_error("Image not found: %s", filename);
             SDL_assert(0 && "Image not found! See stderr.");
@@ -262,7 +264,7 @@ void GraphicsResources::init(void)
     im_image0  = LoadImage("graphics/levelcomplete.png");
     im_image1  = LoadImage("graphics/minimap.png");
     im_image2  = LoadImage("graphics/covered.png");
-    im_image3  = LoadImage("graphics/elephant.png");
+    im_image3  = LoadImage("graphics/elephant.png", TEX_WHITE);
     im_image4  = LoadImage("graphics/gamecomplete.png");
     im_image5  = LoadImage("graphics/fliplevelcomplete.png");
     im_image6  = LoadImage("graphics/flipgamecomplete.png");
