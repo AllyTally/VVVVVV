@@ -9,6 +9,7 @@
 #include "Game.h"
 #include "Graphics.h"
 #include "GraphicsUtil.h"
+#include "Render.h"
 #include "Vlogging.h"
 
 void ScreenSettings_default(struct ScreenSettings* _this)
@@ -277,7 +278,20 @@ void Screen::toggleLinearFilter(void)
 void Screen::toggleVSync(void)
 {
     vsync = !vsync;
-    SDL_RenderSetVSync(m_renderer, (int) vsync);
+    SDL_RenderSetVSync(m_renderer, (int)vsync);
+
+    // Fix for d3d9, which clears the gameplay texture after vSync is toggled.
+    // The gameplay texture is used to render the game during the menu opening/closing animation,
+    // so it's important we fix it before the users closes the menu.
+    // Additionally, it's important to reset the lerp value, so unpausing isn't jarring.
+
+    if (game.ingame_titlemode)
+    {
+        float oldAlpha = graphics.alpha;
+        graphics.alpha = 0;
+        gamerender();
+        graphics.alpha = oldAlpha;
+    }
 }
 
 /* FIXME: Launching in forced fullscreen then exiting and relaunching in normal
