@@ -68,6 +68,11 @@ void entclass::clear(void)
     SDL_zero(realcol);
     lerpoldxp = 0;
     lerpoldyp = 0;
+
+    gravitycontrol = 0;
+    deathseq = -1;
+    lifeseq = -1;
+    collided_id = -1;
 }
 
 bool entclass::outside(void)

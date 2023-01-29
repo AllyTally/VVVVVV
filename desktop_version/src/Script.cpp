@@ -388,8 +388,8 @@ void scriptclass::run(void)
                     obj.entities[player].yp = ss_toi(words[2]);
                     obj.entities[player].lerpoldxp = obj.entities[player].xp;
                     obj.entities[player].lerpoldyp = obj.entities[player].yp;
+                    obj.entities[player].gravitycontrol = ss_toi(words[3]);
                 }
-                game.gravitycontrol = ss_toi(words[3]);
 
             }
             if (words[0] == "gotoroom")
@@ -985,7 +985,8 @@ void scriptclass::run(void)
                 //not something I'll use a lot, I think. Doesn't need to be very robust!
                 if (words[1] == "player")
                 {
-                    game.gravitycontrol = !game.gravitycontrol;
+                    int player = obj.getplayer();
+                    obj.entities[player].gravitycontrol = !obj.entities[player].gravitycontrol;
                     ++game.totalflips;
                 }
                 else
@@ -1151,8 +1152,8 @@ void scriptclass::run(void)
                 {
                     game.savex = obj.entities[i].xp ;
                     game.savey = obj.entities[i].yp;
+                    game.savegc = obj.entities[i].gravitycontrol;
                 }
-                game.savegc = game.gravitycontrol;
                 game.saverx = game.roomx;
                 game.savery = game.roomy;
                 if (INBOUNDS_VEC(i, obj.entities))
@@ -1395,7 +1396,6 @@ void scriptclass::run(void)
                 game.advancetext = false;
                 game.hascontrol = true;
                 game.resetgameclock();
-                game.gravitycontrol = 0;
                 game.teleport = false;
                 game.companion = 0;
                 game.teleport_to_new_area = false;
@@ -1870,7 +1870,6 @@ void scriptclass::run(void)
                 game.savegc = 0;
                 game.savedir = 0; //Intermission level 2
                 game.savepoint = 0;
-                game.gravitycontrol = 0;
 
                 map.gotoroom(46, 54);
             }
@@ -2838,7 +2837,6 @@ void scriptclass::startgamemode(const enum StartMode mode)
         VVV_unreachable();
     }
 
-    game.gravitycontrol = game.savegc;
     graphics.flipmode = graphics.setflipmode;
 
     if (!map.custommode && !graphics.setflipmode)
@@ -2849,6 +2847,9 @@ void scriptclass::startgamemode(const enum StartMode mode)
 
     obj.entities.clear();
     obj.createentity(game.savex, game.savey, 0, 0);
+
+    obj.createentity(game.savex, game.savey, 0, 0, 1);
+
     if (player_hitbox.initialized)
     {
         /* Restore player hitbox */
@@ -2918,7 +2919,6 @@ void scriptclass::teleport(void)
         game.teleport_to_y = 11;
     }
 
-    game.gravitycontrol = 0;
     map.gotoroom(100+game.teleport_to_x, 100+game.teleport_to_y);
     j = obj.getteleporter();
     if (INBOUNDS_VEC(j, obj.entities))
@@ -3015,7 +3015,6 @@ void scriptclass::hardreset(void)
 
     //Game:
     game.hascontrol = true;
-    game.gravitycontrol = 0;
     game.teleport = false;
     game.companion = 0;
     if (!version2_2)

@@ -491,7 +491,7 @@ void gamelogic(void)
                 game.hascontrol = true;
 
 
-                game.gravitycontrol = game.savegc;
+                //game.gravitycontrol = game.savegc;
                 graphics.textboxremove();
                 map.resetplayer(true);
             }
@@ -1146,32 +1146,82 @@ void gamelogic(void)
         if (!map.warpy && !map.towermode)
         {
             //Normal! Just change room
-            int player = obj.getplayer();
-            if (INBOUNDS_VEC(player, obj.entities) && obj.entities[player].yp >= 238)
+            for (size_t i = 0; i < obj.entities.size(); ++i)
             {
-                obj.entities[player].yp -= 240;
-                GOTOROOM(game.roomx, game.roomy + 1);
-            }
-            if (INBOUNDS_VEC(player, obj.entities) && obj.entities[player].yp < -2)
-            {
-                obj.entities[player].yp += 240;
-                GOTOROOM(game.roomx, game.roomy - 1);
+                if (obj.entities[i].rule == 0)
+                {
+                    if (obj.entities[i].yp >= 238)
+                    {
+                        obj.entities[i].yp -= 240;
+                        for (size_t j = 0; j < obj.entities.size(); ++j)
+                        {
+                            if (obj.entities[j].rule == 0)
+                            {
+                                obj.entities[j].xp = obj.entities[i].xp;
+                                obj.entities[j].yp = obj.entities[i].yp;
+                                obj.entities[j].gravitycontrol = obj.entities[i].gravitycontrol;
+                            }
+                        }
+                        GOTOROOM(game.roomx, game.roomy + 1);
+                        break;
+                    }
+                    if (obj.entities[i].yp < -2)
+                    {
+                        obj.entities[i].yp += 240;
+                        for (size_t j = 0; j < obj.entities.size(); ++j)
+                        {
+                            if (obj.entities[j].rule == 0)
+                            {
+                                obj.entities[j].xp = obj.entities[i].xp;
+                                obj.entities[j].yp = obj.entities[i].yp;
+                                obj.entities[j].gravitycontrol = obj.entities[i].gravitycontrol;
+                            }
+                        }
+                        GOTOROOM(game.roomx, game.roomy - 1);
+                        break;
+                    }
+                }
             }
         }
 
         if (!map.warpx && !map.towermode)
         {
             //Normal! Just change room
-            int player = obj.getplayer();
-            if (INBOUNDS_VEC(player, obj.entities) && obj.entities[player].xp < -14)
+            for (size_t i = 0; i < obj.entities.size(); ++i)
             {
-                obj.entities[player].xp += 320;
-                GOTOROOM(game.roomx - 1, game.roomy);
-            }
-            if (INBOUNDS_VEC(player, obj.entities) && obj.entities[player].xp >= 308)
-            {
-                obj.entities[player].xp -= 320;
-                GOTOROOM(game.roomx + 1, game.roomy);
+                if (obj.entities[i].rule == 0)
+                {
+                    if (obj.entities[i].xp < -14)
+                    {
+                        obj.entities[i].xp += 320;
+                        for (size_t j = 0; j < obj.entities.size(); ++j)
+                        {
+                            if (obj.entities[j].rule == 0)
+                            {
+                                obj.entities[j].xp = obj.entities[i].xp;
+                                obj.entities[j].yp = obj.entities[i].yp;
+                                obj.entities[j].gravitycontrol = obj.entities[i].gravitycontrol;
+                            }
+                        }
+                        GOTOROOM(game.roomx - 1, game.roomy);
+                        break;
+                    }
+                    if (obj.entities[i].xp >= 308)
+                    {
+                        obj.entities[i].xp -= 320;
+                        for (size_t j = 0; j < obj.entities.size(); ++j)
+                        {
+                            if (obj.entities[j].rule == 0)
+                            {
+                                obj.entities[j].xp = obj.entities[i].xp;
+                                obj.entities[j].yp = obj.entities[i].yp;
+                                obj.entities[j].gravitycontrol = obj.entities[i].gravitycontrol;
+                            }
+                        }
+                        GOTOROOM(game.roomx + 1, game.roomy);
+                        break;
+                    }
+                }
             }
         }
 

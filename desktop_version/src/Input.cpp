@@ -2698,35 +2698,28 @@ void gameinput(void)
         if (game.jumppressed > 0)
         {
             game.jumppressed--;
-            if (any_onground && game.gravitycontrol == 0)
+            for (size_t ie = 0; ie < obj.entities.size(); ++ie)
             {
-                game.gravitycontrol = 1;
-                for (size_t ie = 0; ie < obj.entities.size(); ++ie)
+                if (obj.entities[ie].rule == 0 && (obj.entities[ie].onground > 0 || obj.entities[ie].onroof > 0) && (obj.entities[ie].gravitycontrol == 0))
                 {
-                    if (obj.entities[ie].rule == 0 && (obj.entities[ie].onground > 0 || obj.entities[ie].onroof > 0))
-                    {
+                        obj.entities[ie].gravitycontrol = 1;
                         obj.entities[ie].vy = -4;
                         obj.entities[ie].ay = -3;
-                    }
+                        music.playef(0);
+                        game.jumppressed = 0;
+                        game.totalflips++;
+                        continue;
                 }
-                music.playef(0);
-                game.jumppressed = 0;
-                game.totalflips++;
-            }
-            if (any_onroof && game.gravitycontrol == 1)
-            {
-                game.gravitycontrol = 0;
-                for (size_t ie = 0; ie < obj.entities.size(); ++ie)
+
+                if (obj.entities[ie].rule == 0 && (obj.entities[ie].onground > 0 || obj.entities[ie].onroof > 0) && (obj.entities[ie].gravitycontrol == 1))
                 {
-                    if (obj.entities[ie].rule == 0 && (obj.entities[ie].onground > 0 || obj.entities[ie].onroof > 0))
-                    {
-                        obj.entities[ie].vy = 4;
-                        obj.entities[ie].ay = 3;
-                    }
+                    obj.entities[ie].gravitycontrol = 0;
+                    obj.entities[ie].vy = 4;
+                    obj.entities[ie].ay = 3;
+                    music.playef(1);
+                    game.jumppressed = 0;
+                    game.totalflips++;
                 }
-                music.playef(1);
-                game.jumppressed = 0;
-                game.totalflips++;
             }
         }
     }

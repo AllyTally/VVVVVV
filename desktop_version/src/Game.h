@@ -260,7 +260,6 @@ public:
     enum GameGamestate prevgamestate; //only used sometimes
     bool hascontrol, jumpheld;
     int jumppressed;
-    int gravitycontrol;
     bool isingamecompletescreen();
 
     bool muted;

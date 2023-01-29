@@ -55,6 +55,12 @@ public:
 
     SDL_Color realcol;
     int lerpoldxp, lerpoldyp;
+
+    int gravitycontrol;
+    int deathseq;
+    int lifeseq;
+
+    int collided_id;
 };
 
 #endif /* ENT_H */

@@ -1298,6 +1298,7 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
     switch(t)
     {
     case 0: //Player
+    {
         entity.rule = 0; //Playable character
         entity.tile = 0;
         entity.colour = 0;
@@ -1313,8 +1314,22 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
 
         if (meta1 == 1) entity.invis = true;
 
+        entity.para = meta2;
+
+        int colors[] = { 0, 11, 7, 8, 9, 17, 4, 22, 3 };
+
+        if (meta2 >= 0 && meta2 < 9)
+        {
+            entity.colour = colors[meta2];
+        }
+        else
+        {
+            entity.colour = 1;
+        }
+
         entity.gravity = true;
         break;
+    }
     case 1: //Simple enemy, bouncing off the walls
         entity.rule = 1;
         entity.behave = meta1;
@@ -2629,7 +2644,7 @@ bool entityclass::updateentities( int i )
             //wait for collision
             if (entities[i].state == 1)
             {
-                game.gravitycontrol = (game.gravitycontrol + 1) % 2;
+                entities[entities[i].collided_id].gravitycontrol = (entities[entities[i].collided_id].gravitycontrol + 1) % 2;
                 ++game.totalflips;
                 return disableentity(i);
 
@@ -2748,10 +2763,10 @@ bool entityclass::updateentities( int i )
 
 
                 music.playef(8);
-                game.gravitycontrol = (game.gravitycontrol + 1) % 2;
                 game.totalflips++;
-                int temp = getplayer();
-                if (game.gravitycontrol == 0)
+                int temp = entities[i].collided_id;
+                entities[temp].gravitycontrol = (entities[temp].gravitycontrol + 1) % 2;
+                if (entities[entities[i].collided_id].gravitycontrol == 0)
                 {
                     if (INBOUNDS_VEC(temp, entities) && entities[temp].vy < 3) entities[temp].vy = 3;
                 }
@@ -3450,7 +3465,7 @@ void entityclass::animateentities( int _i )
                 if (entities[_i].visualonroof > 0) entities[_i].drawframe += 6;
                 // Stuck in a wall? Then default to gravitycontrol
                 if (entities[_i].visualonground > 0 && entities[_i].visualonroof > 0
-                && game.gravitycontrol == 0)
+                && entities[_i].gravitycontrol == 0)
                 {
                     entities[_i].drawframe -= 6;
                 }
@@ -3458,17 +3473,17 @@ void entityclass::animateentities( int _i )
             else
             {
                 entities[_i].drawframe ++;
-                if (game.gravitycontrol == 1)
+                if (entities[_i].gravitycontrol == 1)
                 {
                     entities[_i].drawframe += 6;
                 }
             }
 
-            if (game.deathseq > -1)
+            if (entities[_i].deathseq > -1)
             {
                 entities[_i].drawframe=13;
                 if (entities[_i].dir == 1) entities[_i].drawframe = 12;
-                if (game.gravitycontrol == 1) entities[_i].drawframe += 2;
+                if (entities[_i].gravitycontrol == 1) entities[_i].drawframe += 2;
             }
             break;
         case 1:
@@ -3720,7 +3735,7 @@ void entityclass::animateentities( int _i )
                 //}
             }
 
-            if (game.deathseq > -1)
+            if (entities[_i].deathseq > -1)
             {
                 entities[_i].drawframe=13;
                 if (entities[_i].dir == 1) entities[_i].drawframe = 12;
@@ -3854,14 +3869,14 @@ void entityclass::animatehumanoidcollision(const int i)
     {
         ++entity->collisiondrawframe;
 
-        if (entity->type == 0 && game.gravitycontrol == 1)
+        if (entity->type == 0 && entity->gravitycontrol == 1)
         {
             entity->collisiondrawframe += 6;
         }
     }
 
     /* deathseq shouldn't matter, but handling it anyway just in case */
-    if (game.deathseq > -1)
+    if (entity->deathseq > -1)
     {
         entity->collisiondrawframe = 13;
 
@@ -3870,7 +3885,7 @@ void entityclass::animatehumanoidcollision(const int i)
             entity->collisiondrawframe = 12;
         }
 
-        if ((entity->type == 0 && game.gravitycontrol == 1)
+        if ((entity->type == 0 && entity->gravitycontrol == 1)
         || (entity->type != 0 && entity->rule == 7))
         {
             entity->collisiondrawframe += 2;
@@ -4561,7 +4576,7 @@ void entityclass::updateentitylogic( int t )
     {
         if (entities[t].rule == 0)
         {
-            if(game.gravitycontrol==0)
+            if(entities[t].gravitycontrol==0)
             {
                 entities[t].ay = 3;
             }
@@ -4820,7 +4835,11 @@ void entityclass::collisioncheck(int i, int j, bool scm /*= false*/)
     case 3:   //Entity to entity
         if(entities[j].onentity>0)
         {
-            if (entitycollide(i, j)) entities[j].state = entities[j].onentity;
+            if (entitycollide(i, j))
+            {
+                entities[j].state = entities[j].onentity;
+                entities[j].collided_id = i;
+            }
         }
         break;
     case 4:   //Person vs horizontal line!
@@ -4832,10 +4851,11 @@ void entityclass::collisioncheck(int i, int j, bool scm /*= false*/)
             {
                 if (entityhlinecollide(i, j))
                 {
+                    entities[j].collided_id = i;
                     music.playef(8);
-                    game.gravitycontrol = (game.gravitycontrol + 1) % 2;
+                    entities[i].gravitycontrol = (entities[i].gravitycontrol + 1) % 2;
                     game.totalflips++;
-                    if (game.gravitycontrol == 0)
+                    if (entities[i].gravitycontrol == 0)
                     {
                         if (entities[i].vy < 1) entities[i].vy = 1;
                     }
@@ -4857,6 +4877,7 @@ void entityclass::collisioncheck(int i, int j, bool scm /*= false*/)
             {
                 if (entityvlinecollide(i, j))
                 {
+                    entities[j].collided_id = i;
                     entities[j].state = entities[j].onentity;
                     entities[j].life = 4;
                 }
@@ -4873,7 +4894,11 @@ void entityclass::collisioncheck(int i, int j, bool scm /*= false*/)
                 temp = entities[i].xp - entities[j].xp;
                 if (temp > -30 && temp < 30)
                 {
-                    if (entitycollide(i, j)) entities[j].state = entities[j].onentity;
+                    if (entitycollide(i, j))
+                    {
+                        entities[j].state = entities[j].onentity;
+                        entities[j].collided_id = i;
+                    }
                 }
             }
         }
@@ -4885,6 +4910,7 @@ void entityclass::collisioncheck(int i, int j, bool scm /*= false*/)
         && entityhlinecollide(i, j))
         {
             entities[j].state = entities[j].onentity;
+            entities[j].collided_id = i;
         }
         break;
     }
@@ -4902,7 +4928,7 @@ void entityclass::stuckprevention(int t)
     if (!testwallsx(t, entities[t].xp, entities[t].yp, true))
     {
         // Let's try to get out...
-        if (game.gravitycontrol == 0)
+        if (entities[t].gravitycontrol == 0)
         {
             entities[t].yp -= 3;
         }

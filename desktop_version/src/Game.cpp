@@ -176,7 +176,6 @@ void Game::init(void)
     jumpheld = false;
     advancetext = false;
     jumppressed = 0;
-    gravitycontrol = 0;
     teleport = false;
     edteleportent = 0; //Added in the port!
     companion = 0;
@@ -393,7 +392,7 @@ void Game::lifesequence(void)
             if (lifeseq == 6) obj.entities[i].invis = true;
             if (lifeseq >= 8) obj.entities[i].invis = true;
         }
-        if (lifeseq > 5) gravitycontrol = savegc;
+        if (lifeseq > 5) obj.entities[i].gravitycontrol = savegc;
 
         lifeseq--;
         if (INBOUNDS_VEC(i, obj.entities) && lifeseq <= 0)
@@ -1664,9 +1663,9 @@ void Game::updatestate(void)
 
             int i = obj.getplayer();
             hascontrol = false;
-            if (INBOUNDS_VEC(i, obj.entities) && obj.entities[i].onroof > 0 && gravitycontrol == 1)
+            if (INBOUNDS_VEC(i, obj.entities) && obj.entities[i].onroof > 0 && obj.entities[i].gravitycontrol == 1)
             {
-                gravitycontrol = 0;
+                obj.entities[i].gravitycontrol = 0;
                 music.playef(1);
             }
             if (INBOUNDS_VEC(i, obj.entities) && obj.entities[i].onground > 0)
@@ -1788,9 +1787,9 @@ void Game::updatestate(void)
 
             int i = obj.getplayer();
             hascontrol = false;
-            if (INBOUNDS_VEC(i, obj.entities) && obj.entities[i].onground > 0 && gravitycontrol == 0)
+            if (INBOUNDS_VEC(i, obj.entities) && obj.entities[i].onground > 0 && obj.entities[i].gravitycontrol == 0)
             {
-                gravitycontrol = 1;
+                obj.entities[i].gravitycontrol = 1;
                 music.playef(1);
             }
             if (INBOUNDS_VEC(i, obj.entities) && obj.entities[i].onroof > 0)
@@ -4880,7 +4879,7 @@ void Game::customstart(void)
     savegc = edsavegc;
     savedir = edsavedir; //Worldmap Start
     savepoint = 0;
-    gravitycontrol = savegc;
+    //gravitycontrol = savegc;
 
     setstate(0);
     deathseq = -1;
@@ -4898,7 +4897,6 @@ void Game::start(void)
     savegc = 0;
     savedir = 1; //Worldmap Start
     savepoint = 0;
-    gravitycontrol = savegc;
 
     setstate(0);
     deathseq = -1;
@@ -5006,7 +5004,6 @@ void Game::startspecial( int t )
     }
 
     savepoint = 0;
-    gravitycontrol = savegc;
     setstate(0);
     deathseq = -1;
     lifeseq = 0;
@@ -5076,7 +5073,6 @@ void Game::starttrial( int t )
     }
 
     savepoint = 0;
-    gravitycontrol = savegc;
 
     setstate(0);
     deathseq = -1;
@@ -7086,7 +7082,6 @@ void Game::returntolab(void)
         obj.entities[player].xp = 132;
         obj.entities[player].yp = 137;
     }
-    gravitycontrol = 0;
 
     savepoint = 0;
     saverx = 119;

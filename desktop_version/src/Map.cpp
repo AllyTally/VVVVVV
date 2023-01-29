@@ -968,8 +968,9 @@ void mapclass::warpto(int rx, int ry , int t, int tx, int ty)
         obj.entities[t].yp = (ty * 8) - obj.entities[t].h;
         obj.entities[t].lerpoldxp = obj.entities[t].xp;
         obj.entities[t].lerpoldyp = obj.entities[t].yp;
+        obj.entities[t].gravitycontrol = 0;
     }
-    game.gravitycontrol = 0;
+    //game.gravitycontrol = 0;
 }
 
 void mapclass::gotoroom(int rx, int ry)
