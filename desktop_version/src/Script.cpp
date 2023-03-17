@@ -1297,11 +1297,11 @@ void scriptclass::run(void)
             }
             else if (words[0] == "showteleporters")
             {
-                map.showteleporters = true;
+                map.set_teleporters_visible(true);
             }
             else if (words[0] == "showtargets")
             {
-                map.showtargets = true;
+                map.set_targets_visible(true);
             }
             else if (words[0] == "showtrinkets")
             {
@@ -1309,11 +1309,11 @@ void scriptclass::run(void)
             }
             else if (words[0] == "hideteleporters")
             {
-                map.showteleporters = false;
+                map.set_teleporters_visible(false);
             }
             else if (words[0] == "hidetargets")
             {
-                map.showtargets = false;
+                map.set_targets_visible(false);
             }
             else if (words[0] == "hidetrinkets")
             {
@@ -2803,7 +2803,7 @@ void scriptclass::startgamemode(const enum StartMode mode)
         SDL_memset(map.explored, true, sizeof(map.explored));
         i = 400; /* previously a nested for-loop set this */
         game.insecretlab = true;
-        map.showteleporters = true;
+        map.set_teleporters_visible(true);
 
         music.play(11);
         graphics.fademode = FADE_START_FADEIN;
@@ -3279,8 +3279,6 @@ void scriptclass::hardreset(void)
     //mapclass
     map.warpx = false;
     map.warpy = false;
-    map.showteleporters = false;
-    map.showtargets = false;
     map.showtrinkets = false;
     map.finalmode = false;
     map.finalstretch = false;
@@ -3293,6 +3291,8 @@ void scriptclass::hardreset(void)
     map.rcol = 0;
     map.custommode=false;
     map.custommodeforreal=false;
+    map.set_targets_visible(false);
+    map.set_teleporters_visible(true);
     if (!version2_2)
     {
         // Ironically, resetting more variables makes the janky fadeout system even more glitchy
