@@ -25,7 +25,7 @@ bool FILESYSTEM_isFile(const char* filename);
 bool FILESYSTEM_isMounted(const char* filename);
 
 void FILESYSTEM_loadZip(const char* filename);
-bool FILESYSTEM_mountAssets(const char *path);
+bool FILESYSTEM_mountAssets(const char *path, bool absolute = false);
 void FILESYSTEM_unmountAssets(void);
 bool FILESYSTEM_isAssetMounted(const char* filename);
 bool FILESYSTEM_areAssetsInSameRealDir(const char* filenameA, const char* filenameB);
@@ -43,7 +43,7 @@ void FILESYSTEM_loadAssetToMemory(
 bool FILESYSTEM_loadBinaryBlob(binaryBlob* blob, const char* filename);
 
 bool FILESYSTEM_saveTiXml2Document(const char *name, tinyxml2::XMLDocument& doc, bool sync = true);
-bool FILESYSTEM_loadTiXml2Document(const char *name, tinyxml2::XMLDocument& doc);
+bool FILESYSTEM_loadTiXml2Document(const char *name, tinyxml2::XMLDocument& doc, bool absolute = false);
 bool FILESYSTEM_loadAssetTiXml2Document(const char *name, tinyxml2::XMLDocument& doc);
 
 void FILESYSTEM_enumerateLevelDirFileNames(void (*callback)(const char* filename));

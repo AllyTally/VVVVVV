@@ -281,8 +281,8 @@ void customlevelclass::getDirectoryData(void)
             }
         }
     }
-
 }
+
 bool customlevelclass::getLevelMetaDataAndPlaytestArgs(const std::string& _path, LevelMetaData& _data, CliPlaytestArgs* pt_args, bool absolute)
 {
     unsigned char *uMem;
@@ -343,6 +343,7 @@ bool customlevelclass::getLevelMetaDataAndPlaytestArgs(const std::string& _path,
     }
 
     _data.filename = _path;
+    _data.absolute = absolute;
     return true;
 }
 
@@ -994,7 +995,7 @@ int customlevelclass::findwarptoken(int t)
 }
 
 
-bool customlevelclass::load(std::string _path)
+bool customlevelclass::load(std::string _path, bool absolute)
 {
     tinyxml2::XMLDocument doc;
     tinyxml2::XMLHandle hDoc(&doc);
@@ -1006,7 +1007,7 @@ bool customlevelclass::load(std::string _path)
 #endif
 
     static const char *levelDir = "levels/";
-    if (_path.compare(0, SDL_strlen(levelDir), levelDir) != 0)
+    if (_path.compare(0, SDL_strlen(levelDir), levelDir) != 0 && !absolute)
     {
         _path = levelDir + _path;
     }
@@ -1018,10 +1019,10 @@ bool customlevelclass::load(std::string _path)
     }
     else
     {
-        MAYBE_FAIL(FILESYSTEM_mountAssets(_path.c_str()));
+        MAYBE_FAIL(FILESYSTEM_mountAssets(_path.c_str(), absolute));
     }
 
-    if (!FILESYSTEM_loadTiXml2Document(_path.c_str(), doc))
+    if (!FILESYSTEM_loadTiXml2Document(_path.c_str(), doc, absolute))
     {
         vlog_warn("%s not found", _path.c_str());
         goto fail;

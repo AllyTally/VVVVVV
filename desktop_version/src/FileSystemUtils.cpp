@@ -523,9 +523,9 @@ void FILESYSTEM_loadZip(const char* filename)
     }
 }
 
-bool FILESYSTEM_mountAssets(const char* path)
+bool FILESYSTEM_mountAssets(const char* path, bool absolute)
 {
-    const char* real_dir = PHYSFS_getRealDir(path);
+    const char* real_dir = absolute ? path : PHYSFS_getRealDir(path);
 
     if (real_dir != NULL &&
     SDL_strncmp(real_dir, "levels/", sizeof("levels/") - 1) == 0 &&
@@ -547,7 +547,28 @@ bool FILESYSTEM_mountAssets(const char* path)
         char filename[MAX_PATH];
         char virtual_path[MAX_PATH];
 
-        VVV_between(path, "levels/", filename, ".vvvvvv");
+        if (absolute)
+        {
+            // Get filename from path
+            const char* last_slash = SDL_strrchr(path, '\\');
+
+            if (last_slash == NULL)
+            {
+                SDL_strlcpy(filename, path, sizeof(filename));
+            }
+            else
+            {
+                SDL_strlcpy(filename, last_slash + 1, sizeof(filename));
+            }
+
+            // Remove the extension (.vvvvvv)
+            filename[strlen(filename) - 7] = '\0';
+
+        }
+        else
+        {
+            VVV_between(path, "levels/", filename, ".vvvvvv");
+        }
 
         SDL_snprintf(
             virtual_path,
@@ -730,11 +751,70 @@ void FILESYSTEM_loadFileToMemoryAbs(
     unsigned char** mem,
     size_t* len
 ) {
-    // Absolute version of FILESYSTEM_loadFileToMemory
+    PHYSFS_File* handle;
+    PHYSFS_sint64 length;
+    PHYSFS_sint64 success;
+    const char* lastSlash;
 
-    // TODO
+    if (name == NULL || mem == NULL)
+    {
+        goto fail;
+    }
 
-    FILESYSTEM_loadFileToMemory(name, mem, len);
+    lastSlash = SDL_strrchr(name, '\\'); /* FIXME: pathSep */
+
+    char parentDir[MAX_PATH];
+    SDL_strlcpy(parentDir, name, SDL_min((unsigned)(lastSlash - name + 1), sizeof(parentDir)));
+
+    char filename[MAX_PATH];
+    SDL_strlcpy(filename, lastSlash + 1, sizeof(filename));
+
+    PHYSFS_mount(parentDir, NULL, 0);
+
+    handle = PHYSFS_openRead(filename);
+    if (handle == NULL)
+    {
+        vlog_debug(
+            "Could not read file %s: %s",
+            name,
+            PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode())
+        );
+        goto fail;
+    }
+    length = PHYSFS_fileLength(handle);
+    if (len != NULL)
+    {
+        if (length < 0)
+        {
+            length = 0;
+        }
+        *len = length;
+    }
+
+    *mem = (unsigned char*)SDL_malloc(length + 1);
+    if (*mem == NULL)
+    {
+        VVV_exit(1);
+    }
+    (*mem)[length] = 0;
+
+    success = PHYSFS_readBytes(handle, *mem, length);
+    if (success == -1)
+    {
+        VVV_free(*mem);
+    }
+    PHYSFS_close(handle);
+    return;
+
+fail:
+    if (mem != NULL)
+    {
+        *mem = NULL;
+    }
+    if (len != NULL)
+    {
+        *len = 0;
+    }
 }
 
 void FILESYSTEM_loadFileToMemory(
@@ -970,11 +1050,19 @@ bool FILESYSTEM_saveTiXml2Document(const char *name, tinyxml2::XMLDocument& doc,
     return true;
 }
 
-bool FILESYSTEM_loadTiXml2Document(const char *name, tinyxml2::XMLDocument& doc)
+bool FILESYSTEM_loadTiXml2Document(const char *name, tinyxml2::XMLDocument& doc, bool absolute)
 {
     /* XMLDocument.LoadFile doesn't account for Unicode paths, PHYSFS does */
     unsigned char *mem;
-    FILESYSTEM_loadFileToMemory(name, &mem, NULL);
+    if (absolute)
+    {
+        FILESYSTEM_loadFileToMemoryAbs(name, &mem, NULL);
+    }
+    else
+    {
+        FILESYSTEM_loadFileToMemory(name, &mem, NULL);
+    }
+
     if (mem == NULL)
     {
         return false;
@@ -1321,7 +1409,7 @@ void FILESYSTEM_associate_levels(char* gamePath)
 
     vformat_buf(
         path, sizeof(path),
-        loc::gettext("{path} -P %1"),
+        loc::gettext("{path} -P \"%1\""),
         "path:str",
         gamePath
     );

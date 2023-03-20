@@ -68,6 +68,9 @@ struct LevelMetaData
     /* This is for the metadata in the levels list,
      * so it will only be a main font (no custom ones). */
     uint8_t level_main_font_idx;
+
+    // Whether this file path is absolute or not
+    bool absolute;
 };
 
 struct CliPlaytestArgs
@@ -137,7 +140,7 @@ public:
 
     int absfree(int x, int y);
 
-    bool load(std::string _path);
+    bool load(std::string _path, bool absolute);
 #ifndef NO_EDITOR
     bool save(const std::string& _path);
 #endif

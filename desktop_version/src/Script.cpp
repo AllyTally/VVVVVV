@@ -2846,7 +2846,7 @@ void scriptclass::startgamemode(const enum StartMode mode)
     case Start_CUSTOM_QUICKSAVE:
     {
         std::string filename = std::string(cl.ListOfMetaData[game.playcustomlevel].filename);
-        if (!cl.load(filename))
+        if (!cl.load(filename, cl.ListOfMetaData[game.playcustomlevel].absolute))
         {
             gotoerrorloadinglevel();
             break;

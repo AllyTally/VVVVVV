@@ -2469,7 +2469,7 @@ void editorinput(void)
             case TEXT_LOAD:
             {
                 std::string loadstring = ed.filename + ".vvvvvv";
-                if (cl.load(loadstring))
+                if (cl.load(loadstring, false))
                 {
                     // don't use filename, it has the full path
                     char buffer[3*SCREEN_WIDTH_CHARS + 1];
