@@ -101,7 +101,7 @@ public:
 
     void loadZips(void);
     void getDirectoryData(void);
-    bool getLevelMetaDataAndPlaytestArgs(const std::string& filename, LevelMetaData& _data, CliPlaytestArgs* pt_args);
+    bool getLevelMetaDataAndPlaytestArgs(const std::string& filename, LevelMetaData& _data, CliPlaytestArgs* pt_args, bool absolute);
     bool getLevelMetaData(const std::string& filename, LevelMetaData& _data);
 
     void reset(void);

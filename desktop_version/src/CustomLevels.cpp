@@ -283,10 +283,17 @@ void customlevelclass::getDirectoryData(void)
     }
 
 }
-bool customlevelclass::getLevelMetaDataAndPlaytestArgs(const std::string& _path, LevelMetaData& _data, CliPlaytestArgs* pt_args)
+bool customlevelclass::getLevelMetaDataAndPlaytestArgs(const std::string& _path, LevelMetaData& _data, CliPlaytestArgs* pt_args, bool absolute)
 {
     unsigned char *uMem;
-    FILESYSTEM_loadFileToMemory(_path.c_str(), &uMem, NULL);
+    if (absolute)
+    {
+        FILESYSTEM_loadFileToMemoryAbs(_path.c_str(), &uMem, NULL);
+    }
+    else
+    {
+        FILESYSTEM_loadFileToMemory(_path.c_str(), &uMem, NULL);
+    }
 
     if (uMem == NULL)
     {
@@ -341,7 +348,7 @@ bool customlevelclass::getLevelMetaDataAndPlaytestArgs(const std::string& _path,
 
 bool customlevelclass::getLevelMetaData(const std::string& _path, LevelMetaData& _data)
 {
-    return getLevelMetaDataAndPlaytestArgs(_path, _data, NULL);
+    return getLevelMetaDataAndPlaytestArgs(_path, _data, NULL, false);
 }
 
 void customlevelclass::reset(void)

@@ -54,6 +54,7 @@ entityclass obj;
 Screen gameScreen;
 
 static bool startinplaytest = false;
+static bool playtestabsolute = false;
 static bool savefileplaytest = false;
 static int savex = 0;
 static int savey = 0;
@@ -480,9 +481,19 @@ int main(int argc, char *argv[])
             ARG_INNER({
                 i++;
                 startinplaytest = true;
+                playtestabsolute = false;
                 playtestname = std::string("levels/");
                 playtestname.append(argv[i]);
                 playtestname.append(std::string(".vvvvvv"));
+            })
+        }
+        else if (ARG("-playingabs") || ARG("-P"))
+        {
+            ARG_INNER({
+                i++;
+                startinplaytest = true;
+                playtestabsolute = true;
+                playtestname = argv[i];
             })
         }
         else if (ARG("-playx") || ARG("-playy") ||
@@ -587,6 +598,8 @@ int main(int argc, char *argv[])
     {
         SDL_StopTextInput();
     }
+
+    FILESYSTEM_associate_levels(argv[0]);
 
     NETWORK_init();
 
@@ -731,12 +744,12 @@ int main(int argc, char *argv[])
 
         LevelMetaData meta;
         CliPlaytestArgs pt_args;
-        if (cl.getLevelMetaDataAndPlaytestArgs(playtestname, meta, &pt_args)) {
+        if (cl.getLevelMetaDataAndPlaytestArgs(playtestname, meta, &pt_args, playtestabsolute)) {
             cl.ListOfMetaData.clear();
             cl.ListOfMetaData.push_back(meta);
         } else {
             cl.loadZips();
-            if (cl.getLevelMetaDataAndPlaytestArgs(playtestname, meta, &pt_args)) {
+            if (cl.getLevelMetaDataAndPlaytestArgs(playtestname, meta, &pt_args, playtestabsolute)) {
                 cl.ListOfMetaData.clear();
                 cl.ListOfMetaData.push_back(meta);
             } else {

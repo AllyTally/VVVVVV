@@ -30,6 +30,8 @@ void FILESYSTEM_unmountAssets(void);
 bool FILESYSTEM_isAssetMounted(const char* filename);
 bool FILESYSTEM_areAssetsInSameRealDir(const char* filenameA, const char* filenameB);
 
+void FILESYSTEM_loadFileToMemoryAbs(const char* name, unsigned char** mem,
+    size_t* len);
 void FILESYSTEM_loadFileToMemory(const char *name, unsigned char **mem,
                                  size_t *len);
 void FILESYSTEM_loadAssetToMemory(
@@ -66,5 +68,7 @@ bool FILESYSTEM_openDirectory(const char *dname);
 
 bool FILESYSTEM_delete(const char *name);
 void FILESYSTEM_deleteLevelSaves(void);
+
+void FILESYSTEM_associate_levels(char* path);
 
 #endif /* FILESYSTEMUTILS_H */

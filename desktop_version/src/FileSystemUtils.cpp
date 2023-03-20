@@ -725,6 +725,18 @@ static void load_stdin(void)
     stdin_length = pos - 1;
 }
 
+void FILESYSTEM_loadFileToMemoryAbs(
+    const char* name,
+    unsigned char** mem,
+    size_t* len
+) {
+    // Absolute version of FILESYSTEM_loadFileToMemory
+
+    // TODO
+
+    FILESYSTEM_loadFileToMemory(name, mem, len);
+}
+
 void FILESYSTEM_loadFileToMemory(
     const char *name,
     unsigned char **mem,
@@ -1241,3 +1253,85 @@ void FILESYSTEM_deleteLevelSaves(void)
         );
     }
 }
+
+#ifdef _WIN32
+void FILESYSTEM_set_registry_key(HKEY hkeyHive, const char* pszVar, const char* pszValue) {
+    HKEY hkey;
+
+    char szValueCurrent[1000];
+    DWORD dwType;
+    DWORD dwSize = sizeof(szValueCurrent);
+
+    int iRC = RegGetValue(hkeyHive, pszVar, NULL, RRF_RT_ANY, &dwType, szValueCurrent, &dwSize);
+
+    bool bDidntExist = iRC == ERROR_FILE_NOT_FOUND;
+
+    if (iRC != ERROR_SUCCESS && !bDidntExist)
+    {
+        vlog_error(
+            "Failed to set registry key: RegGetValue returned %d",
+            strerror(iRC)
+        );
+    }
+
+    if (!bDidntExist) {
+        if (dwType != REG_SZ)
+        {
+            vlog_error(
+                "Failed to set registry key: %d",
+                dwType
+            );
+        }
+
+        if (SDL_strcmp(szValueCurrent, pszValue) == 0) {
+            // We already set it!
+            vlog_info("Registry key already set to %s", pszValue);
+            return;
+        }
+    }
+
+    DWORD dwDisposition;
+    iRC = RegCreateKeyEx(hkeyHive, pszVar, 0, 0, 0, KEY_ALL_ACCESS, NULL, &hkey, &dwDisposition);
+    if (iRC != ERROR_SUCCESS)
+    {
+        vlog_error("Failed to create registry key: %s", strerror(iRC));
+    }
+
+    iRC = RegSetValueEx(hkey, "", 0, REG_SZ, (BYTE*)pszValue, strlen(pszValue) + 1);
+    if (iRC != ERROR_SUCCESS)
+    {
+        vlog_error("Failed to set registry key: %s", strerror(iRC));
+    }
+
+    if (bDidntExist)
+    {
+        vlog_info("Set registry key to %s", pszValue);
+    }
+    else
+    {
+        vlog_info("Changed registry key from %s to %s", szValueCurrent, pszValue);
+    }
+
+    RegCloseKey(hkey);
+}
+
+void FILESYSTEM_associate_levels(char* gamePath)
+{
+    char path[MAX_PATH + 8] = "";
+
+    vformat_buf(
+        path, sizeof(path),
+        loc::gettext("{path} -P %1"),
+        "path:str",
+        gamePath
+    );
+
+    FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\.vvvvvv", "VVVVVV.vvvvvv");
+    FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\.vvvvvv\\Content Type", "application/xml");
+    FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\.vvvvvv\\PerceivedType", "gamemedia");
+    FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\VVVVVV.vvvvvv", "VVVVVV level");
+    FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\VVVVVV.vvvvvv\\Shell\\Open\\Command", path);
+
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+}
+#endif
