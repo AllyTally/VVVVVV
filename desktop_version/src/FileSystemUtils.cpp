@@ -501,7 +501,7 @@ static bool FILESYSTEM_mountAssetsFrom(const char *fname)
     return true;
 }
 
-void FILESYSTEM_loadZip(const char* filename)
+void FILESYSTEM_loadZip(const char* filename, bool absolute)
 {
     PHYSFS_File* zip = PHYSFS_openRead(filename);
     if (zip == NULL)
@@ -529,10 +529,10 @@ bool FILESYSTEM_mountAssets(const char* path, bool absolute)
 
     if (real_dir != NULL &&
     SDL_strncmp(real_dir, "levels/", sizeof("levels/") - 1) == 0 &&
-    endsWith(real_dir, ".zip"))
+    (endsWith(real_dir, ".zip") || endsWith(real_dir, ".vpkg")))
     {
         /* This is a level zip */
-        vlog_info("Asset directory is .zip at %s", real_dir);
+        vlog_info("Asset directory is .zip or .vpkg at %s", real_dir);
 
         if (!FILESYSTEM_mountAssetsFrom(real_dir))
         {
@@ -1414,11 +1414,19 @@ void FILESYSTEM_associate_levels(char* gamePath)
         gamePath
     );
 
+    // register .vvvvvv (levels)
     FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\.vvvvvv", "VVVVVV.vvvvvv");
     FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\.vvvvvv\\Content Type", "application/xml");
     FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\.vvvvvv\\PerceivedType", "gamemedia");
     FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\VVVVVV.vvvvvv", "VVVVVV level");
     FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\VVVVVV.vvvvvv\\Shell\\Open\\Command", path);
+
+    // register .vpkg (levels with assets)
+    FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\.vpkg", "VVVVVV.vpkg");
+    FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\.vpkg\\Content Type", "application/zip");
+    FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\.vpkg\\PerceivedType", "gamemedia");
+    FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\VVVVVV.vpkg", "VVVVVV level");
+    FILESYSTEM_set_registry_key(HKEY_CURRENT_USER, "Software\\Classes\\VVVVVV.vpkg\\Shell\\Open\\Command", path);
 
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
 }

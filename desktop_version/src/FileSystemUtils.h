@@ -24,7 +24,7 @@ bool FILESYSTEM_restoreWriteDir(void);
 bool FILESYSTEM_isFile(const char* filename);
 bool FILESYSTEM_isMounted(const char* filename);
 
-void FILESYSTEM_loadZip(const char* filename);
+void FILESYSTEM_loadZip(const char* filename, bool absolute = false);
 bool FILESYSTEM_mountAssets(const char *path, bool absolute = false);
 void FILESYSTEM_unmountAssets(void);
 bool FILESYSTEM_isAssetMounted(const char* filename);

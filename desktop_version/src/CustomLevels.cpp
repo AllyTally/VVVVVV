@@ -118,7 +118,7 @@ static void levelZipCallback(const char* filename)
         return;
     }
 
-    if (endsWith(filename, ".zip"))
+    if (endsWith(filename, ".zip") || endsWith(filename, ".vpkg"))
     {
         FILESYSTEM_loadZip(filename);
     }
@@ -288,6 +288,10 @@ bool customlevelclass::getLevelMetaDataAndPlaytestArgs(const std::string& _path,
     unsigned char *uMem;
     if (absolute)
     {
+        if (endsWith(_path.c_str(), ".zip") || endsWith(_path.c_str(), ".vpkg"))
+        {
+            FILESYSTEM_loadZip(_path.c_str(), true);
+        }
         FILESYSTEM_loadFileToMemoryAbs(_path.c_str(), &uMem, NULL);
     }
     else
