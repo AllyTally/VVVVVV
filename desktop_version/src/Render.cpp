@@ -2043,6 +2043,9 @@ void gamerender(void)
         font::print(PR_CEN | PR_BOR, -1, graphics.flipmode ? 228 : 5, buffer_adv, 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2));
     }
 
+    std::string gamestate = "State: " + help.String(game.state);
+    font::print(PR_BOR, 16, 16, gamestate, 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2));
+
     if (game.readytotele > 100 || game.oldreadytotele > 100)
     {
         char buffer[SCREEN_WIDTH_CHARS + 1];
