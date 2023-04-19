@@ -42,6 +42,7 @@ namespace Menu
         showlevelspath,
         levellist,
         quickloadlevel,
+        loadtimetrial,
         deletequicklevel,
         youwannaquit,
         errornostart,
@@ -129,6 +130,28 @@ struct CustomLevelStat
     int score; //0 - not played, 1 - finished, 2 - all trinkets, 3 - finished, all trinkets
 };
 
+struct TimeTrial
+{
+    int room_x;
+    int room_y;
+    int start_x;
+    int start_y;
+    bool start_flipped;
+    int par;
+    int trinkets;
+    std::string name;
+};
+
+struct TimeTrialSave
+{
+    std::string level;
+    int trial_id;
+    bool unlocked;
+    int best_time;
+    int best_trinkets;
+    int best_lives;
+    int best_rank;
+};
 
 class Game
 {
@@ -530,6 +553,9 @@ public:
     bool inputdelay;
 
     bool statelocked;
+
+    std::vector<TimeTrial> timetrials;
+    std::vector<TimeTrialSave> timetrialsaves;
 };
 
 #ifndef GAME_DEFINITION

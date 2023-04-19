@@ -390,6 +390,8 @@ void customlevelclass::reset(void)
     script.textbox_colours.clear();
     script.add_default_colours();
     map.specialroomnames.clear();
+
+    game.timetrials.clear();
 }
 
 const int* customlevelclass::loadlevel( int rxi, int ryi )
@@ -1114,7 +1116,6 @@ bool customlevelclass::load(std::string _path)
             levmusic = help.Int(pText);
         }
 
-
         if (SDL_strcmp(pKey, "contents") == 0 && pText[0] != '\0')
         {
             int x = 0;
@@ -1141,7 +1142,6 @@ bool customlevelclass::load(std::string _path)
                 }
             }
         }
-
 
         if (SDL_strcmp(pKey, "edEntities") == 0)
         {
@@ -1386,6 +1386,29 @@ next:
                 }
 
                 map.specialroomnames.push_back(name);
+            }
+        }
+
+        if (SDL_strcmp(pKey, "TimeTrials") == 0)
+        {
+            for (tinyxml2::XMLElement* timeTrialElement = pElem->FirstChildElement(); timeTrialElement; timeTrialElement = timeTrialElement->NextSiblingElement())
+            {
+                TimeTrial trial;
+                timeTrialElement->QueryIntAttribute("room_x", &trial.room_x);
+                timeTrialElement->QueryIntAttribute("room_y", &trial.room_y);
+                timeTrialElement->QueryIntAttribute("start_x", &trial.start_x);
+                timeTrialElement->QueryIntAttribute("start_y", &trial.start_y);
+                timeTrialElement->QueryBoolAttribute("start_flipped", &trial.start_flipped);
+                timeTrialElement->QueryIntAttribute("par", &trial.par);
+                timeTrialElement->QueryIntAttribute("trinkets", &trial.trinkets);
+
+                trial.name = "???";
+                if (timeTrialElement->GetText() != NULL)
+                {
+                    trial.name = timeTrialElement->GetText();
+                }
+
+                game.timetrials.push_back(trial);
             }
         }
     }

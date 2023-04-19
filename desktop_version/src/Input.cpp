@@ -527,6 +527,11 @@ static void menuactionpress(void)
             break;
         case 2:
             music.playef(11);
+            game.createmenu(Menu::loadtimetrial);
+            map.nexttowercolour();
+            break;
+        case 3:
+            music.playef(11);
             game.createmenu(Menu::deletequicklevel);
             map.nexttowercolour();
             break;

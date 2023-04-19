@@ -1572,6 +1572,105 @@ static void menurender(void)
 
         break;
     }
+    case Menu::loadtimetrial:
+    {
+        bool unlocked = false;
+        int id_trial = game.currentmenuoption;
+        int par;
+        int max_trinkets;
+
+        font::print(PR_2X | PR_CEN, -1, 30, loc::gettext(game.timetrials[id_trial].name.c_str()), tr, tg, tb);
+        unlocked = true;
+        par = 75;
+        max_trinkets = 2;
+
+        if (unlocked)
+        {
+            if (game.besttimes[id_trial] == -1)
+            {
+                font::print_wrap(PR_CEN, -1, 75, loc::gettext("Not yet attempted"), tr, tg, tb);
+            }
+            else
+            {
+                int sp = SDL_max(10, font::height(0));
+
+                font::print(0, 32, 65, loc::gettext("RECORDS"), tr, tg, tb);
+                const char* label = loc::gettext("TIME");
+                int label_len = font::len(0, label);
+                font::print(0, 32, 65 + sp, label, tr, tg, tb);
+                label = loc::gettext("SHINY");
+                label_len = SDL_max(label_len, font::len(0, label));
+                font::print(0, 32, 65 + sp * 2, label, tr, tg, tb);
+                label = loc::gettext("LIVES");
+                label_len = SDL_max(label_len, font::len(0, label));
+                font::print(0, 32, 65 + sp * 3, label, tr, tg, tb);
+
+                font::print(0, label_len + 48, 65 + sp, game.timetstring(game.besttimes[id_trial]), tr, tg, tb);
+
+                char buffer[SCREEN_WIDTH_CHARS + 1];
+                vformat_buf(
+                    buffer, sizeof(buffer),
+                    loc::gettext("{n_trinkets}/{max_trinkets}"),
+                    "n_trinkets:int, max_trinkets:int",
+                    game.besttrinkets[id_trial], max_trinkets
+                );
+                font::print(0, label_len + 48, 65 + sp * 2, buffer, tr, tg, tb);
+                font::print(0, label_len + 48, 65 + sp * 3, help.String(game.bestlives[id_trial]), tr, tg, tb);
+
+
+                const char* str_par_time = loc::gettext("PAR TIME");
+                const std::string par_time = game.timetstring(par);
+                const char* str_best_rank = loc::gettext("BEST RANK");
+                const char* rank;
+                switch (game.bestrank[id_trial])
+                {
+                case 0:
+                    rank = loc::gettext("B");
+                    break;
+                case 1:
+                    rank = loc::gettext("A");
+                    break;
+                case 2:
+                    rank = loc::gettext("S");
+                    break;
+                case 3:
+                    rank = loc::gettext("V");
+                    break;
+                default:
+                    rank = "?";
+                }
+
+                int w[4] = {
+                    font::len(0, str_par_time),
+                    font::len(0, par_time.c_str()),
+                    font::len(0, str_best_rank),
+                    font::len(PR_2X, rank)
+                };
+                int longest_w = 0;
+                for (size_t i = 0; i < 4; i++)
+                {
+                    if (w[i] > longest_w)
+                    {
+                        longest_w = w[i];
+                    }
+                }
+                int center_x = 288 - longest_w / 2;
+
+                font::print(PR_CEN, center_x, 65, str_par_time, tr, tg, tb);
+                font::print(PR_CEN, center_x, 65 + sp, par_time, tr, tg, tb);
+                font::print(PR_CEN, center_x, 65 + sp * 3, str_best_rank, tr, tg, tb);
+                font::print(
+                    PR_2X | PR_CEN,
+                    center_x,
+                    66 + sp * 4,
+                    rank,
+                    225, 225, 225
+                );
+            }
+        }
+
+        break;
+    }
     case Menu::gamecompletecontinue:
         font::print(PR_2X | PR_CEN | PR_CJK_HIGH, -1, 25, loc::gettext("Congratulations!"), tr, tg, tb);
 

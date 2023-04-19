@@ -334,6 +334,7 @@ void Game::init(void)
     swnmessage = 0;
 
     clearcustomlevelstats();
+    timetrialsaves.clear();
 
     saveFilePath = FILESYSTEM_getUserSaveDirectory();
 
@@ -500,6 +501,7 @@ void Game::loadcustomlevelstats(void)
     }
 
     customlevelstats.clear();
+    timetrialsaves.clear();
 
     // Old system
     std::vector<std::string> customlevelnames;
@@ -514,8 +516,11 @@ void Game::loadcustomlevelstats(void)
         .FirstChildElement()
         .ToElement();
 
+    bool old_system = true;
+
     // First pass, look for the new system of storing stats
     // If they don't exist, then fall back to the old system
+    // Additionally, look for time trials
     for (pElem = firstElement; pElem != NULL; pElem = pElem->NextSiblingElement())
     {
         const char* pKey = pElem->Value();
@@ -544,43 +549,61 @@ void Game::loadcustomlevelstats(void)
                 customlevelstats.push_back(stat);
             }
 
-            return;
+            old_system = false;
+        }
+
+        if (SDL_strcmp(pKey, "trials") == 0)
+        {
+            for (tinyxml2::XMLElement* trial_el = pElem->FirstChildElement(); trial_el; trial_el = trial_el->NextSiblingElement())
+            {
+                TimeTrialSave trial;
+
+                trial_el->QueryIntAttribute("trial_id", &trial.trial_id);
+
+                if (trial_el->Attribute("level"))
+                {
+                    trial.level = trial_el->Attribute("level");
+                }
+
+                timetrialsaves.push_back(trial);
+            }
         }
     }
 
-
-    // Since we're still here, we must be on the old system
-    for (pElem = firstElement; pElem; pElem=pElem->NextSiblingElement())
+    if (old_system)
     {
-        const char* pKey = pElem->Value();
-        const char* pText = pElem->GetText() ;
-        if(pText == NULL)
+        for (pElem = firstElement; pElem; pElem = pElem->NextSiblingElement())
         {
-            pText = "";
-        }
-
-        if (SDL_strcmp(pKey, "customlevelscore") == 0 && pText[0] != '\0')
-        {
-            char buffer[16];
-            size_t start = 0;
-
-            while (next_split_s(buffer, sizeof(buffer), &start, pText, ','))
+            const char* pKey = pElem->Value();
+            const char* pText = pElem->GetText();
+            if (pText == NULL)
             {
-                customlevelscores.push_back(help.Int(buffer));
+                pText = "";
             }
-        }
 
-        if (SDL_strcmp(pKey, "customlevelstats") == 0 && pText[0] != '\0')
-        {
-            size_t start = 0;
-            size_t len = 0;
-            size_t prev_start = 0;
-
-            while (next_split(&start, &len, &pText[start], '|'))
+            if (SDL_strcmp(pKey, "customlevelscore") == 0 && pText[0] != '\0')
             {
-                customlevelnames.push_back(std::string(&pText[prev_start], len));
+                char buffer[16];
+                size_t start = 0;
 
-                prev_start = start;
+                while (next_split_s(buffer, sizeof(buffer), &start, pText, ','))
+                {
+                    customlevelscores.push_back(help.Int(buffer));
+                }
+            }
+
+            if (SDL_strcmp(pKey, "customlevelstats") == 0 && pText[0] != '\0')
+            {
+                size_t start = 0;
+                size_t len = 0;
+                size_t prev_start = 0;
+
+                while (next_split(&start, &len, &pText[start], '|'))
+                {
+                    customlevelnames.push_back(std::string(&pText[prev_start], len));
+
+                    prev_start = start;
+                }
             }
         }
     }
@@ -1587,16 +1610,34 @@ void Game::updatestate(void)
             {
                 bestlives[timetriallevel] = deathcounts;
             }
-            if (timetrialrank > bestrank[timetriallevel] || bestrank[timetriallevel]==-1)
+            if (timetrialrank > bestrank[timetriallevel] || bestrank[timetriallevel] == -1)
             {
                 bestrank[timetriallevel] = timetrialrank;
-                if(timetrialrank>=3){
-                    if(timetriallevel==0) unlockAchievement("vvvvvvtimetrial_station1_fixed");
-                    if(timetriallevel==1) unlockAchievement("vvvvvvtimetrial_lab_fixed");
-                    if(timetriallevel==2) unlockAchievement("vvvvvvtimetrial_tower_fixed");
-                    if(timetriallevel==3) unlockAchievement("vvvvvvtimetrial_station2_fixed");
-                    if(timetriallevel==4) unlockAchievement("vvvvvvtimetrial_warp_fixed");
-                    if(timetriallevel==5) unlockAchievement("vvvvvvtimetrial_final_fixed");
+                if (timetrialrank >= 3 && !map.custommode)
+                {
+                    switch (timetriallevel)
+                    {
+                    case 0:
+                        unlockAchievement("vvvvvvtimetrial_station1_fixed");
+                        break;
+                    case 1:
+                        unlockAchievement("vvvvvvtimetrial_lab_fixed");
+                        break;
+                    case 2:
+                        unlockAchievement("vvvvvvtimetrial_tower_fixed");
+                        break;
+                    case 3:
+                        unlockAchievement("vvvvvvtimetrial_station2_fixed");
+                        break;
+                    case 4:
+                        unlockAchievement("vvvvvvtimetrial_warp_fixed");
+                        break;
+                    case 5:
+                        unlockAchievement("vvvvvvtimetrial_final_fixed");
+                        break;
+                    default:
+                        break;
+                    }
                 }
             }
 
@@ -6354,9 +6395,24 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
     case Menu::quickloadlevel:
         option(loc::gettext("continue from save"));
         option(loc::gettext("start from beginning"));
+        option(loc::gettext("play time trials"));
         option(loc::gettext("delete save"));
         option(loc::gettext("back to levels"));
         menuyoff = -30;
+        break;
+    case Menu::loadtimetrial:
+        // Load level
+        loadcustomlevelstats();
+
+        cl.load(cl.ListOfMetaData[playcustomlevel].filename);
+        for (size_t i = 0; i < timetrials.size(); ++i)
+        {
+            option(loc::gettext(timetrials[i].name.c_str()));
+        }
+
+        option(loc::gettext("return"));
+        menuyoff = 0;
+        maxspacing = 15;
         break;
     case Menu::deletequicklevel:
         option(loc::gettext("no! don't delete"));
