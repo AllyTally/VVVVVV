@@ -542,6 +542,19 @@ static void menuactionpress(void)
             break;
         }
         break;
+    case Menu::loadtimetrial:
+        if (game.currentmenuoption + 1 == game.menuoptions.size()) {
+            game.createmenu(Menu::quickloadlevel);
+            music.playef(11);
+            map.nexttowercolour();
+        }
+        else
+        {
+            game.timetriallevel = game.currentmenuoption;
+            music.playef(11);
+            startmode(Start_CUSTOM_TRIAL);
+        }
+        break;
 #if !defined(NO_CUSTOM_LEVELS)
     case Menu::deletequicklevel:
         switch (game.currentmenuoption)

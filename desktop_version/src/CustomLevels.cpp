@@ -1401,6 +1401,7 @@ next:
                 timeTrialElement->QueryBoolAttribute("start_flipped", &trial.start_flipped);
                 timeTrialElement->QueryIntAttribute("par", &trial.par);
                 timeTrialElement->QueryIntAttribute("trinkets", &trial.trinkets);
+                timeTrialElement->QueryIntAttribute("music", &trial.music);
 
                 trial.name = "???";
                 if (timeTrialElement->GetText() != NULL)
@@ -1659,6 +1660,22 @@ bool customlevelclass::save(const std::string& _path)
         }
     }
     xml::update_tag(data, "script", scriptString.c_str());
+
+    msg = xml::update_element_delete_contents(data, "TimeTrials");
+    for (size_t i = 0; i < game.timetrials.size(); i++)
+    {
+        tinyxml2::XMLElement* trialElement = doc.NewElement("trial");
+        trialElement->SetAttribute("room_x", game.timetrials[i].room_x);
+        trialElement->SetAttribute("room_y", game.timetrials[i].room_y);
+        trialElement->SetAttribute("start_x", game.timetrials[i].start_x);
+        trialElement->SetAttribute("start_y", game.timetrials[i].start_y);
+        trialElement->SetAttribute("start_flipped", game.timetrials[i].start_flipped);
+        trialElement->SetAttribute("par", game.timetrials[i].par);
+        trialElement->SetAttribute("trinkets", game.timetrials[i].trinkets);
+        trialElement->SetAttribute("music", game.timetrials[i].music);
+        trialElement->LinkEndChild(doc.NewText(game.timetrials[i].name.c_str()));
+        msg->LinkEndChild(trialElement);
+    }
 
     return FILESYSTEM_saveTiXml2Document(newpath.c_str(), doc);
 }

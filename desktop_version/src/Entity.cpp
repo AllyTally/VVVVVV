@@ -1828,42 +1828,42 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
         switch (meta2)
         {
         case 1:
-            if(game.bestrank[0]>=3)
+            if(game.timetrialsaves[0].best_rank >= 3)
             {
                 entity.tile = 184 + meta1;
                 entity.colour = 31;
             }
             break;
         case 2:
-            if(game.bestrank[1]>=3)
+            if(game.timetrialsaves[1].best_rank >= 3)
             {
                 entity.tile = 186 + meta1;
                 entity.colour = 35;
             }
             break;
         case 3:
-            if(game.bestrank[2]>=3)
+            if(game.timetrialsaves[2].best_rank >= 3)
             {
                 entity.tile = 184 + meta1;
                 entity.colour = 33;
             }
             break;
         case 4:
-            if(game.bestrank[3]>=3)
+            if(game.timetrialsaves[3].best_rank >= 3)
             {
                 entity.tile = 184 + meta1;
                 entity.colour = 32;
             }
             break;
         case 5:
-            if(game.bestrank[4]>=3)
+            if(game.timetrialsaves[4].best_rank >= 3)
             {
                 entity.tile = 184 + meta1;
                 entity.colour = 34;
             }
             break;
         case 6:
-            if(game.bestrank[5]>=3)
+            if(game.timetrialsaves[5].best_rank >= 3)
             {
                 entity.tile = 184 + meta1;
                 entity.colour = 30;

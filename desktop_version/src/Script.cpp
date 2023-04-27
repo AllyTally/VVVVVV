@@ -1150,6 +1150,22 @@ void scriptclass::run(void)
                 game.state = ss_toi(words[1]);
                 game.statedelay = 0;
             }
+            else if (words[0] == "endtrial")
+            {
+                game.state = 82;
+                game.statedelay = 0;
+            }
+            else if (words[0] == "iftrial")
+            {
+                if (game.intimetrial)
+                {
+                    if (game.timetriallevel == ss_toi(words[1]))
+                    {
+                        loadalts("custom_" + words[2], "custom_" + raw_words[2]);
+                        position--;
+                    }
+                }
+            }
             else if (words[0] == "textboxactive")
             {
                 graphics.textboxactive();
@@ -2595,6 +2611,7 @@ void scriptclass::startgamemode(const enum StartMode mode)
     case Start_EDITORPLAYTESTING:
     case Start_CUSTOM:
     case Start_CUSTOM_QUICKSAVE:
+    case Start_CUSTOM_TRIAL:
         break;
     case Start_EDITOR:
         font::set_level_font_new();
@@ -2816,6 +2833,7 @@ void scriptclass::startgamemode(const enum StartMode mode)
 
     case Start_CUSTOM:
     case Start_CUSTOM_QUICKSAVE:
+    case Start_CUSTOM_TRIAL:
     {
         std::string filename = std::string(cl.ListOfMetaData[game.playcustomlevel].filename);
         if (!cl.load(filename))
@@ -2847,6 +2865,24 @@ void scriptclass::startgamemode(const enum StartMode mode)
         case Start_CUSTOM_QUICKSAVE:
             game.customloadquick(cl.ListOfMetaData[game.playcustomlevel].filename);
             break;
+        case Start_CUSTOM_TRIAL:
+            game.intimetrial = true;
+            game.timetrialparlost = false;
+            game.timetrialresulttime = 0;
+            game.timetrialshinytarget = game.timetrials[game.timetriallevel].trinkets;
+            game.timetrialcountdown = 150;
+            game.timetrialpar = game.timetrials[game.timetriallevel].par;
+            game.timetrialcheater = false;
+
+            game.savex = game.timetrials[game.timetriallevel].start_x;
+            game.savey = game.timetrials[game.timetriallevel].start_y;
+            game.savegc = game.timetrials[game.timetriallevel].start_flipped;
+            game.saverx = game.timetrials[game.timetriallevel].room_x + 100;
+            game.savery = game.timetrials[game.timetriallevel].room_y + 100;
+            game.savedir = 1;
+
+            break;
+
         default:
             VVV_unreachable();
         }

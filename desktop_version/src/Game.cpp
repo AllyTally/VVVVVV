@@ -249,11 +249,6 @@ void Game::init(void)
     SDL_memset(ndmresultcrewstats, false, sizeof(ndmresultcrewstats));
     SDL_memset(tele_crewstats, false, sizeof(tele_crewstats));
     SDL_memset(quick_crewstats, false, sizeof(quick_crewstats));
-    SDL_memset(besttimes, -1, sizeof(besttimes));
-    SDL_memset(bestframes, -1, sizeof(bestframes));
-    SDL_memset(besttrinkets, -1, sizeof(besttrinkets));
-    SDL_memset(bestlives, -1, sizeof(bestlives));
-    SDL_memset(bestrank, -1, sizeof(bestrank));
 
     crewstats[0] = true;
     lastsaved = 0;
@@ -558,14 +553,20 @@ void Game::loadcustomlevelstats(void)
             {
                 TimeTrialSave trial;
 
-                trial_el->QueryIntAttribute("trial_id", &trial.trial_id);
+                int trial_id = 0;
+                trial_el->QueryIntAttribute("trial_id", &trial_id);
+                trial_el->QueryIntAttribute("trinkets", &trial.best_trinkets);
+                trial_el->QueryIntAttribute("time", &trial.best_time);
+                trial_el->QueryIntAttribute("frames", &trial.best_frames);
+                trial_el->QueryIntAttribute("lives", &trial.best_lives);
+                trial_el->QueryIntAttribute("rank", &trial.best_rank);
 
                 if (trial_el->Attribute("level"))
                 {
                     trial.level = trial_el->Attribute("level");
                 }
 
-                timetrialsaves.push_back(trial);
+                timetrialsaves[trial_id] = trial;
             }
         }
     }
@@ -1595,24 +1596,24 @@ void Game::updatestate(void)
             if (trinkets() >= timetrialshinytarget) timetrialrank++;
             if (deathcounts == 0) timetrialrank++;
 
-            if (timetrialresulttime < besttimes[timetriallevel]
-            || (timetrialresulttime == besttimes[timetriallevel] && timetrialresultframes < bestframes[timetriallevel])
-            || besttimes[timetriallevel]==-1)
+            if (timetrialresulttime < timetrialsaves[timetriallevel].best_time
+            || (timetrialresulttime == timetrialsaves[timetriallevel].best_time && timetrialresultframes < timetrialsaves[timetriallevel].best_frames)
+            || timetrialsaves[timetriallevel].best_time == -1)
             {
-                besttimes[timetriallevel] = timetrialresulttime;
-                bestframes[timetriallevel] = timetrialresultframes;
+                timetrialsaves[timetriallevel].best_time = timetrialresulttime;
+                timetrialsaves[timetriallevel].best_frames = timetrialresultframes;
             }
-            if (timetrialresulttrinkets > besttrinkets[timetriallevel] || besttrinkets[timetriallevel]==-1)
+            if (timetrialresulttrinkets > timetrialsaves[timetriallevel].best_trinkets || timetrialsaves[timetriallevel].best_trinkets == -1)
             {
-                besttrinkets[timetriallevel] = trinkets();
+                timetrialsaves[timetriallevel].best_trinkets = trinkets();
             }
-            if (deathcounts < bestlives[timetriallevel] || bestlives[timetriallevel]==-1)
+            if (deathcounts < timetrialsaves[timetriallevel].best_lives || timetrialsaves[timetriallevel].best_lives == -1)
             {
-                bestlives[timetriallevel] = deathcounts;
+                timetrialsaves[timetriallevel].best_lives = deathcounts;
             }
-            if (timetrialrank > bestrank[timetriallevel] || bestrank[timetriallevel] == -1)
+            if (timetrialrank > timetrialsaves[timetriallevel].best_lives || timetrialsaves[timetriallevel].best_lives == -1)
             {
-                bestrank[timetriallevel] = timetrialrank;
+                timetrialsaves[timetriallevel].best_lives = timetrialrank;
                 if (timetrialrank >= 3 && !map.custommode)
                 {
                     switch (timetriallevel)
@@ -4282,14 +4283,6 @@ void Game::deletestats(void)
             unlock[i] = false;
             unlocknotify[i] = false;
         }
-        for (int i = 0; i < numtrials; i++)
-        {
-            besttimes[i] = -1;
-            bestframes[i] = -1;
-            besttrinkets[i] = -1;
-            bestlives[i] = -1;
-            bestrank[i] = -1;
-        }
         swnrecord = 0;
         swnbestrank = 0;
         bestgamedeaths = -1;
@@ -4365,21 +4358,21 @@ void Game::loadstats(struct ScreenSettings* screen_settings)
             pText = "";
         }
 
-        LOAD_ARRAY(unlock)
+        //LOAD_ARRAY(unlock)
 
-        LOAD_ARRAY(unlocknotify)
+        //LOAD_ARRAY(unlocknotify)
 
-        LOAD_ARRAY(besttimes)
+        //LOAD_ARRAY(besttimes)
 
-        LOAD_ARRAY(bestframes)
+        //LOAD_ARRAY(bestframes)
 
-        LOAD_ARRAY(besttrinkets)
-
-
-        LOAD_ARRAY(bestlives)
+        //LOAD_ARRAY(besttrinkets)
 
 
-        LOAD_ARRAY(bestrank)
+        //LOAD_ARRAY(bestlives)
+
+
+        //LOAD_ARRAY(bestrank)
 
 
 
@@ -4709,7 +4702,7 @@ bool Game::savestats(const struct ScreenSettings* screen_settings, bool sync /*=
     }
     xml::update_tag(dataNode, "unlocknotify", s_unlocknotify.c_str());
 
-    std::string s_besttimes;
+    /*std::string s_besttimes;
     for(size_t i = 0; i < SDL_arraysize(besttimes); i++ )
     {
         s_besttimes += help.String(besttimes[i]) + ",";
@@ -4742,7 +4735,7 @@ bool Game::savestats(const struct ScreenSettings* screen_settings, bool sync /*=
     {
         s_bestrank += help.String(bestrank[i]) + ",";
     }
-    xml::update_tag(dataNode, "bestrank", s_bestrank.c_str());
+    xml::update_tag(dataNode, "bestrank", s_bestrank.c_str());*/
 
     xml::update_tag(dataNode, "bestgamedeaths", bestgamedeaths);
 
@@ -6808,12 +6801,12 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         {
             //Alright, we haven't unlocked any time trials. How about no death mode?
             temp = 0;
-            if (bestrank[0] >= 2) temp++;
-            if (bestrank[1] >= 2) temp++;
-            if (bestrank[2] >= 2) temp++;
-            if (bestrank[3] >= 2) temp++;
-            if (bestrank[4] >= 2) temp++;
-            if (bestrank[5] >= 2) temp++;
+            //if (bestrank[0] >= 2) temp++;
+            //if (bestrank[1] >= 2) temp++;
+            //if (bestrank[2] >= 2) temp++;
+            //if (bestrank[3] >= 2) temp++;
+            //if (bestrank[4] >= 2) temp++;
+            //if (bestrank[5] >= 2) temp++;
             if (temp >= 4 && !unlocknotify[17])
             {
                 //Unlock No Death Mode

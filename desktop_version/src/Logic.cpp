@@ -756,27 +756,7 @@ void gamelogic(void)
                 if(game.timetrialcountdown == 60) music.playef(21);
                 if (game.timetrialcountdown == 30)
                 {
-                    switch(game.timetriallevel)
-                    {
-                    case 0:
-                        music.play(1);
-                        break;
-                    case 1:
-                        music.play(3);
-                        break;
-                    case 2:
-                        music.play(2);
-                        break;
-                    case 3:
-                        music.play(1);
-                        break;
-                    case 4:
-                        music.play(12);
-                        break;
-                    case 5:
-                        music.play(15);
-                        break;
-                    }
+                    music.play(game.timetrials[game.timetriallevel].music);
                     music.playef(22);
                 }
             }

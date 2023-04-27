@@ -49,6 +49,7 @@ enum StartMode
     Start_EDITORPLAYTESTING,
     Start_CUSTOM,
     Start_CUSTOM_QUICKSAVE,
+    Start_CUSTOM_TRIAL,
     Start_QUIT,
     Start_CUTSCENETEST,
 

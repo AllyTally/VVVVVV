@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include <SDL.h>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -140,6 +141,7 @@ struct TimeTrial
     int par;
     int trinkets;
     std::string name;
+    int music;
 };
 
 struct TimeTrialSave
@@ -148,6 +150,7 @@ struct TimeTrialSave
     int trial_id;
     bool unlocked;
     int best_time;
+    int best_frames;
     int best_trinkets;
     int best_lives;
     int best_rank;
@@ -420,14 +423,6 @@ public:
     int stat_trinkets;
     int bestgamedeaths;
 
-
-    static const int numtrials = 6;
-    int besttimes[numtrials];
-    int bestframes[numtrials];
-    int besttrinkets[numtrials];
-    int bestlives[numtrials];
-    int bestrank[numtrials];
-
     std::string tele_gametime;
     int tele_trinkets;
     std::string tele_currentarea;
@@ -555,7 +550,7 @@ public:
     bool statelocked;
 
     std::vector<TimeTrial> timetrials;
-    std::vector<TimeTrialSave> timetrialsaves;
+    std::map<int,TimeTrialSave> timetrialsaves;
 };
 
 #ifndef GAME_DEFINITION

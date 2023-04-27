@@ -715,12 +715,12 @@ int main(int argc, char *argv[])
         }
     }
 
-    if(game.bestrank[0]>=3) game.unlockAchievement("vvvvvvtimetrial_station1_fixed");
-    if(game.bestrank[1]>=3) game.unlockAchievement("vvvvvvtimetrial_lab_fixed");
-    if(game.bestrank[2]>=3) game.unlockAchievement("vvvvvvtimetrial_tower_fixed");
-    if(game.bestrank[3]>=3) game.unlockAchievement("vvvvvvtimetrial_station2_fixed");
-    if(game.bestrank[4]>=3) game.unlockAchievement("vvvvvvtimetrial_warp_fixed");
-    if(game.bestrank[5]>=3) game.unlockAchievement("vvvvvvtimetrial_final_fixed");
+    if (game.timetrialsaves[0].best_rank >= 3) game.unlockAchievement("vvvvvvtimetrial_station1_fixed");
+    if (game.timetrialsaves[1].best_rank >= 3) game.unlockAchievement("vvvvvvtimetrial_lab_fixed");
+    if (game.timetrialsaves[2].best_rank >= 3) game.unlockAchievement("vvvvvvtimetrial_tower_fixed");
+    if (game.timetrialsaves[3].best_rank >= 3) game.unlockAchievement("vvvvvvtimetrial_station2_fixed");
+    if (game.timetrialsaves[4].best_rank >= 3) game.unlockAchievement("vvvvvvtimetrial_warp_fixed");
+    if (game.timetrialsaves[5].best_rank >= 3) game.unlockAchievement("vvvvvvtimetrial_final_fixed");
 
     obj.init();
 

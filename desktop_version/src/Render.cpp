@@ -1487,7 +1487,7 @@ static void menurender(void)
 
         if (unlocked)
         {
-            if (game.besttimes[id_trial] == -1)
+            if (game.timetrialsaves[id_trial].best_time == -1)
             {
                 font::print_wrap(PR_CEN, -1, 75, loc::gettext("Not yet attempted"), tr, tg, tb);
             }
@@ -1506,24 +1506,24 @@ static void menurender(void)
                 label_len = SDL_max(label_len, font::len(0, label));
                 font::print(0, 32, 65+sp*3, label, tr, tg, tb);
 
-                font::print(0, label_len+48, 65+sp, game.timetstring(game.besttimes[id_trial]), tr, tg, tb);
+                font::print(0, label_len+48, 65+sp, game.timetstring(game.timetrialsaves[id_trial].best_time), tr, tg, tb);
 
                 char buffer[SCREEN_WIDTH_CHARS + 1];
                 vformat_buf(
                     buffer, sizeof(buffer),
                     loc::gettext("{n_trinkets}/{max_trinkets}"),
                     "n_trinkets:int, max_trinkets:int",
-                    game.besttrinkets[id_trial], max_trinkets
+                    game.timetrialsaves[id_trial].best_trinkets, max_trinkets
                 );
                 font::print(0, label_len+48, 65+sp*2, buffer, tr, tg, tb);
-                font::print(0, label_len+48, 65+sp*3, help.String(game.bestlives[id_trial]), tr, tg, tb);
+                font::print(0, label_len+48, 65+sp*3, help.String(game.timetrialsaves[id_trial].best_lives), tr, tg, tb);
 
 
                 const char* str_par_time = loc::gettext("PAR TIME");
                 const std::string par_time = game.timetstring(par);
                 const char* str_best_rank = loc::gettext("BEST RANK");
                 const char* rank;
-                switch(game.bestrank[id_trial])
+                switch(game.timetrialsaves[id_trial].best_rank)
                 {
                 case 0:
                     rank = loc::gettext("B");
@@ -1574,19 +1574,30 @@ static void menurender(void)
     }
     case Menu::loadtimetrial:
     {
-        bool unlocked = false;
         int id_trial = game.currentmenuoption;
-        int par;
-        int max_trinkets;
+
+        if (!INBOUNDS_VEC(id_trial, game.timetrials))
+        {
+            break;
+        }
 
         font::print(PR_2X | PR_CEN, -1, 30, loc::gettext(game.timetrials[id_trial].name.c_str()), tr, tg, tb);
-        unlocked = true;
-        par = 75;
-        max_trinkets = 2;
+        bool unlocked = true;
+        int par = game.timetrials[id_trial].par;
+        int max_trinkets = game.timetrials[id_trial].trinkets;
+
+        bool attempted = false;
+        TimeTrialSave save;
+
+        if (game.timetrialsaves.count(id_trial) > 0)
+        {
+            attempted = true;
+            save = game.timetrialsaves[id_trial];
+        }
 
         if (unlocked)
         {
-            if (game.besttimes[id_trial] == -1)
+            if (!attempted)
             {
                 font::print_wrap(PR_CEN, -1, 75, loc::gettext("Not yet attempted"), tr, tg, tb);
             }
@@ -1605,24 +1616,24 @@ static void menurender(void)
                 label_len = SDL_max(label_len, font::len(0, label));
                 font::print(0, 32, 65 + sp * 3, label, tr, tg, tb);
 
-                font::print(0, label_len + 48, 65 + sp, game.timetstring(game.besttimes[id_trial]), tr, tg, tb);
+                font::print(0, label_len + 48, 65 + sp, game.timetstring(save.best_time), tr, tg, tb);
 
                 char buffer[SCREEN_WIDTH_CHARS + 1];
                 vformat_buf(
                     buffer, sizeof(buffer),
                     loc::gettext("{n_trinkets}/{max_trinkets}"),
                     "n_trinkets:int, max_trinkets:int",
-                    game.besttrinkets[id_trial], max_trinkets
+                    save.best_trinkets, max_trinkets
                 );
                 font::print(0, label_len + 48, 65 + sp * 2, buffer, tr, tg, tb);
-                font::print(0, label_len + 48, 65 + sp * 3, help.String(game.bestlives[id_trial]), tr, tg, tb);
+                font::print(0, label_len + 48, 65 + sp * 3, help.String(save.best_lives), tr, tg, tb);
 
 
                 const char* str_par_time = loc::gettext("PAR TIME");
                 const std::string par_time = game.timetstring(par);
                 const char* str_best_rank = loc::gettext("BEST RANK");
                 const char* rank;
-                switch (game.bestrank[id_trial])
+                switch (save.best_rank)
                 {
                 case 0:
                     rank = loc::gettext("B");
