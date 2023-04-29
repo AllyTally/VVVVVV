@@ -2136,7 +2136,14 @@ static void menuactionpress(void)
         case 1:
             /* Replay time trial */
             music.playef(11);
-            startmode((enum StartMode) (game.timetriallevel + Start_FIRST_TIMETRIAL));
+            if (map.custommode)
+            {
+                startmode(Start_CUSTOM_TRIAL);
+            }
+            else
+            {
+                startmode((enum StartMode)(game.timetriallevel + Start_FIRST_TIMETRIAL));
+            }
             break;
         }
         break;
@@ -2496,7 +2503,15 @@ void gameinput(void)
     {
         //restart the time trial
         game.quickrestartkludge = false;
-        script.startgamemode((enum StartMode) (game.timetriallevel + Start_FIRST_TIMETRIAL));
+
+        if (map.custommode)
+        {
+            script.startgamemode(Start_CUSTOM_TRIAL);
+        }
+        else
+        {
+            script.startgamemode((enum StartMode)(game.timetriallevel + Start_FIRST_TIMETRIAL));
+        }
         game.deathseq = -1;
         game.completestop = false;
         game.hascontrol = false;
