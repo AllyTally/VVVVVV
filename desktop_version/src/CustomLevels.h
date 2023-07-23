@@ -6,6 +6,7 @@
 #include <SDL.h>
 #include <string>
 #include <vector>
+#include <map>
 
 class CustomEntity
 {
@@ -83,6 +84,13 @@ struct CliPlaytestArgs
     bool valid;
 };
 
+struct CustomEntityColour
+{
+    std::string input;
+    bool synced;
+    Uint32 tick;
+    SDL_Color colour;
+};
 
 extern std::vector<CustomEntity> customentities;
 
@@ -172,6 +180,9 @@ public:
     SDL_Color getonewaycol(int rx, int ry);
     SDL_Color getonewaycol(void);
     bool onewaycol_override;
+
+    std::map<int, CustomEntityColour> entcolours;
+    std::map<std::string, int> entcolour_aliases;
 };
 
 std::string translate_title(const std::string& title, bool* is_gettext);

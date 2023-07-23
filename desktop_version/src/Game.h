@@ -588,6 +588,7 @@ public:
 
     int old_skip_message_timer;
     int skip_message_timer;
+    Uint32 gameticks;
 };
 
 #ifndef GAME_DEFINITION
