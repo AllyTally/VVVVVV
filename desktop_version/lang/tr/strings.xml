@@ -107,7 +107,7 @@
     <string english="sound volume" translation="ses seviyesi" explanation="audio menu option"/>
     <string english="Sound Volume" translation="Ses Seviyesi" explanation="title" max="20"/>
     <string english="Change the volume of sound effects." translation="Ses seviyesini değiştir." explanation="" max="38*3"/>
-    <string english="Credits" translation="Jenerik" explanation="credits" max="13"/>
+    <string english="Credits" translation="Jenerik" explanation="credits" max="20"/>
     <string english="VVVVVV is a game by" translation="VVVVVV&apos;yi tasarlayan ve geliştiren:" explanation="credits" max="40"/>
     <string english="and features music by" translation="Müzikler:" explanation="credits" max="40"/>
     <string english="Roomnames are by" translation="Oda adları:" explanation="credits" max="40"/>
@@ -326,10 +326,10 @@
     <string english="[Trinkets found]" translation="[Bulunan Eşyalar]" explanation="amount of shiny trinkets found" max="40"/>
     <string english="[Number of Deaths]" translation="[Ölüm Sayısı]" explanation="" max="40"/>
     <string english="[Time Taken]" translation="[Harcanan Süre]" explanation="stopwatch time" max="40"/>
-    <string english="Trinkets Found:" translation="Bulunan Eşyalar:" explanation="game complete screen" max="21"/>
-    <string english="Game Time:" translation="Oyun Süresi:" explanation="game complete screen" max="21"/>
-    <string english="Total Flips:" translation="Toplam Ters Dönme:" explanation="game complete screen" max="21"/>
-    <string english="Total Deaths:" translation="Toplam Ölüm:" explanation="game complete screen" max="21"/>
+    <string english="Trinkets Found:" translation="Bulunan Eşyalar:" explanation="game complete screen" max="22"/>
+    <string english="Game Time:" translation="Oyun Süresi:" explanation="game complete screen" max="22"/>
+    <string english="Total Flips:" translation="Toplam Ters Dönme:" explanation="game complete screen" max="22"/>
+    <string english="Total Deaths:" translation="Toplam Ölüm:" explanation="game complete screen" max="22"/>
     <string english="Results" translation="Sonuçlar" explanation="bigger title" max="13"/>
     <string english="TIME TAKEN:" translation="HARCANAN SÜRE:" explanation="time the player took playing the level" max="32"/>
     <string english="NUMBER OF DEATHS:" translation="ÖLME SAYISI:" explanation="amount of times the player died" max="32"/>
@@ -498,6 +498,7 @@
     <string english="Press {button} to activate terminal" translation="{button}, terminali etkinleştirir" explanation="keyboard key (E or ENTER) or controller button glyph is filled in for {button}. max is when displayed" max="37"/>
     <string english="Press {button} to activate terminals" translation="{button}, terminalleri etkinleştirir" explanation="keyboard key (E or ENTER) or controller button glyph is filled in for {button}. max is when displayed. there are 3 next to each other in the ship" max="37"/>
     <string english="Press {button} to interact" translation="Etkileşim kurmak için {button} tuşuna bas" explanation="keyboard key (E or ENTER) or controller button glyph is filled in for {button}. max is when displayed" max="37"/>
+    <string english="- Press {button} to skip -" translation="" explanation="keyboard key (ENTER) or controller button glyph is filled in for {button}. max is when displayed. This prompt is for skipping cutscenes" max="40"/>
     <string english="Passion for Exploring" translation="Passion for Exploring" explanation="jukebox prompt. song name should probably not be translated" max="37*2"/>
     <string english="Pushing Onwards" translation="Pushing Onwards" explanation="jukebox prompt. song name should probably not be translated" max="37*2"/>
     <string english="Positive Force" translation="Positive Force" explanation="jukebox prompt. song name should probably not be translated" max="37*2"/>
@@ -516,7 +517,7 @@
     <string english="Editor ghost trail is ON" translation="Düzenleyicide oyuncu hayaleti izi AÇIK" explanation="level editor. Repetition of the player&apos;s path after playtesting is enabled" max="40"/>
     <string english="load level" translation="bölümü yükle" explanation="level editor menu option"/>
     <string english="save level" translation="bölümü kaydet" explanation="level editor menu option"/>
-    <string english="quit to main menu" translation="ana menüye çık" explanation="level editor menu option" max="19"/>
+    <string english="quit to main menu" translation="ana menüye çık" explanation="level editor menu option" max="22"/>
     <string english="change name" translation="ismi değiştir" explanation="level editor menu option"/>
     <string english="change author" translation="geliştiriciyi değiştir" explanation="level editor menu option"/>
     <string english="change description" translation="açıklamayı değiştir" explanation="level editor menu option"/>
@@ -630,6 +631,7 @@
     <string english="Now using {area} Tileset" translation="{area} Kareleri kullanılıyor" explanation="level editor, user changed the tileset of the room to {area} (like Ship, Lab, etc)" max="38*3"/>
     <string english="Tileset Colour Changed" translation="Kare Renkleri Değişti" explanation="level editor, user changed the tileset colour/variant of the room" max="38*3"/>
     <string english="Enemy Type Changed" translation="Düşman Türü Değişti" explanation="level editor, user changed enemy appearance for the room" max="38*3"/>
+    <string english="Platform speed is now {speed}" translation="" explanation="level editor, user changed speed of platforms for the room" max="38*3"/>
     <string english="Reloaded resources" translation="Kaynaklar tekrar yüklendi" explanation="level editor, reloaded graphics assets/resources, music and sound effects" max="38*3"/>
     <string english="ERROR: Invalid format" translation="HATA: Geçersiz format" explanation="user was supposed to enter something like `12,12`, but entered `as@df`" max="38*3"/>
     <string english="Loaded map: {filename}.vvvvvv" translation="Yüklenen harita: {dosyaadi}.vvvvvv" explanation="successfully loaded level file" max="38*3"/>
@@ -647,7 +649,10 @@
     <string english="ERROR: No checkpoint to spawn at" translation="HATA: Canlanılacak kayıt noktası yok" explanation="we cannot playtest because there is no checkpoint in this room that the player could start (be spawned) at" max="38*3"/>
     <string english="ERROR: Max number of trinkets is 100" translation="HATA: Maksimum eşya sayısı 100&apos;dür" explanation="editor, user tried to place another trinket" max="38*3"/>
     <string english="ERROR: Max number of crewmates is 100" translation="HATA: Maksimum ekip üyesi sayısı 100&apos;dür" explanation="editor, user tried to place another crewmate" max="38*3"/>
+    <string english="Level quits to menu" translation="" explanation="editor message, user would have been forcefully returned to title screen but wasn&apos;t" max="38*3"/>
+    <string english="Level completed" translation="" explanation="editor message, user would have been returned to levels list but wasn&apos;t" max="38*3"/>
     <string english="Rolled credits" translation="Jenerik kısmı" explanation="editor message, credits would have been shown but weren&apos;t" max="38*3"/>
+    <string english="Time trial completed" translation="" explanation="editor message, time trial complete screen would have been shown but wasn&apos;t" max="38*3"/>
     <string english="{hrs}:{min|digits=2}:{sec|digits=2}" translation="{hrs}:{min|digits=2}:{sec|digits=2}" explanation="time format H:MM:SS"/>
     <string english="{hrs}:{min|digits=2}:{sec|digits=2}.{cen|digits=2}" translation="{hrs}:{min|digits=2}:{sec|digits=2}.{cen|digits=2}" explanation="time format H:MM:SS.CC"/>
     <string english="{min}:{sec|digits=2}" translation="{min}:{sec|digits=2}" explanation="time format M:SS"/>
@@ -757,7 +762,11 @@ Gizli laboratuvarı buldun!" explanation="" max="34*4"/>
     <string english="Last 1 minute on the Super Gravitron" translation="Süper Gravitron&apos;da 1 dakika dayan" explanation="achievement/trophy description" max="38*2"/>
     <string english="MASTER OF THE UNIVERSE" translation="EVRENİN USTASI" explanation="achievement/trophy title - no death mode complete" max="38*2"/>
     <string english="Complete the game in no death mode" translation="Oyunu ölümsüz modunda tamamla" explanation="achievement/trophy description" max="38*2"/>
+    <string english="Something went wrong, but we forgot the error message." translation="" explanation="the message that is printed in case the game detects an error but there&apos;s no error message set" max="38*6"/>
     <string english="Could not mount {path}: real directory doesn&apos;t exist" translation="{path} bağlanamadı: gerçek klasör yok" explanation="mount: link/attach a directory (folder) in the filesystem into the game&apos;s filesystem so we can access it" max="38*6"/>
+    <string english="Level {path} not found" translation="" explanation="" max="38*6"/>
+    <string english="Error parsing {path}: {error}" translation="" explanation="we tried to parse the level file, but failed" max="38*6"/>
+    <string english="{filename} dimensions not exact multiples of {width} by {height}!" translation="" explanation="filename is something like tiles.png, tiles2.png, etc. and width/height are something like 8, 32, etc.; this is used if the dimensions of a graphics file aren&apos;t an exact multiple of the given size (e.g. 8x8, 32x32, etc.)" max="38*6"/>
     <string english="ERROR: Could not write to language folder! Make sure there is no &quot;lang&quot; folder next to the regular saves." translation="HATA: Dil klasörüne yazılamadı! Normal kayıt dosyalarının yanında &quot;lang&quot; adlı bir klasör olmadığından emin ol." explanation="" max="38*5"/>
     <string english="" translation="" explanation=""/>
     <string english="" translation="" explanation=""/>

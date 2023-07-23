@@ -107,7 +107,7 @@
     <string english="sound volume" translation="effektlautstärke" explanation="audio menu option"/>
     <string english="Sound Volume" translation="Effektlautstärke" explanation="title" max="20"/>
     <string english="Change the volume of sound effects." translation="Ändere die Lautstärke der Soundeffekte." explanation="" max="38*3"/>
-    <string english="Credits" translation="Mitwirkende" explanation="credits" max="13"/>
+    <string english="Credits" translation="Mitwirkende" explanation="credits" max="20"/>
     <string english="VVVVVV is a game by" translation="VVVVVV ist ein Spiel von" explanation="credits" max="40"/>
     <string english="and features music by" translation="mit Musik von" explanation="credits" max="40"/>
     <string english="Roomnames are by" translation="Raumnamen sind von" explanation="credits" max="40"/>
@@ -326,10 +326,10 @@
     <string english="[Trinkets found]" translation="[Dingsdas gefunden]" explanation="amount of shiny trinkets found" max="40"/>
     <string english="[Number of Deaths]" translation="[Tode]" explanation="" max="40"/>
     <string english="[Time Taken]" translation="[Zeit]" explanation="stopwatch time" max="40"/>
-    <string english="Trinkets Found:" translation="Dingsdas gefunden:" explanation="game complete screen" max="21"/>
-    <string english="Game Time:" translation="Spielzeit:" explanation="game complete screen" max="21"/>
-    <string english="Total Flips:" translation="Flipps insgesamt:" explanation="game complete screen" max="21"/>
-    <string english="Total Deaths:" translation="Tode insgesamt:" explanation="game complete screen" max="21"/>
+    <string english="Trinkets Found:" translation="Dingsdas gefunden:" explanation="game complete screen" max="22"/>
+    <string english="Game Time:" translation="Spielzeit:" explanation="game complete screen" max="22"/>
+    <string english="Total Flips:" translation="Flipps insgesamt:" explanation="game complete screen" max="22"/>
+    <string english="Total Deaths:" translation="Tode insgesamt:" explanation="game complete screen" max="22"/>
     <string english="Results" translation="Ergebnisse" explanation="bigger title" max="13"/>
     <string english="TIME TAKEN:" translation="ZEIT:" explanation="time the player took playing the level" max="32"/>
     <string english="NUMBER OF DEATHS:" translation="TODE:" explanation="amount of times the player died" max="32"/>
@@ -479,7 +479,7 @@
     <string english="no, keep playing" translation="nein, weiterspielen" explanation="in-game menu option" max="28"/>
     <string english="[ NO, KEEP PLAYING ]" translation="[ NEIN, WEITERSPIELEN ]" explanation="in-game menu option" max="32"/>
     <string english="yes, quit to menu" translation="ja, zurück zum menü" explanation="in-game menu option" max="24"/>
-    <string english="[ YES, QUIT TO MENU ]" translation="[ JA, ZURÜCK ZUM NENÜ ]" explanation="in-game menu option" max="28"/>
+    <string english="[ YES, QUIT TO MENU ]" translation="[ JA, ZURÜCK ZUM MENÜ ]" explanation="in-game menu option" max="28"/>
     <string english="yes, return" translation="ja, zurück" explanation="in-game menu option" max="24"/>
     <string english="[ YES, RETURN ]" translation="[JA, ZURÜCK]" explanation="in-game menu option" max="28"/>
     <string english="no, return" translation="nein, zurück" explanation="quit program menu option"/>
@@ -498,6 +498,7 @@
     <string english="Press {button} to activate terminal" translation="Aktiviere das Terminal mit {button}" explanation="keyboard key (E or ENTER) or controller button glyph is filled in for {button}. max is when displayed" max="37"/>
     <string english="Press {button} to activate terminals" translation="Drücke {button}, um Terminals zu aktivieren" explanation="keyboard key (E or ENTER) or controller button glyph is filled in for {button}. max is when displayed. there are 3 next to each other in the ship" max="37"/>
     <string english="Press {button} to interact" translation="Drücke {button} zum Interagieren" explanation="keyboard key (E or ENTER) or controller button glyph is filled in for {button}. max is when displayed" max="37"/>
+    <string english="- Press {button} to skip -" translation="" explanation="keyboard key (ENTER) or controller button glyph is filled in for {button}. max is when displayed. This prompt is for skipping cutscenes" max="40"/>
     <string english="Passion for Exploring" translation="Passion for Exploring" explanation="jukebox prompt. song name should probably not be translated" max="37*2"/>
     <string english="Pushing Onwards" translation="Pushing Onwards" explanation="jukebox prompt. song name should probably not be translated" max="37*2"/>
     <string english="Positive Force" translation="Positive Force" explanation="jukebox prompt. song name should probably not be translated" max="37*2"/>
@@ -516,7 +517,7 @@
     <string english="Editor ghost trail is ON" translation="Editor-Geisterspur ist AN" explanation="level editor. Repetition of the player&apos;s path after playtesting is enabled" max="40"/>
     <string english="load level" translation="level laden" explanation="level editor menu option"/>
     <string english="save level" translation="level speichern" explanation="level editor menu option"/>
-    <string english="quit to main menu" translation="zum hauptmenü" explanation="level editor menu option" max="19"/>
+    <string english="quit to main menu" translation="zum hauptmenü" explanation="level editor menu option" max="22"/>
     <string english="change name" translation="namen ändern" explanation="level editor menu option"/>
     <string english="change author" translation="autor ändern" explanation="level editor menu option"/>
     <string english="change description" translation="beschreibung ändern" explanation="level editor menu option"/>
@@ -589,7 +590,7 @@
     <string english="7: Conveyors" translation="7: Förderbänder" explanation="editor tool. Conveyor belt" max="32"/>
     <string english="8: Moving" translation="8: Bewegt" explanation="***OUTDATED***"/>
     <string english="8: Moving Platforms" translation="" explanation="editor tool. Moving platform" max="32"/>
-    <string english="9: Enemies" translation="9: Finde" explanation="editor tool" max="32"/>
+    <string english="9: Enemies" translation="9: Feinde" explanation="editor tool" max="32"/>
     <string english="0: Grav Line" translation="0: Grav-Linie" explanation="***OUTDATED***"/>
     <string english="0: Gravity Lines" translation="" explanation="editor tool. Gravity line, which flips your gravity when touching it" max="32"/>
     <string english="R: Roomtext" translation="R: Raumtext" explanation="editor tool. Freely typed text, consider just Text" max="32"/>
@@ -630,6 +631,7 @@
     <string english="Now using {area} Tileset" translation="{area}-Tileset wird jetzt verwendet" explanation="level editor, user changed the tileset of the room to {area} (like Ship, Lab, etc)" max="38*3"/>
     <string english="Tileset Colour Changed" translation="Tileset-Farbe geändert" explanation="level editor, user changed the tileset colour/variant of the room" max="38*3"/>
     <string english="Enemy Type Changed" translation="Feindtyp geändert" explanation="level editor, user changed enemy appearance for the room" max="38*3"/>
+    <string english="Platform speed is now {speed}" translation="" explanation="level editor, user changed speed of platforms for the room" max="38*3"/>
     <string english="Reloaded resources" translation="Ressourcen neu geladen" explanation="level editor, reloaded graphics assets/resources, music and sound effects" max="38*3"/>
     <string english="ERROR: Invalid format" translation="FEHLER: ungültiges Format" explanation="user was supposed to enter something like `12,12`, but entered `as@df`" max="38*3"/>
     <string english="Loaded map: {filename}.vvvvvv" translation="Karte geladen: {filename}.vvvvvv" explanation="successfully loaded level file" max="38*3"/>
@@ -647,7 +649,10 @@
     <string english="ERROR: No checkpoint to spawn at" translation="FEHLER: kein Checkpoint zum Spawnen" explanation="we cannot playtest because there is no checkpoint in this room that the player could start (be spawned) at" max="38*3"/>
     <string english="ERROR: Max number of trinkets is 100" translation="FEHLER: maximale Anzahl von Dingsdas ist 100" explanation="editor, user tried to place another trinket" max="38*3"/>
     <string english="ERROR: Max number of crewmates is 100" translation="FEHLER: maximale Anzahl von Crewmitgliedern ist 100" explanation="editor, user tried to place another crewmate" max="38*3"/>
+    <string english="Level quits to menu" translation="" explanation="editor message, user would have been forcefully returned to title screen but wasn&apos;t" max="38*3"/>
+    <string english="Level completed" translation="" explanation="editor message, user would have been returned to levels list but wasn&apos;t" max="38*3"/>
     <string english="Rolled credits" translation="Abspann gezeigt" explanation="editor message, credits would have been shown but weren&apos;t" max="38*3"/>
+    <string english="Time trial completed" translation="" explanation="editor message, time trial complete screen would have been shown but wasn&apos;t" max="38*3"/>
     <string english="{hrs}:{min|digits=2}:{sec|digits=2}" translation="{hrs}:{min|digits=2}:{sec|digits=2}" explanation="time format H:MM:SS"/>
     <string english="{hrs}:{min|digits=2}:{sec|digits=2}.{cen|digits=2}" translation="{hrs}:{min|digits=2}:{sec|digits=2}.{cen|digits=2}" explanation="time format H:MM:SS.CC"/>
     <string english="{min}:{sec|digits=2}" translation="{min}:{sec|digits=2}" explanation="time format M:SS"/>
@@ -757,7 +762,11 @@ Du hast das Geheimlabor gefunden!" explanation="" max="34*4"/>
     <string english="Last 1 minute on the Super Gravitron" translation="Überstehe 1 Minute im Super Gravitron" explanation="achievement/trophy description" max="38*2"/>
     <string english="MASTER OF THE UNIVERSE" translation="HERRSCHER DES UNIVERSUMS" explanation="achievement/trophy title - no death mode complete" max="38*2"/>
     <string english="Complete the game in no death mode" translation="Beende das Spiel im Keine-Tode-Modus" explanation="achievement/trophy description" max="38*2"/>
+    <string english="Something went wrong, but we forgot the error message." translation="" explanation="the message that is printed in case the game detects an error but there&apos;s no error message set" max="38*6"/>
     <string english="Could not mount {path}: real directory doesn&apos;t exist" translation="Konnte {Pfad} nicht mounten: echtes Verzeichnis existiert nicht" explanation="mount: link/attach a directory (folder) in the filesystem into the game&apos;s filesystem so we can access it" max="38*6"/>
+    <string english="Level {path} not found" translation="" explanation="" max="38*6"/>
+    <string english="Error parsing {path}: {error}" translation="" explanation="we tried to parse the level file, but failed" max="38*6"/>
+    <string english="{filename} dimensions not exact multiples of {width} by {height}!" translation="" explanation="filename is something like tiles.png, tiles2.png, etc. and width/height are something like 8, 32, etc.; this is used if the dimensions of a graphics file aren&apos;t an exact multiple of the given size (e.g. 8x8, 32x32, etc.)" max="38*6"/>
     <string english="ERROR: Could not write to language folder! Make sure there is no &quot;lang&quot; folder next to the regular saves." translation="FEHLER: Konnte nicht in den Sprachordner schreiben! Stelle sicher, dass es keinen &quot;lang&quot;-Ordner neben den regulären Spielständen gibt." explanation="" max="38*5"/>
     <string english="" translation="" explanation=""/>
     <string english="" translation="" explanation=""/>

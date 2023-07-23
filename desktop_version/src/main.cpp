@@ -61,7 +61,7 @@ static int savey = 0;
 static int saverx = 0;
 static int savery = 0;
 static int savegc = 0;
-static int savemusic = 0;
+static int savemusic = -1;
 static std::string playassets;
 
 static std::string playtestname;
@@ -175,6 +175,7 @@ static const inline struct ImplFunc* get_gamestate_funcs(
     FUNC_LIST_END
 
     FUNC_LIST_BEGIN(GAMECOMPLETE2)
+        {Func_fixed, gamecompleterenderfixed2},
         {Func_delta, gamecompleterender2},
         {Func_input, gamecompleteinput2},
         {Func_fixed, gamecompletelogic2},
@@ -658,12 +659,16 @@ int main(int argc, char *argv[])
     {
         /* Something wrong with the default assets? We can't use them to
          * display the error message, and we have to bail. */
-        SDL_ShowSimpleMessageBox(
-            SDL_MESSAGEBOX_ERROR,
-            graphics.error_title,
-            graphics.error,
-            NULL
-        );
+        const char* message;
+        if (FILESYSTEM_levelDirHasError())
+        {
+            message = FILESYSTEM_getLevelDirError();
+        }
+        else
+        {
+            message = loc::gettext("Something went wrong, but we forgot the error message.");
+        }
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message, NULL);
 
         VVV_exit(1);
     }
@@ -696,9 +701,18 @@ int main(int argc, char *argv[])
         if(game.swnbestrank >= 6) game.unlockAchievement("vvvvvvsupgrav60");
     }
 
-    if(game.unlock[5]) game.unlockAchievement("vvvvvvgamecomplete");
-    if(game.unlock[19]) game.unlockAchievement("vvvvvvgamecompleteflip");
-    if(game.unlock[20]) game.unlockAchievement("vvvvvvmaster");
+    if (game.unlock[UnlockTrophy_GAME_COMPLETE])
+    {
+        game.unlockAchievement("vvvvvvgamecomplete");
+    }
+    if (game.unlock[UnlockTrophy_FLIPMODE_COMPLETE])
+    {
+        game.unlockAchievement("vvvvvvgamecompleteflip");
+    }
+    if (game.unlock[UnlockTrophy_NODEATHMODE_COMPLETE])
+    {
+        game.unlockAchievement("vvvvvvmaster");
+    }
 
     if (game.bestgamedeaths > -1) {
         if (game.bestgamedeaths <= 500) {
@@ -715,12 +729,30 @@ int main(int argc, char *argv[])
         }
     }
 
-    if(game.bestrank[0]>=3) game.unlockAchievement("vvvvvvtimetrial_station1_fixed");
-    if(game.bestrank[1]>=3) game.unlockAchievement("vvvvvvtimetrial_lab_fixed");
-    if(game.bestrank[2]>=3) game.unlockAchievement("vvvvvvtimetrial_tower_fixed");
-    if(game.bestrank[3]>=3) game.unlockAchievement("vvvvvvtimetrial_station2_fixed");
-    if(game.bestrank[4]>=3) game.unlockAchievement("vvvvvvtimetrial_warp_fixed");
-    if(game.bestrank[5]>=3) game.unlockAchievement("vvvvvvtimetrial_final_fixed");
+    if (game.bestrank[TimeTrial_SPACESTATION1] >= 3)
+    {
+        game.unlockAchievement("vvvvvvtimetrial_station1_fixed");
+    }
+    if (game.bestrank[TimeTrial_LABORATORY] >= 3)
+    {
+        game.unlockAchievement("vvvvvvtimetrial_lab_fixed");
+    }
+    if (game.bestrank[TimeTrial_TOWER] >= 3)
+    {
+        game.unlockAchievement("vvvvvvtimetrial_tower_fixed");
+    }
+    if (game.bestrank[TimeTrial_SPACESTATION2] >= 3)
+    {
+        game.unlockAchievement("vvvvvvtimetrial_station2_fixed");
+    }
+    if (game.bestrank[TimeTrial_WARPZONE] >= 3)
+    {
+        game.unlockAchievement("vvvvvvtimetrial_warp_fixed");
+    }
+    if (game.bestrank[TimeTrial_FINALLEVEL] >= 3)
+    {
+        game.unlockAchievement("vvvvvvtimetrial_final_fixed");
+    }
 
     obj.init();
 

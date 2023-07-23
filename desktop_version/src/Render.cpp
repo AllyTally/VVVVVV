@@ -157,6 +157,45 @@ static void inline drawglitchrunnertext(const int y)
     font::print_wrap(PR_CEN, -1, y, buffer, tempr, tempg, tempb);
 }
 
+static inline void draw_skip_message()
+{
+    /* Unlock 18 is Flip Mode.
+     * If this is the first playthrough, 5 (game completed) will be unlocked
+     * but not Flip Mode until the player hits "play" on the title screen */
+    bool draw =
+#ifndef MAKEANDPLAY
+        game.unlock[Unlock_FLIPMODE] &&
+#endif
+        graphics.fademode == FADE_NONE;
+    if (!draw)
+    {
+        return;
+    }
+
+    const int alpha = graphics.lerp(
+        game.old_skip_message_timer, game.skip_message_timer
+    );
+
+    draw = alpha > 100;
+    if (!draw)
+    {
+        return;
+    }
+
+    char buffer[SCREEN_WIDTH_CHARS + 1];
+    vformat_buf(
+        buffer, sizeof(buffer),
+        loc::gettext("- Press {button} to skip -"),
+        "button:but",
+        vformat_button(ActionSet_InGame, Action_InGame_Map)
+    );
+    font::print(
+        PR_BRIGHTNESS(alpha) | PR_BOR | PR_CEN,
+        -1, graphics.flipmode ? 20 : 210, buffer,
+        220 - help.glow, 220 - help.glow, 255 - help.glow / 2
+    );
+}
+
 static void menurender(void)
 {
 
@@ -230,7 +269,7 @@ static void menurender(void)
     {
         int gameplayoptionsoffset = 0;
 #if !defined(MAKEANDPLAY)
-        if (game.ingame_titlemode && game.unlock[18])
+        if (game.ingame_titlemode && game.unlock[Unlock_FLIPMODE])
 #endif
         {
             gameplayoptionsoffset = 1;
@@ -631,7 +670,7 @@ static void menurender(void)
                 loc::gettext("Interact is bound to: "),
                 BUTTONGLYPHS_get_all_gamepad_buttons(buffer_b, sizeof(buffer_b), ActionSet_InGame, Action_InGame_Interact)
             );
-            font::print(PR_CEN, -1, 115, buffer_a, tr, tg, tb);
+            font::print(PR_CEN | PR_BRIGHTNESS(game.separate_interact ? 255 : 128), -1, 115, buffer_a, tr, tg, tb);
             break;
         }
         }
@@ -646,7 +685,22 @@ static void menurender(void)
         else if ((unsigned)game.currentmenuoption < loc::languagelist.size())
         {
             font::print_wrap(PR_CEN, -1, 8, loc::languagelist[game.currentmenuoption].credit.c_str(), tr/2, tg/2, tb/2);
-            font::print(PR_CEN, -1, 230, loc::languagelist[game.currentmenuoption].action_hint, tr/2, tg/2, tb/2);
+            const char* select_hint;
+            char buffer[SCREEN_WIDTH_CHARS + 1];
+            if (BUTTONGLYPHS_keyboard_is_active())
+            {
+                select_hint = loc::languagelist[game.currentmenuoption].action_hint.c_str();
+            }
+            else
+            {
+                vformat_buf(buffer, sizeof(buffer),
+                    loc::languagelist[game.currentmenuoption].gamepad_hint.c_str(),
+                    "button:but",
+                    vformat_button(ActionSet_Menu, Action_Menu_Accept)
+                );
+                select_hint = buffer;
+            }
+            font::print(PR_CEN, -1, 230, select_hint, tr/2, tg/2, tb/2);
         }
         break;
     case Menu::translator_main:
@@ -1107,7 +1161,7 @@ static void menurender(void)
             font::print(PR_2X | PR_CEN, -1, 30, loc::gettext("Intermissions"), tr, tg, tb);
             int next_y = font::print_wrap(PR_CEN, -1, 65, loc::gettext("Replay the intermission levels."), tr, tg, tb);
 
-            if (!game.unlock[15] && !game.unlock[16])
+            if (!game.unlock[Unlock_INTERMISSION_REPLAYS])
             {
                 font::print_wrap(PR_CEN, -1, next_y, loc::gettext("TO UNLOCK: Complete the intermission levels in-game."), tr, tg, tb);
             }
@@ -1122,7 +1176,7 @@ static void menurender(void)
             {
                 font::print_wrap(PR_CEN, -1, next_y, loc::gettext("No Death Mode is not available with slowdown or invincibility."), tr, tg, tb);
             }
-            else if (!game.unlock[17])
+            else if (!game.unlock[Unlock_NODEATHMODE])
             {
                 font::print_wrap(PR_CEN, -1, next_y, loc::gettext("TO UNLOCK: Achieve an S-rank or above in at least 4 time trials."), tr, tg, tb);
             }
@@ -1133,7 +1187,7 @@ static void menurender(void)
             font::print(PR_2X | PR_CEN, -1, 30, loc::gettext("Flip Mode"), tr, tg, tb);
             int next_y = font::print_wrap(PR_CEN, -1, 65, loc::gettext("Flip the entire game vertically. Compatible with other game modes."), tr, tg, tb);
 
-            if (game.unlock[18])
+            if (game.unlock[Unlock_FLIPMODE])
             {
                 if (graphics.setflipmode)
                 {
@@ -1373,7 +1427,7 @@ static void menurender(void)
         switch (game.currentmenuoption)
         {
         case 0:
-            if(game.unlock[9])
+            if (game.unlock[Unlock_TIMETRIAL_SPACESTATION1])
             {
                 font::print(PR_2X | PR_CEN, -1, 30, loc::gettext("Space Station 1"), tr, tg, tb);
                 unlocked = true;
@@ -1389,7 +1443,7 @@ static void menurender(void)
             }
             break;
         case 1:
-            if(game.unlock[10])
+            if (game.unlock[Unlock_TIMETRIAL_LABORATORY])
             {
                 font::print(PR_2X | PR_CEN, -1, 30, loc::gettext("The Laboratory"), tr, tg, tb);
                 unlocked = true;
@@ -1405,7 +1459,7 @@ static void menurender(void)
             }
             break;
         case 2:
-            if(game.unlock[11])
+            if (game.unlock[Unlock_TIMETRIAL_TOWER])
             {
                 font::print(PR_2X | PR_CEN, -1, 30, loc::gettext("The Tower"), tr, tg, tb);
                 unlocked = true;
@@ -1421,7 +1475,7 @@ static void menurender(void)
             }
             break;
         case 3:
-            if(game.unlock[12])
+            if (game.unlock[Unlock_TIMETRIAL_SPACESTATION2])
             {
                 font::print(PR_2X | PR_CEN, -1, 30, loc::gettext("Space Station 2"), tr, tg, tb);
                 unlocked = true;
@@ -1437,7 +1491,7 @@ static void menurender(void)
             }
             break;
         case 4:
-            if(game.unlock[13])
+            if (game.unlock[Unlock_TIMETRIAL_WARPZONE])
             {
                 font::print(PR_2X | PR_CEN, -1, 30, loc::gettext("The Warp Zone"), tr, tg, tb);
                 unlocked = true;
@@ -1453,7 +1507,7 @@ static void menurender(void)
             }
             break;
         case 5:
-            if(game.unlock[14])
+            if (game.unlock[Unlock_TIMETRIAL_FINALLEVEL])
             {
                 font::print(PR_2X | PR_CEN, -1, 30, loc::gettext("The Final Level"), tr, tg, tb);
                 unlocked = true;
@@ -1611,23 +1665,34 @@ static void menurender(void)
         break;
     case Menu::errorloadinglevel:
     {
-        const char* str;
+        const char* message;
         if (FILESYSTEM_levelDirHasError())
         {
-            str = FILESYSTEM_getLevelDirError();
+            message = FILESYSTEM_getLevelDirError();
         }
         else
         {
-            str = graphics.error;
+            message = loc::gettext("Something went wrong, but we forgot the error message.");
         }
         font::print(PR_2X | PR_CEN, -1, 45, loc::gettext("ERROR"), tr, tg, tb);
-        font::print_wrap(PR_CEN, -1, 65, str, tr, tg, tb);
+        font::print_wrap(PR_CEN, -1, 65, message, tr, tg, tb);
         break;
     }
     case Menu::warninglevellist:
+    {
+        const char* message;
+        if (FILESYSTEM_levelDirHasError())
+        {
+            message = FILESYSTEM_getLevelDirError();
+        }
+        else
+        {
+            message = loc::gettext("Something went wrong, but we forgot the error message.");
+        }
         font::print(PR_2X | PR_CEN, -1, 45, loc::gettext("WARNING"), tr, tg, tb);
-        font::print_wrap(PR_CEN, -1, 65, FILESYSTEM_getLevelDirError(), tr, tg, tb);
+        font::print_wrap(PR_CEN, -1, 65, message, tr, tg, tb);
         break;
+    }
     default:
         break;
     }
@@ -1751,7 +1816,16 @@ void gamecompleterender(void)
         font::print(0, 100, 480 + position, loc::gettext("Doctor Victoria"), tr, tg, tb);
     }
 
-    if (graphics.onscreen(520 + position)) font::print(PR_3X | PR_CEN, -1, 520 + position, loc::gettext("Credits"), tr, tg, tb);
+    if (graphics.onscreen(520 + position))
+    {
+        uint32_t flag = PR_3X;
+        const char* text = loc::gettext("Credits");
+        if (font::len(flag, text) > SCREEN_WIDTH_PIXELS)
+        {
+            flag = PR_2X;
+        }
+        font::print(flag | PR_CEN, -1, 520 + position, text, tr, tg, tb);
+    }
 
     if (graphics.onscreen(560 + position))
     {
@@ -1840,6 +1914,8 @@ void gamecompleterender(void)
         font::print(PR_2X | PR_CEN | PR_CJK_LOW, -1, creditOffset + position, loc::gettext("playing!"), tr, tg, tb);
     }
 
+    draw_skip_message();
+
     graphics.drawfade();
 
     graphics.render();
@@ -1871,6 +1947,8 @@ void gamecompleterender2(void)
     }
 
     graphics.fill_rect(graphics.lerp(game.oldcreditposx * 8, game.creditposx * 8) + 8, game.creditposy * 8, 8, 8, 0, 0, 0);
+
+    draw_skip_message();
 
     graphics.drawfade();
 
@@ -1942,7 +2020,7 @@ void gamerender(void)
     if (graphics.fademode == FADE_NONE
     && !game.intimetrial
     && !game.isingamecompletescreen()
-    && (!game.swnmode || game.swngame != 1)
+    && (!game.swnmode || game.swngame != SWN_SUPERGRAVITRON)
     && game.showingametimer
     && !roomname_translator::enabled)
     {
@@ -2051,12 +2129,12 @@ void gamerender(void)
 
     if (game.swnmode)
     {
-        if (game.swngame == 0)
+        if (game.swngame == SWN_GRAVITRON)
         {
             std::string tempstring = help.timestring(game.swntimer);
             font::print(PR_2X | PR_CEN | PR_BOR, -1, 20, tempstring, 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2));
         }
-        else if (game.swngame == 1)
+        else if (game.swngame == SWN_SUPERGRAVITRON)
         {
             if (game.swnmessage == 0)
             {
@@ -2132,7 +2210,7 @@ void gamerender(void)
             );
             font::print(PR_BOR | PR_CEN, -1, 228, buffer, 160 - (help.glow/2), 160 - (help.glow/2), 160 - (help.glow/2));
         }
-        else if(game.swngame==2)
+        else if (game.swngame == SWN_START_GRAVITRON_STEP_3)
         {
             if (int(game.swndelay / 15) % 2 == 1 || game.swndelay >= 120)
             {
@@ -2152,7 +2230,7 @@ void gamerender(void)
                 font::print(PR_2X | PR_CEN | PR_BOR, -1, y2, loc::gettext("60 seconds!"), 220 - (help.glow), 220 - (help.glow), 255 - (help.glow / 2));
             }
         }
-        else if(game.swngame==7)
+        else if (game.swngame == SWN_START_SUPERGRAVITRON_STEP_2)
         {
             if (game.swndelay >= 60)
             {
@@ -2449,33 +2527,33 @@ static void rendermapcursor(const bool flashing)
     if (!map.custommode && game.roomx == 109)
     {
         // Draw the tower specially
-        if (!flashing)
+        if (!flashing || game.noflashingmode)
         {
-            graphics.drawrect(40 + ((game.roomx - 100) * 12) + 2, 21 + 2, 12 - 4, 180 - 4, 16, 245 - (help.glow * 2), 245 - (help.glow * 2));
+            graphics.draw_rect(40 + ((game.roomx - 100) * 12) + 2, 21 + 2, 12 - 4, 180 - 4, 16, 245 - (help.glow * 2), 245 - (help.glow * 2));
         }
         else if (map.cursorstate == 1)
         {
             if (int(map.cursordelay / 4) % 2 == 0)
             {
-                graphics.drawrect(40 + ((game.roomx - 100) * 12), 21, 12, 180, 255, 255, 255);
-                graphics.drawrect(40 + ((game.roomx - 100) * 12) + 2, 21 + 2, 12 - 4, 180 - 4, 255, 255, 255);
+                graphics.draw_rect(40 + ((game.roomx - 100) * 12), 21, 12, 180, 255, 255, 255);
+                graphics.draw_rect(40 + ((game.roomx - 100) * 12) + 2, 21 + 2, 12 - 4, 180 - 4, 255, 255, 255);
             }
         }
         else if (map.cursorstate == 2 && (int(map.cursordelay / 15) % 2 == 0))
         {
-            graphics.drawrect(40 + ((game.roomx - 100) * 12) + 2, 21 + 2, 12 - 4, 180 - 4, 16, 245 - (help.glow), 245 - (help.glow));
+            graphics.draw_rect(40 + ((game.roomx - 100) * 12) + 2, 21 + 2, 12 - 4, 180 - 4, 16, 245 - (help.glow), 245 - (help.glow));
         }
         return;
     }
 
-    if (!flashing || (map.cursorstate == 2 && int(map.cursordelay / 15) % 2 == 0))
+    if (!flashing || ((map.cursorstate == 2 && int(map.cursordelay / 15) % 2 == 0) || game.noflashingmode))
     {
-        graphics.drawrect(40 + ((game.roomx - 100) * 12 * data.zoom) + 2 + data.xoff, 21 + ((game.roomy - 100) * 9 * data.zoom) + 2 + data.yoff, (12 * data.zoom) - 4, (9 * data.zoom) - 4, 16, 245 - (help.glow), 245 - (help.glow));
+        graphics.draw_rect(40 + ((game.roomx - 100) * 12 * data.zoom) + 2 + data.xoff, 21 + ((game.roomy - 100) * 9 * data.zoom) + 2 + data.yoff, (12 * data.zoom) - 4, (9 * data.zoom) - 4, 16, 245 - (help.glow), 245 - (help.glow));
     }
-    else if (map.cursorstate == 1 && (int(map.cursordelay / 4) % 2 == 0))
+    else if (map.cursorstate == 1 && int(map.cursordelay / 4) % 2 == 0)
     {
-        graphics.drawrect(40 + ((game.roomx - 100) * 12 * data.zoom) + data.xoff, 21 + ((game.roomy - 100) * 9 * data.zoom) + data.yoff, 12 * data.zoom, 9 * data.zoom, 255, 255, 255);
-        graphics.drawrect(40 + ((game.roomx - 100) * 12 * data.zoom) + 2 + data.xoff, 21 + ((game.roomy - 100) * 9 * data.zoom) + 2 + data.yoff, (12 * data.zoom) - 4, (9 * data.zoom) - 4, 255, 255, 255);
+        graphics.draw_rect(40 + ((game.roomx - 100) * 12 * data.zoom) + data.xoff, 21 + ((game.roomy - 100) * 9 * data.zoom) + data.yoff, 12 * data.zoom, 9 * data.zoom, 255, 255, 255);
+        graphics.draw_rect(40 + ((game.roomx - 100) * 12 * data.zoom) + 2 + data.xoff, 21 + ((game.roomy - 100) * 9 * data.zoom) + 2 + data.yoff, (12 * data.zoom) - 4, (9 * data.zoom) - 4, 255, 255, 255);
     }
 }
 
@@ -2861,8 +2939,16 @@ void maprender(void)
         );
         font::print(PR_RIGHT, 262, FLIP(132, 8), buffer, 255 - help.glow/2, 255 - help.glow/2, 255 - help.glow/2);
 
-        graphics.draw_sprite(34, FLIP(126, 17), 50, graphics.col_clock);
-        graphics.draw_sprite(270, FLIP(126, 17), 22, graphics.col_trinket);
+        if (graphics.flipmode)
+        {
+            graphics.draw_flipsprite(34, FLIP(126, 17), 50, graphics.col_clock);
+            graphics.draw_flipsprite(270, FLIP(126, 17), 22, graphics.col_trinket);
+        }
+        else
+        {
+            graphics.draw_sprite(34, FLIP(126, 17), 50, graphics.col_clock);
+            graphics.draw_sprite(270, FLIP(126, 17), 22, graphics.col_trinket);
+        }
         break;
     }
     case 10:
@@ -3020,8 +3106,8 @@ void teleporterrender(void)
         //Draw the chosen destination coordinate!
         //TODO
         //draw the coordinates //destination
-        graphics.drawrect(40 + data.xoff + (telex * 12 * data.zoom) + 1, 21 + data.yoff + (teley * 9 * data.zoom) + 1, 12 * data.zoom - 2, 9 * data.zoom - 2, 245 - (help.glow * 2), 16, 16);
-        graphics.drawrect(40 + data.xoff + (telex * 12 * data.zoom) + 3, 21 + data.yoff + (teley * 9 * data.zoom) + 3, 12 * data.zoom - 6, 9 * data.zoom - 6, 245 - (help.glow * 2), 16, 16);
+        graphics.draw_rect(40 + data.xoff + (telex * 12 * data.zoom) + 1, 21 + data.yoff + (teley * 9 * data.zoom) + 1, 12 * data.zoom - 2, 9 * data.zoom - 2, 245 - (help.glow * 2), 16, 16);
+        graphics.draw_rect(40 + data.xoff + (telex * 12 * data.zoom) + 3, 21 + data.yoff + (teley * 9 * data.zoom) + 3, 12 * data.zoom - 6, 9 * data.zoom - 6, 245 - (help.glow * 2), 16, 16);
     }
 
     // Draw the legend itself
@@ -3030,7 +3116,7 @@ void teleporterrender(void)
 
     // Highlight the currently selected teleporter
 
-    if (game.useteleporter && help.slowsine % 16 > 8)
+    if (game.useteleporter && (help.slowsine % 16 > 8 || game.noflashingmode))
     {
         graphics.drawtile(data.legendxoff + data.xoff + (telex * 12 * data.zoom), data.legendyoff + data.yoff + (teley * 9 * data.zoom), 1128 + (graphics.flipmode ? 3 : 0));
     }

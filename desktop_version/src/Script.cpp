@@ -47,6 +47,7 @@ scriptclass::scriptclass(void)
     add_default_colours();
     textflipme = false;
     textcentertext = false;
+    textboxtimer = 0;
     textpad_left = 0;
     textpad_right = 0;
     textpadtowidth = 0;
@@ -57,6 +58,7 @@ scriptclass::scriptclass(void)
 
 void scriptclass::add_default_colours(void)
 {
+    textbox_colours["player"] = graphics.getRGB(164, 164, 255);
     textbox_colours["cyan"] = graphics.getRGB(164, 164, 255);
     textbox_colours["red"] = graphics.getRGB(255, 60, 60);
     textbox_colours["green"] = graphics.getRGB(144, 255, 144);
@@ -407,7 +409,7 @@ void scriptclass::run(void)
             }
             if (words[0] == "trinketscriptmusic")
             {
-                music.play(4);
+                music.play(Music_PASSIONFOREXPLORING);
             }
             if (words[0] == "gotoposition")
             {
@@ -502,6 +504,7 @@ void scriptclass::run(void)
                 textpad_left = 0;
                 textpad_right = 0;
                 textpadtowidth = 0;
+                textboxtimer = 0;
 
                 translate_dialogue();
             }
@@ -668,6 +671,10 @@ void scriptclass::run(void)
             {
                 game.backgroundtext = true;
             }
+            else if (words[0] == "textboxtimer")
+            {
+                textboxtimer = ss_toi(words[1]);
+            }
             else if (words[0] == "flipme")
             {
                 textflipme = !textflipme;
@@ -692,6 +699,11 @@ void scriptclass::run(void)
                     {
                         graphics.addline(txt[i]);
                     }
+                }
+
+                if (textboxtimer > 0)
+                {
+                    graphics.textboxtimer(textboxtimer);
                 }
 
                 // Some textbox formatting that can be set by translations...
@@ -785,6 +797,8 @@ void scriptclass::run(void)
                 {
                     obj.entities[i].xp = 30;
                     obj.entities[i].yp = 46;
+                    obj.entities[i].lerpoldxp = obj.entities[i].xp;
+                    obj.entities[i].lerpoldyp = obj.entities[i].yp;
                     obj.entities[i].size = 13;
                     obj.entities[i].colour = 23;
                     obj.entities[i].cx = 36;// 6;
@@ -799,6 +813,7 @@ void scriptclass::run(void)
                 if (INBOUNDS_VEC(i, obj.entities))
                 {
                     obj.entities[i].xp = 100;
+                    obj.entities[i].lerpoldxp = obj.entities[i].xp;
                     obj.entities[i].size = 0;
                     obj.entities[i].colour = 0;
                     obj.entities[i].cx = 6;
@@ -1114,39 +1129,39 @@ void scriptclass::run(void)
             {
                 if (words[1] == "player")
                 {
-                    music.playef(11);
+                    music.playef(Sound_VIRIDIAN);
                 }
                 else if (words[1] == "cyan")
                 {
-                    music.playef(11);
+                    music.playef(Sound_VIRIDIAN);
                 }
                 else if (words[1] == "red")
                 {
-                    music.playef(16);
+                    music.playef(Sound_VERMILION);
                 }
                 else if (words[1] == "green")
                 {
-                    music.playef(12);
+                    music.playef(Sound_VERDIGRIS);
                 }
                 else if (words[1] == "yellow")
                 {
-                    music.playef(14);
+                    music.playef(Sound_VITELLARY);
                 }
                 else if (words[1] == "blue")
                 {
-                    music.playef(13);
+                    music.playef(Sound_VICTORIA);
                 }
                 else if (words[1] == "purple")
                 {
-                    music.playef(15);
+                    music.playef(Sound_VIOLET);
                 }
                 else if (words[1] == "cry")
                 {
-                    music.playef(2);
+                    music.playef(Sound_CRY);
                 }
                 else if (words[1] == "terminal")
                 {
-                    music.playef(20);
+                    music.playef(Sound_TERMINALTEXT);
                 }
             }
             else if (words[0] == "blackout")
@@ -1457,7 +1472,7 @@ void scriptclass::run(void)
             }
             else if (words[0] == "entersecretlab")
             {
-                game.unlocknum(8);
+                game.unlocknum(Unlock_SECRETLAB);
                 game.insecretlab = true;
                 SDL_memset(map.explored, true, sizeof(map.explored));
             }
@@ -1522,6 +1537,8 @@ void scriptclass::run(void)
                     game.gamestate = GAMECOMPLETE;
                     graphics.fademode = FADE_START_FADEIN;
                     game.creditposition = 0;
+                    game.skip_message_timer = 1000;
+                    game.old_skip_message_timer = 1000;
                 }
             }
             else if (words[0] == "finalmode")
@@ -1781,7 +1798,7 @@ void scriptclass::run(void)
             }
             else if (words[0] == "setactivityposition")
             {
-                obj.customactivitypositiony = ss_toi(words[2]);
+                obj.customactivitypositiony = ss_toi(words[1]);
             }
             else if (words[0] == "createrescuedcrew")
             {
@@ -1845,7 +1862,7 @@ void scriptclass::run(void)
             else if (words[0] == "foundtrinket")
             {
                 music.silencedasmusik();
-                music.playef(3);
+                music.playef(Sound_TRINKET);
 
                 size_t trinket = ss_toi(words[1]);
                 if (trinket < SDL_arraysize(obj.collect))
@@ -1855,7 +1872,7 @@ void scriptclass::run(void)
 
                 graphics.textboxremovefast();
 
-                graphics.createtextboxflipme(loc::gettext("Congratulations!\n\nYou have found a shiny trinket!"), 50, 85, TEXT_COLOUR_SCR("gray"));
+                graphics.createtextboxflipme(loc::gettext("Congratulations!\n\nYou have found a shiny trinket!"), 50, 85, TEXT_COLOUR("gray"));
                 graphics.textboxprintflags(PR_FONT_INTERFACE);
                 int h = graphics.textboxwrap(2);
                 graphics.textboxcentertext();
@@ -1882,7 +1899,9 @@ void scriptclass::run(void)
                     "n_trinkets:int, max_trinkets:int",
                     game.trinkets(), max_trinkets
                 );
-                graphics.createtextboxflipme(buffer, 50, 95+h, TEXT_COLOUR_SCR("gray"));
+
+                graphics.createtextboxflipme(buffer, 50, 95+h, TEXT_COLOUR("gray"));
+
                 graphics.textboxprintflags(PR_FONT_INTERFACE);
                 graphics.textboxwrap(2);
                 graphics.textboxcentertext();
@@ -1901,11 +1920,12 @@ void scriptclass::run(void)
             }
             else if (words[0] == "foundlab")
             {
-                music.playef(3);
+                music.playef(Sound_TRINKET);
 
                 graphics.textboxremovefast();
 
-                graphics.createtextbox(loc::gettext("Congratulations!\n\nYou have found the secret lab!"), 50, 85, TEXT_COLOUR_SCR("gray"));
+                graphics.createtextbox(loc::gettext("Congratulations!\n\nYou have found the secret lab!"), 50, 85, TEXT_COLOUR("gray"));
+
                 graphics.textboxprintflags(PR_FONT_INTERFACE);
                 graphics.textboxwrap(2);
                 graphics.textboxcentertext();
@@ -1927,7 +1947,8 @@ void scriptclass::run(void)
             {
                 graphics.textboxremovefast();
 
-                graphics.createtextbox(loc::gettext("The secret lab is separate from the rest of the game. You can now come back here at any time by selecting the new SECRET LAB option in the play menu."), 50, 85, TEXT_COLOUR_SCR("gray"));
+                graphics.createtextbox(loc::gettext("The secret lab is separate from the rest of the game. You can now come back here at any time by selecting the new SECRET LAB option in the play menu."), 50, 85, TEXT_COLOUR("gray"));
+
                 graphics.textboxprintflags(PR_FONT_INTERFACE);
                 graphics.textboxwrap(0);
                 graphics.textboxcenterx();
@@ -2620,11 +2641,10 @@ void scriptclass::translate_dialogue(void)
 
 static void gotoerrorloadinglevel(void)
 {
+    game.quittomenu();
     game.createmenu(Menu::errorloadinglevel);
-    map.nexttowercolour();
-    graphics.fademode = FADE_START_FADEIN; /* start fade in */
     music.currentsong = -1; /* otherwise music.play won't work */
-    music.play(6); /* title screen music */
+    music.play(Music_PRESENTINGVVVVVV);
 }
 
 #define DECLARE_MODE_FUNC(funcname, modename) \
@@ -2672,6 +2692,19 @@ void scriptclass::startgamemode(const enum StartMode mode)
             player_hitbox.w = player->w;
             player_hitbox.h = player->h;
         }
+    }
+
+    /* Containers which need to be reset before gameplay starts
+     * ex. before custom levels get loaded */
+
+    switch (mode)
+    {
+    case Start_EDITORPLAYTESTING:
+        break;
+    default:
+        textbox_colours.clear();
+        add_default_colours();
+        break;
     }
 
     hardreset();
@@ -2805,7 +2838,7 @@ void scriptclass::startgamemode(const enum StartMode mode)
         game.insecretlab = true;
         map.set_teleporters_visible(true);
 
-        music.play(11);
+        music.play(Music_PIPEDREAM);
         graphics.fademode = FADE_START_FADEIN;
         break;
 
@@ -2913,16 +2946,17 @@ void scriptclass::startgamemode(const enum StartMode mode)
     case Start_CUSTOM:
     case Start_CUSTOM_QUICKSAVE:
     {
+        map.custommodeforreal = true;
+        map.custommode = true;
+
         std::string filename = std::string(cl.ListOfMetaData[game.playcustomlevel].filename);
         if (!cl.load(filename))
         {
             gotoerrorloadinglevel();
-            break;
+            return;
         }
         cl.findstartpoint();
 
-        map.custommodeforreal = true;
-        map.custommode = true;
         map.customshowmm = true;
 
         music.fadeout();
@@ -3131,7 +3165,7 @@ void scriptclass::teleport(void)
         {
             /* Special case: Ship music needs to be set here;
              * ship teleporter on music map is -1 for jukebox. */
-            music.niceplay(4);
+            music.niceplay(Music_PASSIONFOREXPLORING);
         }
         game.savetele_textbox();
     }
@@ -3227,7 +3261,7 @@ void scriptclass::hardreset(void)
 
     game.swnmode = false;
     game.swntimer = 0;
-    game.swngame = 0;//Not playing sine wave ninja!
+    game.swngame = SWN_NONE; // Not playing sine wave ninja!
     game.swnstate = 0;
     game.swnstate2 = 0;
     game.swnstate3 = 0;

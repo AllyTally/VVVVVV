@@ -107,7 +107,7 @@
     <string english="sound volume" translation="volume suoni" explanation="audio menu option"/>
     <string english="Sound Volume" translation="Volume suoni" explanation="title" max="20"/>
     <string english="Change the volume of sound effects." translation="Cambia il volume degli effetti sonori." explanation="" max="38*3"/>
-    <string english="Credits" translation="Riconoscimenti" explanation="credits" max="13"/>
+    <string english="Credits" translation="Riconoscimenti" explanation="credits" max="20"/>
     <string english="VVVVVV is a game by" translation="VVVVVV è un gioco di" explanation="credits" max="40"/>
     <string english="and features music by" translation="con musiche di" explanation="credits" max="40"/>
     <string english="Roomnames are by" translation="I nomi delle stanze sono di" explanation="credits" max="40"/>
@@ -240,7 +240,7 @@
     <string english="2.2" translation="2.2" explanation="VVVVVV version number for glitchrunner mode"/>
     <string english="input delay" translation="ritardo comandi" explanation="menu option, enable 1 frame of delay after pressing input"/>
     <string english="Input Delay" translation="Ritardo comandi" explanation="title, enable 1 frame of delay after pressing input" max="20"/>
-    <string english="Re-enable the 1-frame input delay from previous versions of the game." translation="Ripristina il ritardo comandi di 1 frame delle versioni precedenti del gioco." explanation="input delay" max="38*3"/>
+    <string english="Re-enable the 1-frame input delay from previous versions of the game." translation="Ripristina il ritardo comandi di un frame delle versioni precedenti del gioco." explanation="input delay" max="38*3"/>
     <string english="Input delay is ON" translation="Ritardo comandi: SÌ" explanation="" max="38*2"/>
     <string english="Input delay is OFF" translation="Ritardo comandi: NO" explanation="" max="38*2"/>
     <string english="accessibility" translation="accessibilità" explanation="menu option"/>
@@ -297,10 +297,10 @@
     <string english="Replay the intermission levels." translation="Rigioca i livelli di intermezzo." explanation="" max="38*3"/>
     <string english="unlock intermissions" translation="sblocca intermezzi" explanation="menu option"/>
     <string english="TO UNLOCK: Complete the intermission levels in-game." translation="PER SBLOCCARE: Completa i livelli di intermezzo nel gioco." explanation="" max="38*4"/>
-    <string english="no death mode" translation="modalità Una vita" explanation="menu option"/>
-    <string english="No Death Mode" translation="Modalità Una vita" explanation="title" max="20"/>
+    <string english="no death mode" translation="modalità una vita" explanation="menu option"/>
+    <string english="No Death Mode" translation="Modalità una vita" explanation="title" max="20"/>
     <string english="Play the entire game without dying once." translation="Completa il gioco senza morire nemmeno una volta." explanation="" max="38*4"/>
-    <string english="No Death Mode is not available with slowdown or invincibility." translation="La modalità Una vita non è disponibile con rallentamento o invincibilità." explanation="" max="38*3"/>
+    <string english="No Death Mode is not available with slowdown or invincibility." translation="La modalità una vita non è disponibile con rallentamento o invincibilità." explanation="" max="38*3"/>
     <string english="unlock no death mode" translation="sblocca modalità una vita" explanation="menu option"/>
     <string english="TO UNLOCK: Achieve an S-rank or above in at least 4 time trials." translation="PER SBLOCCARE: Ottieni rango S o superiore in almeno 4 prove a tempo." explanation="ranks are B A S V, see below" max="38*3"/>
     <string english="flip mode" translation="modalità sottosopra" explanation="menu option, mirrors the entire game vertically"/>
@@ -326,10 +326,10 @@
     <string english="[Trinkets found]" translation="[Gingilli trovati]" explanation="amount of shiny trinkets found" max="40"/>
     <string english="[Number of Deaths]" translation="[Numero di morti]" explanation="" max="40"/>
     <string english="[Time Taken]" translation="[Tempo impiegato]" explanation="stopwatch time" max="40"/>
-    <string english="Trinkets Found:" translation="Gingilli trovati:" explanation="game complete screen" max="21"/>
-    <string english="Game Time:" translation="Tempo di gioco:" explanation="game complete screen" max="21"/>
-    <string english="Total Flips:" translation="Capovolgimenti:" explanation="game complete screen" max="21"/>
-    <string english="Total Deaths:" translation="Morti totali:" explanation="game complete screen" max="21"/>
+    <string english="Trinkets Found:" translation="Gingilli trovati:" explanation="game complete screen" max="22"/>
+    <string english="Game Time:" translation="Tempo di gioco:" explanation="game complete screen" max="22"/>
+    <string english="Total Flips:" translation="Capovolgimenti:" explanation="game complete screen" max="22"/>
+    <string english="Total Deaths:" translation="Morti totali:" explanation="game complete screen" max="22"/>
     <string english="Results" translation="Risultati" explanation="bigger title" max="13"/>
     <string english="TIME TAKEN:" translation="TEMPO:" explanation="time the player took playing the level" max="32"/>
     <string english="NUMBER OF DEATHS:" translation="MORTI:" explanation="amount of times the player died" max="32"/>
@@ -337,9 +337,9 @@
     <string english=" / " translation=" / " explanation="inserted between two times, ex: 0:46.90 / 1:15.99. Time trial results"/>
     <string english="{n_trinkets}/{max_trinkets}" translation="{n_trinkets}/{max_trinkets}" explanation="ex: 2/5"/>
     <string english="{n_trinkets} of {max_trinkets}" translation="{n_trinkets} di {max_trinkets}" explanation="ex: 2 of 5"/>
-    <string english="{n_trinkets|wordy} out of {max_trinkets|wordy}" translation="{n_trinkets|wordy} su {max_trinkets|wordy}" explanation="ex: One out of Twenty, see numbers.xml. You can add |upper for an uppercase letter." max="34"/>
-    <string english="{savebox_n_trinkets|wordy}" translation="{savebox_n_trinkets|wordy}" explanation="trinket count in telesave/quicksave information box. You can add |upper for an uppercase letter."/>
-    <string english="{gamecomplete_n_trinkets|wordy}" translation="{gamecomplete_n_trinkets|wordy}" explanation="trinket count on Game Complete screen (after Trinkets Found:) You can add |upper for an uppercase letter."/>
+    <string english="{n_trinkets|wordy} out of {max_trinkets|wordy}" translation="{n_trinkets|wordy|upper} su {max_trinkets|wordy}" explanation="ex: One out of Twenty, see numbers.xml. You can add |upper for an uppercase letter." max="34"/>
+    <string english="{savebox_n_trinkets|wordy}" translation="{savebox_n_trinkets|wordy|upper}" explanation="trinket count in telesave/quicksave information box. You can add |upper for an uppercase letter."/>
+    <string english="{gamecomplete_n_trinkets|wordy}" translation="{gamecomplete_n_trinkets|wordy|upper}" explanation="trinket count on Game Complete screen (after Trinkets Found:) You can add |upper for an uppercase letter."/>
     <string english="+1 Rank!" translation="Rango +1!" explanation="time trial rank was upgraded (B → A → S → V). B is minimum, which is purposefully high (see it as 7/10) - S is a popular rank above A in a lot of games, so VVVVVV added a rank above that." max="12"/>
     <string english="Rank:" translation="Rango:" explanation="time trial rank" max="9"/>
     <string english="B" translation="B" explanation="time trial rank" max="5"/>
@@ -399,8 +399,8 @@
     <string english="You have unlocked the intermission levels." translation="Hai sbloccato i livelli di intermezzo." explanation="" max="38*7"/>
     <string english="play a level" translation="gioca un livello" explanation="menu option"/>
     <string english="level editor" translation="editor di livelli" explanation="menu option"/>
-    <string english="open level folder" translation="apri la cartella lingue" explanation="menu option. Button that opens the folder with level files in a file explorer"/>
-    <string english="show level folder path" translation="mostra il percorso della cartella lingue" explanation="menu option"/>
+    <string english="open level folder" translation="apri la cartella livelli" explanation="menu option. Button that opens the folder with level files in a file explorer"/>
+    <string english="show level folder path" translation="mostra percorso cartella livelli" explanation="menu option"/>
     <string english="return" translation="indietro" explanation="menu option"/>
     <string english="return to levels" translation="torna ai livelli" explanation="menu option"/>
     <string english="no, don&apos;t show me" translation="no, non mostrarmelo" explanation="menu option"/>
@@ -456,9 +456,9 @@
     <string english="NO SIGNAL" translation="NESSUN SEGNALE" explanation="map screen. So like a TV/computer monitor" max="29"/>
     <string english="Press ACTION to warp to the ship." translation="Premi AZIONE per teletrasportarti alla nave." explanation="***OUTDATED***" max="38*7"/>
     <string english="Press {button} to warp to the ship." translation="" explanation="spaceship. Warp = teleport. Expect `ACTION`" max="38*7"/>
-    <string english="Missing..." translation="Disperso..." case="1" explanation="this male crew member is missing" max="15"/>
-    <string english="Missing..." translation="Dispersa..." case="2" explanation="this female crew member is missing" max="15"/>
-    <string english="Missing..." translation="Oh oh..." case="3" explanation="Viridian is missing (final level). You could even fill in something like `Uh-oh...` here if you really have to specify gender otherwise - everyone else is rescued, but the player is missing" max="15"/>
+    <string english="Missing..." translation="Irreperibile..." case="1" explanation="this male crew member is missing" max="15"/>
+    <string english="Missing..." translation="Irreperibile..." case="2" explanation="this female crew member is missing" max="15"/>
+    <string english="Missing..." translation="Irreperibile..." case="3" explanation="Viridian is missing (final level). You could even fill in something like `Uh-oh...` here if you really have to specify gender otherwise - everyone else is rescued, but the player is missing" max="15"/>
     <string english="Rescued!" translation="Salvato!" case="1" explanation="this male crew member is not missing anymore" max="15"/>
     <string english="Rescued!" translation="Salvata!" case="2" explanation="this female crew member is not missing anymore" max="15"/>
     <string english="(that&apos;s you!)" translation="(sei tu!)" explanation="this crew member is you (Viridian)" max="15"/>
@@ -498,6 +498,7 @@
     <string english="Press {button} to activate terminal" translation="Premi {button} per attivare il terminale" explanation="keyboard key (E or ENTER) or controller button glyph is filled in for {button}. max is when displayed" max="37"/>
     <string english="Press {button} to activate terminals" translation="Premi {button} per attivare i terminali" explanation="keyboard key (E or ENTER) or controller button glyph is filled in for {button}. max is when displayed. there are 3 next to each other in the ship" max="37"/>
     <string english="Press {button} to interact" translation="Premi {button} per interagire" explanation="keyboard key (E or ENTER) or controller button glyph is filled in for {button}. max is when displayed" max="37"/>
+    <string english="- Press {button} to skip -" translation="" explanation="keyboard key (ENTER) or controller button glyph is filled in for {button}. max is when displayed. This prompt is for skipping cutscenes" max="40"/>
     <string english="Passion for Exploring" translation="Passion for Exploring" explanation="jukebox prompt. song name should probably not be translated" max="37*2"/>
     <string english="Pushing Onwards" translation="Pushing Onwards" explanation="jukebox prompt. song name should probably not be translated" max="37*2"/>
     <string english="Positive Force" translation="Positive Force" explanation="jukebox prompt. song name should probably not be translated" max="37*2"/>
@@ -516,7 +517,7 @@
     <string english="Editor ghost trail is ON" translation="Scia fantasma editor: SÌ" explanation="level editor. Repetition of the player&apos;s path after playtesting is enabled" max="40"/>
     <string english="load level" translation="carica livello" explanation="level editor menu option"/>
     <string english="save level" translation="salva livello" explanation="level editor menu option"/>
-    <string english="quit to main menu" translation="esci al menu principale" explanation="level editor menu option" max="19"/>
+    <string english="quit to main menu" translation="esci al menu" explanation="level editor menu option" max="22"/>
     <string english="change name" translation="cambia nome" explanation="level editor menu option"/>
     <string english="change author" translation="cambia autore" explanation="level editor menu option"/>
     <string english="change description" translation="cambia descrizione" explanation="level editor menu option"/>
@@ -630,6 +631,7 @@
     <string english="Now using {area} Tileset" translation="Ora usi il set di caselle {area}" explanation="level editor, user changed the tileset of the room to {area} (like Ship, Lab, etc)" max="38*3"/>
     <string english="Tileset Colour Changed" translation="Colore set di caselle cambiato" explanation="level editor, user changed the tileset colour/variant of the room" max="38*3"/>
     <string english="Enemy Type Changed" translation="Tipo di nemico cambiato" explanation="level editor, user changed enemy appearance for the room" max="38*3"/>
+    <string english="Platform speed is now {speed}" translation="" explanation="level editor, user changed speed of platforms for the room" max="38*3"/>
     <string english="Reloaded resources" translation="Risorse ricaricate" explanation="level editor, reloaded graphics assets/resources, music and sound effects" max="38*3"/>
     <string english="ERROR: Invalid format" translation="ERRORE: Formato non valido" explanation="user was supposed to enter something like `12,12`, but entered `as@df`" max="38*3"/>
     <string english="Loaded map: {filename}.vvvvvv" translation="Mappa caricata: {filename}.vvvvvv" explanation="successfully loaded level file" max="38*3"/>
@@ -647,15 +649,18 @@
     <string english="ERROR: No checkpoint to spawn at" translation="ERRORE: Nessun checkpoint in cui generarsi" explanation="we cannot playtest because there is no checkpoint in this room that the player could start (be spawned) at" max="38*3"/>
     <string english="ERROR: Max number of trinkets is 100" translation="ERRORE: Il numero massimo di gingilli è 100" explanation="editor, user tried to place another trinket" max="38*3"/>
     <string english="ERROR: Max number of crewmates is 100" translation="ERRORE: Il numero massimo di compagni è 100" explanation="editor, user tried to place another crewmate" max="38*3"/>
+    <string english="Level quits to menu" translation="" explanation="editor message, user would have been forcefully returned to title screen but wasn&apos;t" max="38*3"/>
+    <string english="Level completed" translation="" explanation="editor message, user would have been returned to levels list but wasn&apos;t" max="38*3"/>
     <string english="Rolled credits" translation="Riconoscimenti mostrati" explanation="editor message, credits would have been shown but weren&apos;t" max="38*3"/>
+    <string english="Time trial completed" translation="" explanation="editor message, time trial complete screen would have been shown but wasn&apos;t" max="38*3"/>
     <string english="{hrs}:{min|digits=2}:{sec|digits=2}" translation="{hrs}:{min|digits=2}:{sec|digits=2}" explanation="time format H:MM:SS"/>
     <string english="{hrs}:{min|digits=2}:{sec|digits=2}.{cen|digits=2}" translation="{hrs}:{min|digits=2}:{sec|digits=2},{cen|digits=2}" explanation="time format H:MM:SS.CC"/>
     <string english="{min}:{sec|digits=2}" translation="{min}:{sec|digits=2}" explanation="time format M:SS"/>
     <string english="{min}:{sec|digits=2}.{cen|digits=2}" translation="{min}:{sec|digits=2},{cen|digits=2}" explanation="time format M:SS.CC"/>
     <string english="{sec}.{cen|digits=2}" translation="{sec},{cen|digits=2}" explanation="time format S.CC"/>
     <string english=".99" translation=",99" explanation="appended to time format for 99/100 seconds (example: 1:15.99). Time trial results"/>
-    <string english="Level Complete!" translation="Livello completato!" explanation="Might be tight, the exclamation mark may be removed" max="18"/>
-    <string english="Game Complete!" translation="Gioco completato!" explanation="Might be tight, the exclamation mark may be removed" max="18"/>
+    <string english="Level Complete!" translation="Livello completato" explanation="Might be tight, the exclamation mark may be removed" max="18"/>
+    <string english="Game Complete!" translation="Gioco completato" explanation="Might be tight, the exclamation mark may be removed" max="18"/>
     <string english="You have rescued a crew member!" translation="Hai salvato un membro dell&apos;equipaggio!" explanation="If you need to manually wordwrap: please ensure this has exactly two lines. Ignore the (font-adapted) maximum if it says 1 line." max="30*2"/>
     <string english="All Crew Members Rescued!" translation="Hai salvato tutto l&apos;equipaggio!" explanation="" max="32"/>
     <string english="All crewmates rescued!" translation="Hai salvato tutti i compagni!" explanation="" max="32"/>
@@ -757,7 +762,11 @@ Hai trovato il laboratorio segreto!" explanation="" max="34*4"/>
     <string english="Last 1 minute on the Super Gravitron" translation="Resisti 1 minuto sul Super Gravitrone" explanation="achievement/trophy description" max="38*2"/>
     <string english="MASTER OF THE UNIVERSE" translation="DOMINATORE DELL&apos;UNIVERSO" explanation="achievement/trophy title - no death mode complete" max="38*2"/>
     <string english="Complete the game in no death mode" translation="Completa il gioco in modalità Una vita" explanation="achievement/trophy description" max="38*2"/>
+    <string english="Something went wrong, but we forgot the error message." translation="" explanation="the message that is printed in case the game detects an error but there&apos;s no error message set" max="38*6"/>
     <string english="Could not mount {path}: real directory doesn&apos;t exist" translation="Impossibile installare {path}: la directory reale non esiste" explanation="mount: link/attach a directory (folder) in the filesystem into the game&apos;s filesystem so we can access it" max="38*6"/>
+    <string english="Level {path} not found" translation="" explanation="" max="38*6"/>
+    <string english="Error parsing {path}: {error}" translation="" explanation="we tried to parse the level file, but failed" max="38*6"/>
+    <string english="{filename} dimensions not exact multiples of {width} by {height}!" translation="" explanation="filename is something like tiles.png, tiles2.png, etc. and width/height are something like 8, 32, etc.; this is used if the dimensions of a graphics file aren&apos;t an exact multiple of the given size (e.g. 8x8, 32x32, etc.)" max="38*6"/>
     <string english="ERROR: Could not write to language folder! Make sure there is no &quot;lang&quot; folder next to the regular saves." translation="ERRORE: impossibile scrivere sulla cartella lingua! Assicurati che non ci sia una cartella &quot;lang&quot; insieme ai normali salvataggi." explanation="" max="38*5"/>
     <string english="" translation="" explanation=""/>
     <string english="" translation="" explanation=""/>

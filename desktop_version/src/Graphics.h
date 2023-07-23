@@ -51,12 +51,10 @@ public:
 
     GraphicsResources grphx;
 
-    SDL_Color huetilegetcol(int t);
+    SDL_Color huetilegetcol();
     SDL_Color bigchunkygetcol(int t);
 
-    void drawgravityline(int t);
-
-    bool MakeSpriteArray(void);
+    void drawgravityline(int t, int x, int y, int w, int h);
 
     void drawcoloredtile(int x, int y, int t, int r, int g, int b);
 
@@ -160,10 +158,13 @@ public:
     void draw_grid_tile(SDL_Texture* texture, int t, int x, int y, int width, int height, SDL_Color color);
 
     void updatetextboxes(void);
+    const char* textbox_line(char* buffer, size_t buffer_len, size_t textbox_i, size_t line_i);
     void drawgui(void);
 
     void draw_sprite(int x, int y, int t, int r, int g, int b);
     void draw_sprite(int x, int y, int t, SDL_Color color);
+
+    void draw_flipsprite(int x, int y, int t, SDL_Color color);
 
     void scroll_texture(SDL_Texture* texture, SDL_Texture* temp, int x, int y);
 
@@ -202,22 +203,28 @@ public:
     int set_color(Uint8 r, Uint8 g, Uint8 b);
     int set_color(SDL_Color color);
 
+    int fill_rect(const SDL_Rect* rect);
     int fill_rect(const SDL_Rect* rect, int r, int g, int b, int a);
     int fill_rect(int x, int y, int w, int h, int r, int g, int b, int a);
     int fill_rect(int x, int y, int w, int h, int r, int g, int b);
-    int fill_rect(int r, int g, int b, int a);
     int fill_rect(const SDL_Rect* rect, int r, int g, int b);
     int fill_rect(int r, int g, int b);
     int fill_rect(const SDL_Rect* rect, SDL_Color color);
     int fill_rect(int x, int y, int w, int h, SDL_Color color);
     int fill_rect(SDL_Color color);
 
+    int draw_rect(const SDL_Rect* rect);
     int draw_rect(const SDL_Rect* rect, int r, int g, int b, int a);
     int draw_rect(int x, int y, int w, int h, int r, int g, int b, int a);
     int draw_rect(int x, int y, int w, int h, int r, int g, int b);
     int draw_rect(const SDL_Rect* rect, int r, int g, int b);
     int draw_rect(const SDL_Rect* rect, SDL_Color color);
     int draw_rect(int x, int y, int w, int h, SDL_Color color);
+
+    int draw_line(int x, int y, int x2, int y2);
+
+    int draw_points(const SDL_Point* points, int count);
+    int draw_points(const SDL_Point* points, int count, int r, int g, int b);
 
     void map_tab(int opt, const char* text, bool selected = false);
 
@@ -265,8 +272,6 @@ public:
 
     void drawmap(void);
 
-    void drawrect(int x, int y, int w, int h, int r, int g, int b);
-
     void drawtowermap(void);
 
     void drawtowerspikes(void);
@@ -274,6 +279,10 @@ public:
     bool onscreen(int t);
 
     bool reloadresources(void);
+    bool checktexturesize(
+        const char* filename, SDL_Texture* texture,
+        int tilewidth, int tileheight
+    );
 #ifndef NO_CUSTOM_LEVELS
     bool tiles1_mounted;
     bool tiles2_mounted;
@@ -323,10 +332,8 @@ public:
 
     SDL_Rect tiles_rect;
     SDL_Rect sprites_rect;
-    SDL_Rect line_rect;
     SDL_Rect tele_rect;
 
-    SDL_Rect prect;
     SDL_Rect footerrect;
 
     int linestate, linedelay;
@@ -364,7 +371,7 @@ public:
     SDL_Rect backboxes[numbackboxes];
     int backboxvx[numbackboxes];
     int backboxvy[numbackboxes];
-    float backboxint[numbackboxes];
+    float backboxmult;
 
     int warpskip;
 
@@ -401,9 +408,6 @@ public:
     SDL_Color crewcolourreal(int t);
 
     void render_roomname(uint32_t font_flag, const char* roomname, int r, int g, int b);
-
-    char error[128];
-    char error_title[128]; /* for SDL_ShowSimpleMessageBox */
 };
 
 #ifndef GRAPHICS_DEFINITION

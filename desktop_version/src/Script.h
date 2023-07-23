@@ -9,9 +9,11 @@
 
 #define filllines(lines) commands.insert(commands.end(), lines, lines + SDL_arraysize(lines))
 
-#define TEXT_COLOUR_SCR(a) textbox_colours[a]
-
+#ifdef SCRIPT_DEFINITION
+#define TEXT_COLOUR(a) textbox_colours[a]
+#else
 #define TEXT_COLOUR(a) script.textbox_colours[a]
+#endif
 
 struct Script
 {
@@ -120,6 +122,7 @@ public:
     char textcase;
     bool textbuttons;
     bool textlarge;
+    int textboxtimer;
 
     //Misc
     int i, j, k;

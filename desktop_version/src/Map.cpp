@@ -487,7 +487,7 @@ void mapclass::initcustommapdata(void)
 #if !defined(NO_CUSTOM_LEVELS)
     int trinkets = 0;
 
-    shinytrinkets.clear();
+    //shinytrinkets.clear();
     teleporters.clear();
 
     std::vector<SDL_Point> teleporters;
@@ -501,7 +501,7 @@ void mapclass::initcustommapdata(void)
         temp.y = ent.y / 30;
         if (ent.t == 9)
         {
-            settrinket(trinkets++temp.x, temp.y);
+            settrinket(trinkets++, temp.x, temp.y);
         }
         else if (ent.t == 14)
         {
@@ -1037,9 +1037,9 @@ void mapclass::gotoroom(int rx, int ry)
         }
 
         //Final level for time trial
-        if (game.intimetrial)
+        if (game.intimetrial && game.roomx == 46 && game.roomy == 54)
         {
-            if (game.roomx == 46 && game.roomy == 54) music.niceplay(15); //Final level remix
+            music.niceplay(Music_PREDESTINEDFATEREMIX);
         }
     }
 #if !defined(NO_CUSTOM_LEVELS)
@@ -1888,16 +1888,13 @@ void mapclass::loadlevel(int rx, int ry)
         {
             // If entity is in this room, create it
             const CustomEntity& ent = customentities[edi];
-            const int tsx = ent.x / 40;
-            const int tsy = ent.y / 30;
-
-            if (tsx != rx-100 || tsy != ry-100)
+            if (ent.rx != rx - 100 || ent.ry != ry - 100)
             {
                 continue;
             }
 
-            const int ex = (ent.x % 40) * 8;
-            const int ey = (ent.y % 30) * 8;
+            const int ex = ent.x * 8;
+            const int ey = ent.y * 8;
 
             // Platform and enemy bounding boxes
             int bx1 = 0, by1 = 0, bx2 = 0, by2 = 0;

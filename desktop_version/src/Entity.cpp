@@ -1290,13 +1290,19 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
     //Rule 4 is a horizontal line, 5 is vertical
     //Rule 6 is a crew member
 
+    bool custom_gray;
 #if !defined(NO_CUSTOM_LEVELS)
     // Special case for gray Warp Zone tileset!
-    const RoomProperty* const room = cl.getroomprop(game.roomx - 100, game.roomy - 100);
-    bool custom_gray = room->tileset == 3 && room->tilecol == 6;
-#else
-    bool custom_gray = false;
+    if (map.custommode)
+    {
+        const RoomProperty* const room = cl.getroomprop(game.roomx - 100, game.roomy - 100);
+        custom_gray = room->tileset == 3 && room->tilecol == 6;
+    }
+    else
 #endif
+    {
+        custom_gray = false;
+    }
 
     entclass& entity = *entptr;
     entity.xp = xp;
@@ -1768,7 +1774,7 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
         entity.colour = 21;
         entity.tile = 78; //default case
         entity.animate = 1;
-        if (game.swngame == 1)
+        if (game.swngame == SWN_SUPERGRAVITRON)
         {
             //set colour based on current state
             entity.colour = swncolour(game.swncolstate);
@@ -1834,42 +1840,42 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
         switch (meta2)
         {
         case 1:
-            if(game.bestrank[0]>=3)
+            if (game.bestrank[TimeTrial_SPACESTATION1] >= 3)
             {
                 entity.tile = 184 + meta1;
                 entity.colour = 31;
             }
             break;
         case 2:
-            if(game.bestrank[1]>=3)
+            if (game.bestrank[TimeTrial_LABORATORY] >= 3)
             {
                 entity.tile = 186 + meta1;
                 entity.colour = 35;
             }
             break;
         case 3:
-            if(game.bestrank[2]>=3)
+            if (game.bestrank[TimeTrial_TOWER] >= 3)
             {
                 entity.tile = 184 + meta1;
                 entity.colour = 33;
             }
             break;
         case 4:
-            if(game.bestrank[3]>=3)
+            if (game.bestrank[TimeTrial_SPACESTATION2] >= 3)
             {
                 entity.tile = 184 + meta1;
                 entity.colour = 32;
             }
             break;
         case 5:
-            if(game.bestrank[4]>=3)
+            if (game.bestrank[TimeTrial_WARPZONE] >= 3)
             {
                 entity.tile = 184 + meta1;
                 entity.colour = 34;
             }
             break;
         case 6:
-            if(game.bestrank[5]>=3)
+            if (game.bestrank[TimeTrial_FINALLEVEL] >= 3)
             {
                 entity.tile = 184 + meta1;
                 entity.colour = 30;
@@ -1877,7 +1883,7 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
             break;
 
         case 7:
-            if(game.unlock[5])
+            if (game.unlock[UnlockTrophy_GAME_COMPLETE])
             {
                 entity.tile = 188 + meta1;
                 entity.colour = 37;
@@ -1886,7 +1892,7 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
             }
             break;
         case 8:
-            if(game.unlock[19])
+            if (game.unlock[UnlockTrophy_FLIPMODE_COMPLETE])
             {
                 entity.tile = 188 + meta1;
                 entity.colour = 37;
@@ -1979,7 +1985,7 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
             break;
 
         case 19:
-            if(game.unlock[20])
+            if (game.unlock[UnlockTrophy_NODEATHMODE_COMPLETE])
             {
                 entity.tile = 3;
                 entity.colour = 102;
@@ -2586,7 +2592,7 @@ bool entityclass::updateentities( int i )
                 entities[i].state = 2;
                 entities[i].onentity = 0;
 
-                music.playef(7);
+                music.playef(Sound_DISAPPEAR);
             }
             else if (entities[i].state == 2)
             {
@@ -2632,7 +2638,7 @@ bool entityclass::updateentities( int i )
                 entities[i].life = 4;
                 entities[i].state = 2;
                 entities[i].onentity = 0;
-                music.playef(6);
+                music.playef(Sound_CRUMBLE);
             }
             else if (entities[i].state == 2)
             {
@@ -2683,7 +2689,7 @@ bool entityclass::updateentities( int i )
             //wait for collision
             if (entities[i].state == 1)
             {
-                music.playef(4);
+                music.playef(Sound_COIN);
                 if (INBOUNDS_ARR(entities[i].para, collect))
                 {
                     collect[(int) entities[i].para] = true;
@@ -2703,13 +2709,13 @@ bool entityclass::updateentities( int i )
 
                 if (game.intimetrial)
                 {
-                    music.playef(25);
+                    music.playef(Sound_NEWRECORD);
                 }
                 else
                 {
                     game.setstate(1000);
                     if(music.currentsong!=-1) music.silencedasmusik();
-                    music.playef(3);
+                    music.playef(Sound_TRINKET);
                     if (game.trinkets() > game.stat_trinkets && !map.custommode)
                     {
                         game.stat_trinkets = game.trinkets();
@@ -2736,7 +2742,7 @@ bool entityclass::updateentities( int i )
                 entities[i].colour = 5;
                 entities[i].onentity = 0;
                 game.savepoint = entities[i].para;
-                music.playef(5);
+                music.playef(Sound_CHECKPOINT);
 
                 game.savex = entities[i].xp - 4;
 
@@ -2781,7 +2787,7 @@ bool entityclass::updateentities( int i )
                 entities[i].state = 2;
 
 
-                music.playef(8);
+                music.playef(Sound_GRAVITYLINE);
                 game.gravitycontrol = (game.gravitycontrol + 1) % 2;
                 game.totalflips++;
                 int temp = getplayer();
@@ -2823,7 +2829,7 @@ bool entityclass::updateentities( int i )
                 //Depending on the room the warp point is in, teleport to a new location!
                 entities[i].onentity = 0;
                 //play a sound or somefink
-                music.playef(10);
+                music.playef(Sound_TELEPORT);
                 game.teleport = true;
 
                 game.edteleportent = i;
@@ -3175,7 +3181,7 @@ bool entityclass::updateentities( int i )
             {
                 entities[i].colour = 5;
                 entities[i].onentity = 0;
-                music.playef(17);
+                music.playef(Sound_TERMINALTOUCH);
 
                 entities[i].state = 0;
             }
@@ -3352,14 +3358,14 @@ bool entityclass::updateentities( int i )
 
                 if (game.intimetrial)
                 {
-                    music.playef(27);
+                    music.playef(Sound_RESCUE);
                 }
                 else
                 {
                     game.setstate(1010);
                     //music.haltdasmusik();
                     if(music.currentsong!=-1) music.silencedasmusik();
-                    music.playef(27);
+                    music.playef(Sound_RESCUE);
                 }
 
                 return disableentity(i);
@@ -3371,7 +3377,7 @@ bool entityclass::updateentities( int i )
                 //if inactive, activate!
                 if (entities[i].tile == 1)
                 {
-                    music.playef(18);
+                    music.playef(Sound_GAMESAVED);
                     entities[i].tile = 2;
                     entities[i].colour = 101;
                     if(!game.intimetrial && !game.nodeathmode)
@@ -3791,7 +3797,7 @@ void entityclass::animateentities( int _i )
             }
             break;
         case 100: //the teleporter!
-            if (entities[_i].tile == 1)
+            if (entities[_i].tile == 1 || game.noflashingmode)
             {
                 //it's inactive
                 entities[_i].drawframe = entities[_i].tile;
@@ -3801,10 +3807,10 @@ void entityclass::animateentities( int _i )
                 entities[_i].drawframe = entities[_i].tile;
 
                 entities[_i].framedelay--;
-                if(entities[_i].framedelay<=0)
+                if (entities[_i].framedelay <= 0)
                 {
                     entities[_i].framedelay = 1;
-                    entities[_i].walkingframe = int(fRandom() * 6);
+                    entities[_i].walkingframe = (int) (fRandom() * 6);
                     if (entities[_i].walkingframe >= 4)
                     {
                         entities[_i].walkingframe = -1;
@@ -3821,10 +3827,10 @@ void entityclass::animateentities( int _i )
                 entities[_i].drawframe = entities[_i].tile;
 
                 entities[_i].framedelay--;
-                if(entities[_i].framedelay<=0)
+                if (entities[_i].framedelay <= 0)
                 {
                     entities[_i].framedelay = 2;
-                    entities[_i].walkingframe = int(fRandom() * 6);
+                    entities[_i].walkingframe = (int) (fRandom() * 6);
                     if (entities[_i].walkingframe >= 4)
                     {
                         entities[_i].walkingframe = -5;
@@ -4894,7 +4900,7 @@ void entityclass::collisioncheck(int i, int j, bool scm /*= false*/)
             {
                 if (entityhlinecollide(i, j))
                 {
-                    music.playef(8);
+                    music.playef(Sound_GRAVITYLINE);
                     game.gravitycontrol = (game.gravitycontrol + 1) % 2;
                     game.totalflips++;
                     if (game.gravitycontrol == 0)
