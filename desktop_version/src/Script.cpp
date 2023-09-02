@@ -8,6 +8,7 @@
 #include "Constants.h"
 #include "CustomLevels.h"
 #include "Editor.h"
+#include "Ent.h"
 #include "Entity.h"
 #include "Enums.h"
 #include "Exit.h"
@@ -796,7 +797,7 @@ void scriptclass::run(void)
                     obj.entities[i].yp = 46;
                     obj.entities[i].lerpoldxp = obj.entities[i].xp;
                     obj.entities[i].lerpoldyp = obj.entities[i].yp;
-                    obj.entities[i].size = 13;
+                    obj.entities[i].render_type = EntityRenderType_SPRITE_6x;
                     obj.entities[i].colour = 23;
                     obj.entities[i].cx = 36;// 6;
                     obj.entities[i].cy = 12+80;// 2;
@@ -811,7 +812,7 @@ void scriptclass::run(void)
                 {
                     obj.entities[i].xp = 100;
                     obj.entities[i].lerpoldxp = obj.entities[i].xp;
-                    obj.entities[i].size = 0;
+                    obj.entities[i].render_type = EntityRenderType_SPRITE;
                     obj.entities[i].colour = 0;
                     obj.entities[i].cx = 6;
                     obj.entities[i].cy = 2;
@@ -2559,7 +2560,7 @@ void scriptclass::startgamemode(const enum StartMode mode)
     struct
     {
         bool initialized;
-        int size;
+        EntityRenderTypes render_type;
         int cx;
         int cy;
         int w;
@@ -2576,7 +2577,7 @@ void scriptclass::startgamemode(const enum StartMode mode)
         {
             const entclass* player = &obj.entities[player_idx];
             player_hitbox.initialized = true;
-            player_hitbox.size = player->size;
+            player_hitbox.render_type = player->render_type;
             player_hitbox.cx = player->cx;
             player_hitbox.cy = player->cy;
             player_hitbox.w = player->w;
@@ -2902,7 +2903,7 @@ void scriptclass::startgamemode(const enum StartMode mode)
         if (INBOUNDS_VEC(player_idx, obj.entities))
         {
             entclass* player = &obj.entities[player_idx];
-            player->size = player_hitbox.size;
+            player->render_type = player_hitbox.render_type;
             player->cx = player_hitbox.cx;
             player->cy = player_hitbox.cy;
             player->w = player_hitbox.w;

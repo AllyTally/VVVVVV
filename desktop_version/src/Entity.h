@@ -45,7 +45,7 @@ struct EnemyType
     int corner_y;
     int x_offset;
     int y_offset;
-    int size;
+    EntityRenderTypes render_type;
     int behave;
     bool override_behave;
     int para;
