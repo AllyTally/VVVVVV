@@ -239,6 +239,11 @@ void entityclass::add_default_types(void)
 
 void entityclass::set_enemy_type(entclass* entity, const char* type)
 {
+    if (entity == NULL)
+    {
+        return;
+    }
+
     if (enemy_types.count(type) > 0)
     {
         EnemyType* enemyType = &enemy_types[type];
@@ -1446,16 +1451,7 @@ static bool gridmatch( int p1, int p2, int p3, int p4, int p11, int p21, int p31
     return false;
 }
 
-static void entityclonefix(entclass* entity)
-{
-    if (entity->behave == 10 || entity->behave == 12)
-    {
-        /* Fix memory leak */
-        entity->behave = -1;
-    }
-}
-
-void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int p1, int p2, int p3, int p4)
+entclass* entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int p1, int p2, int p3, int p4)
 {
     k = entities.size();
 
@@ -1570,7 +1566,6 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
         else
         {
             entity.setenemyroom(game.roomx, game.roomy);
-            entityclonefix(&entity);
         }
         break;
     case 2: //A moving platform
@@ -1730,7 +1725,7 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
 
         //Check if it's already been collected
         entity.para = meta1;
-        if (!INBOUNDS_ARR(meta1, collect) || collect[meta1]) return;
+        if (!INBOUNDS_ARR(meta1, collect) || collect[meta1]) return NULL;
         break;
     case 9: //Something Shiny
         entity.rule = 3;
@@ -1745,7 +1740,7 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
 
         //Check if it's already been collected
         entity.para = meta1;
-        if (!INBOUNDS_ARR(meta1, collect) || collect[meta1]) return;
+        if (!INBOUNDS_ARR(meta1, collect) || collect[meta1]) return NULL;
         break;
     case 10: //Savepoint
         entity.rule = 3;
@@ -1767,7 +1762,7 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
 
         if (game.nodeathmode)
         {
-            return;
+            return NULL;
         }
         break;
     case 11: //Horizontal Gravity Line
@@ -1941,7 +1936,7 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
 
         //Check if it's already been collected
         entity.para = meta1;
-        if (INBOUNDS_ARR(meta1, collect) && !collect[meta1]) return;
+        if (INBOUNDS_ARR(meta1, collect) && !collect[meta1]) return NULL;
         break;
     case 23: //SWN Enemies
         //Given a different behavior, these enemies are especially for SWN mode and disappear outside the screen.
@@ -2263,7 +2258,7 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
 
         //Check if it's already been collected
         entity.para = meta1;
-        if (!INBOUNDS_ARR(meta1, customcollect) || customcollect[meta1]) return;
+        if (!INBOUNDS_ARR(meta1, customcollect) || customcollect[meta1]) return NULL;
         break;
       case 56: //Custom enemy
         entity.rule = 1;
@@ -2329,8 +2324,6 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
         if(custom_gray){
           entity.colour = 18;
         }
-
-        entityclonefix(&entity);
         break;
     }
 
@@ -2343,48 +2336,51 @@ void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int 
         entities.push_back(entity);
     }
 
+    size_t indice;
+    if (reuse)
+    {
+        indice = entptr - entities.data();
+    }
+    else
+    {
+        indice = entities.size() - 1;
+    }
+
     /* Fix crewmate facing directions
      * This is a bit kludge-y but it's better than copy-pasting
      * and is okay to do because entity 12 does not change state on its own
      */
     if (entity.type == 12)
     {
-        size_t indice;
-        if (reuse)
-        {
-            indice = entptr - entities.data();
-        }
-        else
-        {
-            indice = entities.size() - 1;
-        }
         updateentities(indice);
     }
+
+    return &entities[indice];
 }
 
-void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int p1, int p2)
+entclass* entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int p1, int p2)
 {
-    createentity(xp, yp, t, meta1, meta2, p1, p2, 320, 240);
+    return createentity(xp, yp, t, meta1, meta2, p1, p2, 320, 240);
 }
 
-void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int p1)
+entclass* entityclass::createentity(int xp, int yp, int t, int meta1, int meta2, int p1)
 {
-    createentity(xp, yp, t, meta1, meta2, p1, 0);
+    return createentity(xp, yp, t, meta1, meta2, p1, 0);
 }
 
-void entityclass::createentity(int xp, int yp, int t, int meta1, int meta2)
+entclass* entityclass::createentity(int xp, int yp, int t, int meta1, int meta2)
 {
-    createentity(xp, yp, t, meta1, meta2, 0);
+    return createentity(xp, yp, t, meta1, meta2, 0);
 }
 
-void entityclass::createentity(int xp, int yp, int t, int meta1)
+entclass* entityclass::createentity(int xp, int yp, int t, int meta1)
 {
-    createentity(xp, yp, t, meta1, 0);
+    return createentity(xp, yp, t, meta1, 0);
 }
 
-void entityclass::createentity(int xp, int yp, int t)
+entclass* entityclass::createentity(int xp, int yp, int t)
 {
-    createentity(xp, yp, t, 0);
+    return createentity(xp, yp, t, 0);
 }
 
 //Returns true if entity is removed
@@ -2561,7 +2557,9 @@ bool entityclass::updateentities( int i )
                 //Emitter: shoot an enemy every so often
                 if (entities[i].state == 0)
                 {
-                    createentity(entities[i].xp+28, entities[i].yp, 1, 10, 1);
+                    entclass* entity = createentity(entities[i].xp+28, entities[i].yp, 1, 10, -1);
+                    set_enemy_type(entity, "lies");
+                    entity->setenemyroom(game.roomx, game.roomy); // For the color
                     entities[i].state = 1;
                     entities[i].statedelay = 12;
                 }
@@ -2596,7 +2594,9 @@ bool entityclass::updateentities( int i )
                 //Emitter: shoot an enemy every so often (up)
                 if (entities[i].state == 0)
                 {
-                    createentity(entities[i].xp, entities[i].yp, 1, 12, 1);
+                    entclass* entity = createentity(entities[i].xp, entities[i].yp, 1, 12, -1);
+                    set_enemy_type(entity, "factory_clouds");
+                    entity->setenemyroom(game.roomx, game.roomy); // For the color
                     entities[i].state = 1;
                     entities[i].statedelay = 16;
                 }
