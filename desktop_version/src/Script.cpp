@@ -270,12 +270,12 @@ void scriptclass::run(void)
             {
                 if(words[1]=="gravitylines"){
                     for(size_t edi=0; edi<obj.entities.size(); edi++){
-                        if(obj.entities[edi].type==9) obj.disableentity(edi);
-                        if(obj.entities[edi].type==10) obj.disableentity(edi);
+                        if(obj.entities[edi].type==EntityType_HORIZONTAL_GRAVITY_LINE) obj.disableentity(edi);
+                        if(obj.entities[edi].type==EntityType_VERTICAL_GRAVITY_LINE) obj.disableentity(edi);
                     }
                 }else if(words[1]=="warptokens"){
                     for(size_t edi=0; edi<obj.entities.size(); edi++){
-                        if(obj.entities[edi].type==11) obj.disableentity(edi);
+                        if(obj.entities[edi].type==EntityType_WARP_TOKEN) obj.disableentity(edi);
                     }
                 }else if(words[1]=="platforms"||words[1]=="moving"){
                     bool fixed=words[1]=="moving";
@@ -286,7 +286,7 @@ void scriptclass::run(void)
                 }else if(words[1]=="disappear"){
                     for(size_t edi=0; edi<obj.entities.size(); edi++){
                         obj.disableblockat(obj.entities[edi].xp, obj.entities[edi].yp);
-                        if(obj.entities[edi].type==2 && obj.entities[edi].rule==3) obj.disableentity(edi);
+                        if(obj.entities[edi].type==EntityType_DISAPPEARING_PLATFORM && obj.entities[edi].rule==3) obj.disableentity(edi);
                     }
                 }
             }
@@ -1511,7 +1511,7 @@ void scriptclass::run(void)
             {
                 for (j = 0; j < (int) obj.entities.size(); j++)
                 {
-                    if (obj.entities[j].type == 13)
+                    if (obj.entities[j].type == EntityType_TERMINAL)
                     {
                         obj.entities[j].colour = 4;
                     }
