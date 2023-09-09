@@ -5,6 +5,20 @@
 #include <string>
 #include <vector>
 
+struct OnlineLevelData
+{
+    std::string title;
+    std::string creator;
+    std::string Desc1;
+    std::string Desc2;
+    std::string Desc3;
+    std::string website;
+    std::string filename;
+    std::string url;
+
+    int version;
+};
+
 class CustomEntity
 {
 public:
@@ -96,6 +110,7 @@ public:
     std::string website;
 
     std::vector<LevelMetaData> ListOfMetaData;
+    std::vector<OnlineLevelData> onlineLevelList;
 
     void loadZips(void);
     void getDirectoryData(void);
@@ -167,6 +182,8 @@ public:
     SDL_Color getonewaycol(int rx, int ry);
     SDL_Color getonewaycol(void);
     bool onewaycol_override;
+
+    bool loadOnlineLevels(void);
 };
 
 std::string translate_title(const std::string& title, bool* is_gettext);

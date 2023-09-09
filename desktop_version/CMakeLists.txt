@@ -333,6 +333,8 @@ else()
     target_link_libraries(VVVVVV ${STATIC_LIBRARIES} physfs tinyxml2 FAudio)
 endif()
 
+find_package(CURL REQUIRED)
+target_link_libraries(VVVVVV CURL::libcurl)
 
 if(MSVC)
     # Statically link Microsoft's runtime library so end users don't have to install it (/MT)

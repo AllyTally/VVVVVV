@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <sstream>
 
 #include "ActionSets.h"
 #include "ButtonGlyphs.h"
@@ -260,6 +261,67 @@ static void menurender(void)
         }
         break;
     }
+    case Menu::onlinelevellist:
+    {
+        int tmp = game.currentmenuoption + (game.levelpage * 8);
+        if (INBOUNDS_VEC(tmp, cl.onlineLevelList)) {
+            const bool nextlastoptions = game.levelpage >= game.max_online_pages;
+            //Don't show next/previous page or return to menu options here!
+            if (nextlastoptions && game.menuoptions.size() - game.currentmenuoption <= 3) {
+
+            }
+            else {
+                font::print(PR_2X | PR_CEN, -1, 15, cl.onlineLevelList[tmp].title, tr, tg, tb);
+                font::print(PR_CEN, -1, 40, "by " + cl.onlineLevelList[tmp].creator, tr, tg, tb);
+                font::print(PR_CEN, -1, 50, cl.onlineLevelList[tmp].website, tr, tg, tb);
+                font::print(PR_CEN, -1, 70, cl.onlineLevelList[tmp].Desc1, tr, tg, tb);
+                font::print(PR_CEN, -1, 80, cl.onlineLevelList[tmp].Desc2, tr, tg, tb);
+                font::print(PR_CEN, -1, 90, cl.onlineLevelList[tmp].Desc3, tr, tg, tb);
+            }
+        }
+        break;
+    }
+    case Menu::downloadlevelconfirm:
+    {
+        font::print(PR_CEN, -1, 40, "Are you sure you want to", tr, tg, tb);
+        font::print(PR_CEN, -1, 50, "download this level?", tr, tg, tb);
+        font::print(PR_CEN, -1, 70, cl.onlineLevelList[game.selected_online_level].title, tr, tg, tb);
+        font::print(PR_CEN, -1, 80, "by " + cl.onlineLevelList[game.selected_online_level].creator, tr, tg, tb);
+        break;
+    }
+    case Menu::finisheddownload:
+    {
+        font::print(PR_CEN, -1, 40, "Downloaded level as", tr, tg, tb);
+        font::print(PR_CEN, -1, 70, cl.onlineLevelList[game.selected_online_level].filename, tr, tg, tb);
+        break;
+    }
+    case Menu::downloading:
+    {
+        int progress = FILESYSTEM_getDownloadProgress();
+        if (progress == 100)
+        {
+            game.createmenu(Menu::finisheddownload);
+        }
+        else
+        {
+            int progress_counter = 0;
+            std::stringstream progress_bar;
+            progress_bar << "[";
+            for (; progress_counter < (int)((float)progress / 100 * 20); progress_counter++)
+            {
+                progress_bar << "#";
+            }
+            for (; progress_counter < 20; progress_counter++)
+            {
+                progress_bar << " ";
+            }
+            progress_bar << "] ";
+            if (progress < 10) progress_bar << "0";
+            progress_bar << progress << "%";
+            font::print(PR_CEN, -1, 240 / 2 - 4, progress_bar.str(), tr, tg, tb);
+        }
+    }
+    break;
     case Menu::errornostart:
         font::print_wrap(PR_CEN, -1, 65, loc::gettext("ERROR: This level has no start point!"), tr, tg, tb);
         break;

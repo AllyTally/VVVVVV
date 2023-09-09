@@ -41,6 +41,10 @@ namespace Menu
         confirmshowlevelspath,
         showlevelspath,
         levellist,
+        onlinelevellist,
+        downloadlevelconfirm,
+        downloading,
+        finisheddownload,
         quickloadlevel,
         deletequicklevel,
         youwannaquit,
@@ -516,6 +520,8 @@ public:
     int customcol;
     int levelpage;
     int playcustomlevel;
+    int selected_online_level;
+    int max_online_pages;
     std::string customleveltitle;
     std::string customlevelfilename;
 

@@ -1567,7 +1567,7 @@ void Graphics::drawmenu(int cr, int cg, int cb, enum Menu::MenuName menu)
             y = 140 + i * 12 + game.menuyoff;
         }
 
-        if (menu == Menu::levellist)
+        if (menu == Menu::levellist || menu == Menu::onlinelevellist)
         {
             size_t separator;
             if (cl.ListOfMetaData.size() > 8)

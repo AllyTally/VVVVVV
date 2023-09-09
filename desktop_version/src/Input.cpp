@@ -392,120 +392,199 @@ static void menuactionpress(void)
 #if !defined(MAKEANDPLAY)
         OPTION_ID(0) /* play */
 #endif
-        OPTION_ID(1) /* levels */
-        OPTION_ID(2) /* options */
-        if (loc::show_translator_menu)
-        {
-            OPTION_ID(3) /* translator */
-        }
+            OPTION_ID(1) /* levels */
+            OPTION_ID(2) /* options */
+            if (loc::show_translator_menu)
+            {
+                OPTION_ID(3) /* translator */
+            }
         OPTION_ID(4) /* credits */
-        OPTION_ID(5) /* quit */
+            OPTION_ID(5) /* quit */
 
 #undef OPTION_ID
 
 
-        switch (option_id)
-        {
+            switch (option_id)
+            {
 #if !defined(MAKEANDPLAY)
-        case 0:
-            //Play
-            if (!game.save_exists() && !game.anything_unlocked())
-            {
-                //No saves exist, just start a new game
-                music.playef(Sound_VIRIDIAN);
-                startmode(Start_MAINGAME);
-            }
-            else
-            {
+            case 0:
+                //Play
+                if (!game.save_exists() && !game.anything_unlocked())
+                {
+                    //No saves exist, just start a new game
+                    music.playef(Sound_VIRIDIAN);
+                    startmode(Start_MAINGAME);
+                }
+                else
+                {
+                    //Bring you to the normal playmenu
+                    music.playef(Sound_VIRIDIAN);
+                    game.createmenu(Menu::play);
+                    map.nexttowercolour();
+                }
+                break;
+#endif
+            case 1:
                 //Bring you to the normal playmenu
                 music.playef(Sound_VIRIDIAN);
-                game.createmenu(Menu::play);
+                game.editor_disabled = !BUTTONGLYPHS_keyboard_is_available();
+                game.createmenu(Menu::playerworlds);
                 map.nexttowercolour();
+                break;
+            case 2:
+                //Options
+                music.playef(Sound_VIRIDIAN);
+                game.createmenu(Menu::options);
+                map.nexttowercolour();
+                break;
+            case 3:
+                //Translator
+                music.playef(Sound_VIRIDIAN);
+                game.createmenu(Menu::translator_main);
+                map.nexttowercolour();
+                break;
+            case 4:
+                //Credits
+                music.playef(Sound_VIRIDIAN);
+                game.createmenu(Menu::credits);
+                map.nexttowercolour();
+                break;
+            case 5:
+                music.playef(Sound_VIRIDIAN);
+                game.createmenu(Menu::youwannaquit);
+                map.nexttowercolour();
+                break;
             }
-            break;
-#endif
-        case 1:
-            //Bring you to the normal playmenu
-            music.playef(Sound_VIRIDIAN);
-            game.editor_disabled = !BUTTONGLYPHS_keyboard_is_available();
-            game.createmenu(Menu::playerworlds);
-            map.nexttowercolour();
-            break;
-        case 2:
-            //Options
-            music.playef(Sound_VIRIDIAN);
-            game.createmenu(Menu::options);
-            map.nexttowercolour();
-            break;
-        case 3:
-            //Translator
-            music.playef(Sound_VIRIDIAN);
-            game.createmenu(Menu::translator_main);
-            map.nexttowercolour();
-            break;
-        case 4:
-            //Credits
-            music.playef(Sound_VIRIDIAN);
-            game.createmenu(Menu::credits);
-            map.nexttowercolour();
-            break;
-        case 5:
-            music.playef(Sound_VIRIDIAN);
-            game.createmenu(Menu::youwannaquit);
-            map.nexttowercolour();
-            break;
-        }
         break;
     }
     case Menu::levellist:
     {
         const bool nextlastoptions = cl.ListOfMetaData.size() > 8;
-        if(game.currentmenuoption==(int)game.menuoptions.size()-1){
+        if (game.currentmenuoption == (int)game.menuoptions.size() - 1) {
             //go back to menu
             music.playef(Sound_VIRIDIAN);
             game.returnmenu();
             map.nexttowercolour();
-        }else if(nextlastoptions && game.currentmenuoption==(int)game.menuoptions.size()-2){
+        }
+        else if (nextlastoptions && game.currentmenuoption == (int)game.menuoptions.size() - 2) {
             //previous page
             music.playef(Sound_VIRIDIAN);
-            if(game.levelpage==0){
-                game.levelpage=(cl.ListOfMetaData.size()-1)/8;
-            }else{
+            if (game.levelpage == 0) {
+                game.levelpage = (cl.ListOfMetaData.size() - 1) / 8;
+            }
+            else {
                 game.levelpage--;
             }
             game.createmenu(Menu::levellist, true);
-            game.currentmenuoption=game.menuoptions.size()-2;
+            game.currentmenuoption = game.menuoptions.size() - 2;
             map.nexttowercolour();
-        }else if(nextlastoptions && game.currentmenuoption==(int)game.menuoptions.size()-3){
+        }
+        else if (nextlastoptions && game.currentmenuoption == (int)game.menuoptions.size() - 3) {
             //next page
             music.playef(Sound_VIRIDIAN);
-            if((size_t) ((game.levelpage*8)+8) >= cl.ListOfMetaData.size()){
-                game.levelpage=0;
-            }else{
+            if ((size_t)((game.levelpage * 8) + 8) >= cl.ListOfMetaData.size()) {
+                game.levelpage = 0;
+            }
+            else {
                 game.levelpage++;
             }
             game.createmenu(Menu::levellist, true);
-            game.currentmenuoption=game.menuoptions.size()-3;
+            game.currentmenuoption = game.menuoptions.size() - 3;
             map.nexttowercolour();
-        }else{
+        }
+        else {
             //Ok, launch the level!
             //PLAY CUSTOM LEVEL HOOK
             music.playef(Sound_VIRIDIAN);
-            game.playcustomlevel=(game.levelpage*8)+game.currentmenuoption;
-            game.customleveltitle=cl.ListOfMetaData[game.playcustomlevel].title;
-            game.customlevelfilename=cl.ListOfMetaData[game.playcustomlevel].filename;
+            game.playcustomlevel = (game.levelpage * 8) + game.currentmenuoption;
+            game.customleveltitle = cl.ListOfMetaData[game.playcustomlevel].title;
+            game.customlevelfilename = cl.ListOfMetaData[game.playcustomlevel].filename;
 
             std::string name = "saves/" + cl.ListOfMetaData[game.playcustomlevel].filename.substr(7) + ".vvv";
             tinyxml2::XMLDocument doc;
-            if (!FILESYSTEM_loadTiXml2Document(name.c_str(), doc)){
+            if (!FILESYSTEM_loadTiXml2Document(name.c_str(), doc)) {
                 startmode(Start_CUSTOM);
-            }else{
+            }
+            else {
                 game.createmenu(Menu::quickloadlevel);
                 map.nexttowercolour();
             }
         }
         break;
     }
+
+    case Menu::onlinelevellist:
+    {
+        const bool nextlastoptions = cl.onlineLevelList.size() > 8;
+
+        if (game.currentmenuoption == (int)game.menuoptions.size() - 1) {
+            //go back to menu
+            music.playef(Sound_VIRIDIAN);
+            game.returnmenu();
+            map.nexttowercolour();
+        }
+        else if (nextlastoptions && game.currentmenuoption == (int)game.menuoptions.size() - 2) {
+            //previous page
+            music.playef(Sound_VIRIDIAN);
+            if (game.levelpage == 0) {
+                game.levelpage = game.max_online_pages - 1;
+            }
+            else {
+                game.levelpage--;
+            }
+            cl.loadOnlineLevels();
+            game.createmenu(Menu::onlinelevellist, true);
+            game.currentmenuoption = game.menuoptions.size() - 2;
+            map.nexttowercolour();
+        }
+        else if (nextlastoptions && game.currentmenuoption == (int)game.menuoptions.size() - 3) {
+            //next page
+            music.playef(Sound_VIRIDIAN);
+            if (game.levelpage >= game.max_online_pages) {
+                game.levelpage = 0;
+            }
+            else
+            {
+                game.levelpage++;
+            }
+            cl.loadOnlineLevels();
+            game.createmenu(Menu::onlinelevellist, true);
+            game.currentmenuoption = game.menuoptions.size() - 3;
+            map.nexttowercolour();
+        }
+        else {
+            // dl the level
+            game.selected_online_level = game.currentmenuoption;
+            music.playef(11);
+            game.createmenu(Menu::downloadlevelconfirm);
+            map.nexttowercolour();
+        }
+        break;
+    }
+    case Menu::downloadlevelconfirm:
+        if (game.currentmenuoption == 0) {
+            // download
+            std::string filename = "levels/" + cl.onlineLevelList[game.selected_online_level].filename;
+            FILESYSTEM_downloadFile(filename.c_str(), cl.onlineLevelList[game.selected_online_level].url.c_str());
+            game.createmenu(Menu::downloading);
+            music.playef(11);
+            map.nexttowercolour();
+        }
+        else {
+            // return to menu
+            music.playef(11);
+            game.returnmenu();
+            map.nexttowercolour();
+        }
+        break;
+    case Menu::finisheddownload:
+        music.playef(11);
+        game.returnmenu();
+        game.returnmenu();
+        game.returnmenu();
+        map.nexttowercolour();
+        break;
+
     case Menu::quickloadlevel:
         switch (game.currentmenuoption)
         {
@@ -561,6 +640,20 @@ static void menuactionpress(void)
             map.nexttowercolour();
         }
         else if (game.currentmenuoption == 1)
+        {
+            music.playef(11);
+            game.levelpage = 0;
+            game.max_online_pages = 1;
+            if (cl.loadOnlineLevels()) {
+                game.createmenu(Menu::onlinelevellist);
+            }
+            else
+            {
+                vlog_error("Something went wrong getting levels. Check your internet, maybe?");
+            }
+            map.nexttowercolour();
+        }
+        else if (game.currentmenuoption == 2)
         {
             // LEVEL EDITOR HOOK
             if (game.editor_disabled)

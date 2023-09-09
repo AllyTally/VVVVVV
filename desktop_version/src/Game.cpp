@@ -277,6 +277,8 @@ void Game::init(void)
     menucountdown = 0;
     levelpage=0;
     playcustomlevel=0;
+    selected_online_level = 0;
+    max_online_pages = 0;
 
     silence_settings_error = false;
 
@@ -6271,6 +6273,7 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
         break;
     case Menu::playerworlds:
         option(loc::gettext("play a level"));
+        option(loc::gettext("download levels"));
         option(loc::gettext("level editor"), !editor_disabled);
         if (!editor_disabled)
         {
@@ -6387,6 +6390,57 @@ void Game::createmenu( enum Menu::MenuName t, bool samemenu/*= false*/ )
             menuspacing = 5;
             return; // skip automatic centering, will turn out bad with levels list
         }
+        break;
+    case Menu::onlinelevellist:
+        if (cl.onlineLevelList.size() == 0)
+        {
+            option(loc::gettext("ok"));
+            menuyoff = -20;
+        }
+        else
+        {
+            for (int i = 0; i < (int)cl.onlineLevelList.size(); i++)
+            {
+                option(("    " + cl.onlineLevelList[i].title).c_str());
+            }
+
+            if (cl.onlineLevelList.size() > 8)
+            {
+                if ((size_t)((levelpage * 8) + 8) < cl.onlineLevelList.size())
+                {
+                    option(loc::gettext("next page"));
+                }
+                else
+                {
+                    option(loc::gettext("first page"));
+                }
+                if (levelpage == 0)
+                {
+                    option(loc::gettext("last page"));
+                }
+                else
+                {
+                    option(loc::gettext("previous page"));
+                }
+            }
+            option(loc::gettext("return"));
+
+            menuxoff = 20;
+            menuyoff = 70 - (menuoptions.size() * 10);
+            menuspacing = 5;
+            return; // skip automatic centering, will turn out bad with levels list
+        }
+        break;
+    case Menu::downloadlevelconfirm:
+        option("yes, download");
+        option("return to menu");
+        menuyoff = 40;
+        break;
+    case Menu::downloading:
+        break;
+    case Menu::finisheddownload:
+        menuyoff = -20;
+        option("ok");
         break;
     case Menu::quickloadlevel:
         option(loc::gettext("continue from save"));
