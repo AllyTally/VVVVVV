@@ -2,6 +2,9 @@
 #include "Screen.h"
 
 #include <SDL.h>
+#include <SDL_syswm.h>
+
+#include <dwmapi.h>
 
 #include "Alloc.h"
 #include "Constants.h"
@@ -13,6 +16,10 @@
 #include "InterimVersion.h"
 #include "Render.h"
 #include "Vlogging.h"
+
+#undef LoadIcon
+
+typedef HRESULT(WINAPI* DwmSetWindowAttribute_t)(HWND hwnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
 
 void ScreenSettings_default(struct ScreenSettings* _this)
 {
@@ -57,6 +64,22 @@ void Screen::init(const struct ScreenSettings* settings)
         VVV_exit(1);
     }
 
+    void* handle = SDL_LoadObject("dwmapi.dll");
+    if (handle) {
+        DwmSetWindowAttribute_t DwmSetWindowAttributeFunc = (DwmSetWindowAttribute_t)SDL_LoadFunction(handle, "DwmSetWindowAttribute");
+        if (DwmSetWindowAttributeFunc) {
+            DWM_WINDOW_CORNER_PREFERENCE value = DWMWCP_DONOTROUND;
+
+            SDL_SysWMinfo wmInfo;
+            SDL_VERSION(&wmInfo.version);
+            SDL_GetWindowWMInfo(m_window, &wmInfo);
+            HWND hwnd = wmInfo.info.win.window;
+
+            DwmSetWindowAttributeFunc(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &value, sizeof(value));
+        }
+        SDL_UnloadObject(handle);
+    }
+
     m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
 
     if (m_renderer == NULL)
@@ -65,7 +88,7 @@ void Screen::init(const struct ScreenSettings* settings)
         VVV_exit(1);
     }
 
-    SDL_RenderSetVSync(m_renderer, (int) vsync);
+    SDL_RenderSetVSync(m_renderer, (int)vsync);
 
 #ifdef INTERIM_VERSION_EXISTS
     /* Branch name limits are ill-defined but on GitHub it's ~256 chars
@@ -187,7 +210,7 @@ void Screen::ResizeToNearestMultiple(void)
     bool using_width;
     int usethisdimension, usethisratio;
 
-    if ((float) w / (float) h > 4.0 / 3.0)
+    if ((float)w / (float)h > 4.0 / 3.0)
     {
         // Width is bigger, so it's limited by height
         usethisdimension = h;
@@ -266,7 +289,7 @@ void Screen::UpdateScaling(void)
         return;
     }
 
-    result = SDL_RenderSetIntegerScale(m_renderer, (SDL_bool) (scalingMode == SCALING_INTEGER));
+    result = SDL_RenderSetIntegerScale(m_renderer, (SDL_bool)(scalingMode == SCALING_INTEGER));
     if (result != 0)
     {
         vlog_error("Error: could not set scale: %s", SDL_GetError());
@@ -350,7 +373,7 @@ void Screen::toggleLinearFilter(void)
 void Screen::toggleVSync(void)
 {
     vsync = !vsync;
-    SDL_RenderSetVSync(m_renderer, (int) vsync);
+    SDL_RenderSetVSync(m_renderer, (int)vsync);
 
     recacheTextures();
 }
