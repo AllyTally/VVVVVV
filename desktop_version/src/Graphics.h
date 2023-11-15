@@ -132,6 +132,14 @@ public:
 
     void drawcrewman(int x, int y, int t, bool act, bool noshift =false);
 
+    void drawbutton(const std::string& text, int x, int y, int w, int h, const int r, const int g, const int b);
+
+    void drawbutton(const std::string& text, int x, int y, const int r, const int g, const int b);
+
+    SDL_Rect getbuttonarea(const std::string& text, int x, int y);
+
+    SDL_Rect getbuttonarea(const std::string& text, int x, int y, int w, int h);
+
     int crewcolour(const int t);
 
     void cutscenebars(void);

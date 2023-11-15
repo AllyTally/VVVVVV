@@ -25,6 +25,94 @@
 #include "UtilityClass.h"
 #include "Vlogging.h"
 
+static bool pointinarea(int px, int py, int x, int y, int x2, int y2)
+{
+    return (px >= x && px <= x2 && py >= y && py <= y2);
+}
+
+static bool mouseinarea(int x, int y, int x2, int y2)
+{
+    return pointinarea(key.mousex, key.mousey, x, y, x2, y2);
+}
+
+static bool buttonclicked(const std::string& text, int x, int y)
+{
+    SDL_Rect button = graphics.getbuttonarea(text, x, y);
+    bool clicked = (key.leftbutton == 0 && key.was_pressed) && mouseinarea(button.x, button.y, button.x + button.w, button.y + button.h);
+    key.was_pressed = false;
+    return clicked;
+}
+
+static bool buttonclicked(const std::string& text, int x, int y, int w, int h)
+{
+    SDL_Rect button = graphics.getbuttonarea(text, x, y, w, h);
+    bool clicked = (key.leftbutton == 0 && key.was_pressed) && mouseinarea(button.x, button.y, button.x + button.w, button.y + button.h);
+    key.was_pressed = false;
+    return clicked;
+}
+
+static bool areaclicked(int x, int y, int x2, int y2)
+{
+    bool clicked = (key.leftbutton == 1 && !key.was_pressed) && mouseinarea(x, y, x2, y2);
+    key.was_pressed = true;
+    return clicked;
+}
+
+static VVV_Finger* areatouched(int x, int y, int x2, int y2)
+{
+    std::map<SDL_FingerID, VVV_Finger>::iterator it;
+
+    for (it = key.fingers.begin(); it != key.fingers.end(); it++)
+    {
+        if (it->second.pressed && pointinarea(it->second.x * 320, it->second.y * 240, x, y, x2, y2))
+        {
+            return &(it->second);
+        }
+    }
+    return NULL;
+}
+
+static bool fingerinarea(SDL_FingerID fingerID, int x, int y, int x2, int y2)
+{
+    VVV_Finger finger = key.fingers[fingerID];
+    return pointinarea(finger.x * 320, finger.y * 240, x, y, x2, y2);
+}
+
+static VVV_Finger* left_touched()
+{
+    std::map<SDL_FingerID, VVV_Finger>::iterator it;
+
+    for (it = key.fingers.begin(); it != key.fingers.end(); it++)
+    {
+        if (it->second.pressed && it->second.x < 0.5)
+        {
+            return &(it->second);
+        }
+    }
+    return NULL;
+}
+
+static VVV_Finger* right_touched()
+{
+    std::map<SDL_FingerID, VVV_Finger>::iterator it;
+
+    for (it = key.fingers.begin(); it != key.fingers.end(); it++)
+    {
+        if (it->second.pressed && it->second.x >= 0.5)
+        {
+            return &(it->second);
+        }
+    }
+    return NULL;
+}
+
+static bool clicked()
+{
+    bool clicked = (key.leftbutton == 1 && !key.was_pressed);
+    key.was_pressed = true;
+    return clicked;
+}
+
 static void updatebuttonmappings(int bind)
 {
     for (
@@ -364,6 +452,40 @@ static void slidermodeinput(void)
         *user_changing_volume += USER_VOLUME_STEP;
     }
     *user_changing_volume = SDL_clamp(*user_changing_volume, 0, USER_VOLUME_MAX);
+}
+
+static void menubuttonclick(void)
+{
+    switch (game.currentmenuname)
+    {
+    case Menu::mainmenu:
+
+        if (buttonclicked("play", -1, -1, 140, 52))
+        {
+            key.was_pressed = false;
+            music.playef(11);
+            if (!game.save_exists() && !game.anything_unlocked())
+            {
+                //No saves exist, just start a new game
+                startmode(Start_MAINGAME);
+            }
+            else
+            {
+                //Bring you to the normal playmenu
+                game.createmenu(Menu::play);
+                map.nexttowercolour();
+            }
+            break;
+        }
+        if (buttonclicked("player worlds", -1, 164, 140, 26))
+        {
+            key.was_pressed = false;
+            music.playef(11);
+            game.createmenu(Menu::playerworlds);
+            map.nexttowercolour();
+        }
+        break;
+    }
 }
 
 static void menuactionpress(void)
@@ -2218,6 +2340,11 @@ void titleinput(void)
     if (!game.press_action && !game.press_left && !game.press_right && !key.isDown(27) && !key.isDown(game.controllerButton_esc)) game.jumpheld = false;
     if (!game.press_map) game.mapheld = false;
 
+    if (graphics.fademode == FADE_NONE && key.isUsingTouch() && game.menustart)
+    {
+        menubuttonclick();
+    }
+
     if (!game.jumpheld && graphics.fademode == FADE_NONE)
     {
         if (game.press_action || game.press_left || game.press_right || game.press_map || key.isDown(27) || key.isDown(game.controllerButton_esc))
@@ -2375,7 +2502,7 @@ void titleinput(void)
         if (game.currentmenuoption < 0) game.currentmenuoption = game.menuoptions.size()-1;
         if (game.currentmenuoption >= (int) game.menuoptions.size() ) game.currentmenuoption = 0;
 
-        if (game.press_action)
+        if (game.press_action || clicked())
         {
             if (!game.menustart)
             {
@@ -2385,7 +2512,7 @@ void titleinput(void)
                 game.screenshake = 10;
                 game.flashlight = 5;
             }
-            else
+            else if (game.press_action)
             {
                 menuactionpress();
             }
@@ -2396,6 +2523,8 @@ void titleinput(void)
     {
         handlefadetomode();
     }
+
+    key.was_pressed = (key.leftbutton == 1);
 }
 
 void gameinput(void)
@@ -2424,8 +2553,43 @@ void gameinput(void)
         {
             game.press_right = true;
         }
+
+        VVV_Finger* touched = right_touched();
+        if (touched != NULL)
+        {
+            // We're trying to flip!
+            game.press_action = true;
+            key.flipFinger = touched->id;
+        }
+
+        touched = left_touched();
+        if (touched != NULL)
+        {
+            // We're trying to move!
+            key.movementFinger = touched->id;
+        }
+
+        if (key.fingers.count(key.movementFinger) > 0)
+        {
+            VVV_Finger* finger = &key.fingers[key.movementFinger];
+
+            if ((abs(finger->x - finger->lastX) * 320) > 1)
+            {
+                finger->lastDir = finger->x - finger->lastX;
+            }
+
+            if (finger->lastDir < 0)
+            {
+                game.press_left = true;
+            }
+            else if (finger->lastDir > 0)
+            {
+                game.press_right = true;
+            }
+        }
+
         if (key.isDown(KEYBOARD_z) || key.isDown(KEYBOARD_SPACE) || key.isDown(KEYBOARD_v)
-                || key.isDown(KEYBOARD_UP) || key.isDown(KEYBOARD_DOWN) || key.isDown(KEYBOARD_w) || key.isDown(KEYBOARD_s)|| key.isDown(game.controllerButton_flip))
+                || key.isDown(KEYBOARD_UP) || key.isDown(KEYBOARD_DOWN) || key.isDown(KEYBOARD_w) || key.isDown(KEYBOARD_s) || key.isDown(game.controllerButton_flip) || clicked())
         {
             game.press_action = true;
         }
@@ -3028,6 +3192,10 @@ void mapinput(void)
         if (game.menupage == 29) game.menupage = 32;
         if (game.menupage == 33) game.menupage = 30;
     }
+
+    key.was_pressed = (key.leftbutton == 1);
+
+    key.last_mousex = key.mousex;
 }
 
 static void mapmenuactionpress(const bool version2_2)

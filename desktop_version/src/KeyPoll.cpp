@@ -54,6 +54,12 @@ KeyPoll::KeyPoll(void)
     linealreadyemptykludge = false;
 
     isActive = true;
+
+
+    using_touch = true;
+    was_pressed = false;
+    last_mousex = 0;
+    last_dir = 0;
 }
 
 void KeyPoll::enabletextentry(void)
@@ -146,6 +152,17 @@ void KeyPoll::Poll(void)
     bool fullscreenkeybind = false;
     SDL_GameController *controller = NULL;
     SDL_Event evt;
+
+    // Reset the pressed status of all fingers
+    std::map<SDL_FingerID, VVV_Finger>::iterator it;
+
+    for (it = fingers.begin(); it != fingers.end(); it++)
+    {
+        it->second.pressed = false;
+        it->second.lastX = it->second.x;
+        it->second.lastY = it->second.y;
+    }
+
     while (SDL_PollEvent(&evt))
     {
         switch (evt.type)
@@ -153,6 +170,7 @@ void KeyPoll::Poll(void)
         /* Keyboard Input */
         case SDL_KEYDOWN:
         {
+            using_touch = false;
             keymap[evt.key.keysym.sym] = true;
 
             if (evt.key.keysym.sym == SDLK_BACKSPACE)
@@ -215,6 +233,7 @@ void KeyPoll::Poll(void)
             break;
         }
         case SDL_KEYUP:
+            using_touch = false;
             keymap[evt.key.keysym.sym] = false;
             if (evt.key.keysym.sym == SDLK_BACKSPACE)
             {
@@ -354,6 +373,65 @@ void KeyPoll::Poll(void)
             break;
         }
 
+        /* Touch Events */
+        case SDL_FINGERDOWN:
+        {
+            // Get the SDL_Finger
+            //SDL_Touch* inTouch = SDL_GetTouch(evt.tfinger.touchId);
+            //SDL_Finger* finger = evt.tfinger.
+            vlog_info("Finger %i pressed at %f, %f", evt.tfinger.fingerId, evt.tfinger.x, evt.tfinger.y);
+            VVV_Finger finger;
+            finger.pressed = true;
+            finger.x = evt.tfinger.x;
+            finger.y = evt.tfinger.y;
+            finger.lastX = evt.tfinger.x;
+            finger.lastY = evt.tfinger.y;
+            finger.lastDir = 0;
+            finger.id = evt.tfinger.fingerId;
+            fingers[evt.tfinger.fingerId] = finger;
+
+            using_touch = true;
+            raw_mousex = (int) (evt.tfinger.x * SCREEN_WIDTH_PIXELS);
+            raw_mousey = (int) (evt.tfinger.y * SCREEN_HEIGHT_PIXELS);
+            leftbutton = 1;
+            break;
+        }
+        case SDL_FINGERMOTION:
+        {
+            VVV_Finger finger;
+            finger.pressed = false;
+            finger.lastX = evt.tfinger.x;
+            finger.lastY = evt.tfinger.y;
+            finger.lastDir = 0;
+            if (fingers.count(evt.tfinger.fingerId) > 0)
+            {
+                finger.pressed = fingers[evt.tfinger.fingerId].pressed;
+                finger.lastX = fingers[evt.tfinger.fingerId].lastX;
+                finger.lastY = fingers[evt.tfinger.fingerId].lastY;
+                finger.lastDir = fingers[evt.tfinger.fingerId].lastDir;
+            }
+            finger.x = evt.tfinger.x;
+            finger.y = evt.tfinger.y;
+            finger.id = evt.tfinger.fingerId;
+            fingers[evt.tfinger.fingerId] = finger;
+
+            using_touch = true;
+            raw_mousex = (int) (evt.tfinger.x * SCREEN_WIDTH_PIXELS);
+            raw_mousey = (int) (evt.tfinger.y * SCREEN_HEIGHT_PIXELS);
+            break;
+        }
+        case SDL_FINGERUP:
+        {
+            fingers.erase(evt.tfinger.fingerId);
+            if (movementFinger == evt.tfinger.fingerId) movementFinger = NULL;
+            if (flipFinger == evt.tfinger.fingerId) flipFinger = NULL;
+            using_touch = true;
+            raw_mousex = (int) (evt.tfinger.x * SCREEN_WIDTH_PIXELS);
+            raw_mousey = (int) (evt.tfinger.y * SCREEN_HEIGHT_PIXELS);
+            leftbutton = 0;
+            break;
+        }
+
         /* Window Events */
         case SDL_WINDOWEVENT:
             switch (evt.window.event)
@@ -435,6 +513,7 @@ void KeyPoll::Poll(void)
         switch (evt.type)
         {
         case SDL_KEYDOWN:
+            using_touch = false;
             if (evt.key.repeat == 0)
             {
                 hidemouse = true;
@@ -478,6 +557,11 @@ void KeyPoll::Poll(void)
         mousex = raw_mousex;
         mousey = raw_mousey;
     }
+}
+
+bool KeyPoll::isUsingTouch()
+{
+    return using_touch;
 }
 
 bool KeyPoll::isDown(SDL_Keycode key)
