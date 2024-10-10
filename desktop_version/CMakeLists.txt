@@ -285,30 +285,26 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(VVVVVV PRIVATE -Wno-c99-extensions)
 endif()
 
+# Set standards version, disable exceptions and RTTI
 if(MSVC)
     # MSVC doesn't have /std:c99 or /std:c++98 switches!
 
     # Disable exceptions
     string(REGEX REPLACE "/EH[a-z]+" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    set_source_files_properties(${VVV_CXX_SRC} PROPERTIES COMPILE_FLAGS /EHsc)
-
-    # Disable RTTI
     string(REPLACE "/GR" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    set_source_files_properties(${VVV_CXX_SRC} PROPERTIES COMPILE_FLAGS /GR-)
+    set_source_files_properties(${VVV_CXX_SRC} PROPERTIES COMPILE_FLAGS "/EHsc /GR-")
 else()
     string(REGEX REPLACE "-std=[a-z0-9]+" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
     set_source_files_properties(${VVV_C_SRC} PROPERTIES COMPILE_FLAGS -std=c99)
 
     string(REGEX REPLACE "-std=[a-z0-9+]+" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    set_source_files_properties(${VVV_CXX_SRC} PROPERTIES COMPILE_FLAGS -std=c++11)
-
-    # Disable exceptions
     string(REPLACE "-fexceptions" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    set_source_files_properties(${VVV_CXX_SRC} PROPERTIES COMPILE_FLAGS -fno-exceptions)
-
-    # Disable RTTI
     string(REPLACE "-frtti" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    set_source_files_properties(${VVV_CXX_SRC} PROPERTIES COMPILE_FLAGS -fno-rtti)
+    set_source_files_properties(${VVV_CXX_SRC} PROPERTIES COMPILE_FLAGS "-std=c++11 -fno-exceptions -fno-rtti")
+
+    # Dependencies (as needed)
+    set_source_files_properties(${FAUDIO_SRC} PROPERTIES COMPILE_FLAGS -std=c99)
+    set_source_files_properties(${CHM_SRC} PROPERTIES COMPILE_FLAGS -std=c99)
 endif()
 
 # Unfortunately, it doesn't seem like distros package LodePNG
